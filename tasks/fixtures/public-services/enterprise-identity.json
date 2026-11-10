@@ -1,0 +1,34 @@
+{
+  "apiBaseUrl": "https://pivot.ucas.com.cn:23090",
+  "organizations": [
+    {
+      "orgId": "a1d155cb-7e9f-46ef-babb-ac296faac7a0",
+      "corpId": "wx6552695afd9ed248",
+      "agentId": "1000083",
+      "label": "北京",
+      "callbackUrl": "https://pivot.ucas.com.cn:23090/callback"
+    },
+    {
+      "orgId": "c1715513-9ff7-4d4f-a129-226bc1cf65f0",
+      "corpId": "ww1ef227672ebe1618",
+      "agentId": "1000027",
+      "label": "南京",
+      "callbackUrl": "https://pivot-nj.ucas.com.cn:23091/callback"
+    },
+    {
+      "orgId": "d37a82ec-5fa0-491f-8ba5-36bf0907504e",
+      "corpId": "wwc87af0599a145d14",
+      "agentId": "1000010",
+      "label": "厦门",
+      "callbackUrl": "https://pivot.ansilic.com:23092/callback"
+    },
+    {
+      "orgId": "80f0a35d-d5f7-4e7e-bc3a-d02d2a1a2360",
+      "corpId": "wwb6eecb2e8c0f9d8a",
+      "agentId": "1000003",
+      "label": "天津",
+      "callbackUrl": "https://pivot-tj.ucas.com.cn/callback"
+    }
+  ],
+  "defaultOrgId": "a1d155cb-7e9f-46ef-babb-ac296faac7a0"
+}

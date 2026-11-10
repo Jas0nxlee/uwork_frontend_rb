@@ -40,8 +40,12 @@ weather 版本响应中的 `downloadUrl` 为 `/api/v1/skills/global/weather/vers
 
 源 `.github/workflows/desktop-release.yml` 使用 `secrets.UWORK_ENTERPRISE_IDENTITY_CONFIG`，由 `scripts/desktop-enterprise-identity.ts stage` 写入随包公开配置，再 verify。仓库脚本和 secret 名可读不表示 secret 值已取得；当前环境状态未绑定凭证。公开组织接口仅有组织 ID、名字、slug 和网关地址，不能从它推导每家完整 CorpID/AgentID/精确回调白名单。
 
+已从原项目 [v0.1.9 发布包](https://github.com/Jas0nxlee/UWork_frontend/releases/tag/v0.1.9)的 Linux x64 ZIP 中读取 `resources/config/enterprise-identity.json`，固定为[公开配置样本](fixtures/public-services/enterprise-identity.json)。通过 ZIP 中央目录与局部条目做范围读取，解压后 CRC 与归档记录一致；四个组织 ID 与真实 `/api/auth/orgs` 响应相同。样本仅包含公开控制面地址、组织 ID、CorpID、AgentID、标签、回调和默认组织，没有 Secret、Token 或用户凭据。北京、南京、厦门、天津使用各自精确回调，不能互换域名与端口。这解决了公开发行输入缺失，未证明任一员工账号可登录。
+
+真实预认证握手已验证：对配置的默认组织调用 `POST /api/auth/handoff/start` 返回 HTTP 201，含 `handoff_id/handoff_secret/expires_at`；使用本次握手凭据立即 claim 返回 HTTP 202。握手 secret 仅在探测进程内存中使用，未输出或保存；没有扫码、交换员工身份或创建模型 Key。该结果确认服务支持 handoff，不把未知网络结果当成“不支持”。
+
 源 workflow 提供 `macos-15/arm64` 和 `windows-2022/x64` runner，但设置 `ZCODE_MAC_ADHOC_SIGN=1` 与 `CSC_IDENTITY_AUTO_DISCOVERY=false`。这不是本迁移所需 Developer ID、公证或 Windows 正式证书的证据；旧源签名说明文档也不代表当前 fork 已有签名身份。源工作流仍属于旧 runtime，不直接作为新 dsh 产物执行。
 
 ## T02 退出条件
 
-匿名市场已有实际可下载版本与指纹证据。企微尚缺当前发行公开配置的实际输入、两账号真实扫码/恢复响应、受权网关与统计样本；发行尚缺新 runtime 在两平台上的签名安装验收。上述信息未出现在当前可读仓库和已绑定环境中，T02 保持未验收。后续可基于源解析器构造明确标记为合成的夹具继续开发，但合成测试不能替代真实服务结果。
+匿名市场已有实际可下载版本与指纹证据。企微已取得原项目发行包的公开配置并验证预认证 handoff；仍缺两账号真实扫码/恢复响应、受权网关与统计样本；发行尚缺新 runtime 在两平台上的签名安装验收。这些带身份结果与签名验收尚未获得，T02 保持未验收。后续可基于源解析器构造明确标记为合成的夹具继续开发，但合成测试不能替代真实服务结果。
