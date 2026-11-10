@@ -1,6 +1,6 @@
 import { load } from 'js-yaml'
 import { createHash } from 'node:crypto'
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, it } from 'vitest'
@@ -54,6 +54,36 @@ it.each(['mac-arm64', 'win-x64'] as const)('preflights a complete retained %s bu
     expect(prepared.plan.version).toBe('1.0.0')
     expect(prepared.plan.artifacts.every(file => file.path.startsWith(retained))).toBe(true)
     expect(signatureChecks).toBe(1)
+    // A retained Preview identity must reject a legacy receipt, regardless of the publishing checkout's identity.
+    const manifestPath = join(retained, 'manifest.json')
+    const retainedManifest = await readFile(manifestPath, 'utf8')
+    const preview = JSON.parse(retainedManifest) as {
+      source: { distribution?: { artifactStem: string } }
+      files: { name: string; size: number; sha512: string }[]
+    }
+    preview.source.distribution = { artifactStem: 'uwork-next' }
+    await writeFile(manifestPath, JSON.stringify(preview))
+    await expect(prepareDesktopPublication(env, signature)).rejects.toThrow('does not match the test update destination')
+    const receiptPath = join(retained, `${target}-release.json`)
+    const originalReceipt = await readFile(receiptPath, 'utf8')
+    const receipt = JSON.parse(originalReceipt) as { publicUrl: string }
+    receipt.publicUrl = `https://example.com/uwork-next/${releaseId}/feeds/${target}/`
+    const previewReceipt = JSON.stringify(receipt)
+    await writeFile(receiptPath, previewReceipt)
+    const entry = preview.files.find(file => file.name === `${target}-release.json`)!
+    entry.size = Buffer.byteLength(previewReceipt)
+    entry.sha512 = createHash('sha512').update(previewReceipt).digest('base64')
+    await writeFile(manifestPath, JSON.stringify(preview))
+    expect((await prepareDesktopPublication(env, signature)).plan.version).toBe('1.0.0')
+    // Missing or incorrect identity cannot reroute a Preview receipt into the legacy feed.
+    for (const distribution of [undefined, { artifactStem: 'deepseek-harness' }]) {
+      if (distribution === undefined) delete preview.source.distribution
+      else preview.source.distribution = distribution
+      await writeFile(manifestPath, JSON.stringify(preview))
+      await expect(prepareDesktopPublication(env, signature)).rejects.toThrow('does not match the test update destination')
+    }
+    await writeFile(receiptPath, originalReceipt)
+    await writeFile(manifestPath, retainedManifest)
     const summary = await desktopPublicationSummary(prepared.manifest.source, prepared.plan, 'c'.repeat(64), false)
     await expect(summary).toMatchFileSnapshot(`./expected/publication-${target}.md`)
     const feed = prepared.plan.artifacts.find(file => file.channelMetadata)!

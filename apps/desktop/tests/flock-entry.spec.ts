@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
-import { copyFile, mkdtemp, rm } from 'node:fs/promises'
+import { copyFile, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -112,3 +112,51 @@ it('loads the proxy module where the addon package cannot be resolved', async ()
     expect(stdout).toBe('restoreMacOSNotarizationProxy,withMacOSNotarizationProxy')
   } finally { await rm(root, { recursive: true, force: true }) }
 })
+
+
+it.skipIf(process.platform !== 'linux' && process.platform !== 'darwin').each(['ready', 'missing-host', 'no-flock'] as const)(
+  'probes only the runtime-selected flock addon (%s)', async (mode) => {
+    const root = await mkdtemp(join(tmpdir(), 'flock-probe-test-'))
+    try {
+      const scripts = join(root, 'apps/desktop/scripts')
+      const entry = join(root, 'node_modules/@deepseek-ai/node-addon-system')
+      const platform = join(root, `node_modules/@deepseek-ai/node-addon-system-${process.platform}-${process.arch}`)
+      await Promise.all([scripts, entry, platform].map(path => mkdir(path, { recursive: true })))
+      await copyFile(new URL('../scripts/flock-entry.ts', import.meta.url), join(scripts, 'flock-entry.ts'))
+      await writeFile(join(entry, 'package.json'), JSON.stringify({ type: 'module', exports: {
+        './flock': './flock.js', './package.json': './package.json',
+      } }))
+      await writeFile(join(entry, 'flock.js'), 'export const marker = "selected-host"; export async function tryLockExclusive() {}\n')
+      await writeFile(join(platform, 'package.json'), '{}')
+      const libc = process.platform === 'linux'
+        ? ((process.report.getReport() as { header: { glibcVersionRuntime?: string } }).header.glibcVersionRuntime ? 'glibc' : 'musl')
+        : undefined
+      const path = libc === undefined ? 'bin/system.node' : `bin/${libc}/system.node`
+      await writeFile(join(platform, 'prebuilds.json'), JSON.stringify({ binaries: mode === 'no-flock' ? [] : [
+        { tool: 'flock', kind: 'node-api', libc, path },
+        { tool: 'flock', kind: 'node-api', libc: 'foreign-libc', path: 'bin/foreign/system.node' },
+        { tool: 'landlock-run', kind: 'static-musl', path: 'bin/landlock-run' },
+      ] }))
+      if (mode === 'ready') {
+        await mkdir(join(platform, 'bin', libc ?? ''), { recursive: true })
+        await writeFile(join(platform, path), '')
+      }
+      const child = spawn(process.execPath, ['--input-type=module', '-e', `
+        const module = await import(${JSON.stringify(pathToFileURL(join(scripts, 'flock-entry.ts')).href)});
+        process.stdout.write((await module.loadFlockEntry()).marker);
+      `], { stdio: ['ignore', 'pipe', 'pipe'], env: { PATH: process.env.PATH } })
+      let stdout = '', stderr = ''
+      child.stdout.setEncoding('utf8').on('data', (chunk: string) => { stdout += chunk })
+      child.stderr.setEncoding('utf8').on('data', (chunk: string) => { stderr = (stderr + chunk).slice(-8192) })
+      const [code] = await once(child, 'close') as [number | null]
+      if (mode === 'ready') {
+        expect(code, stderr).toBe(0)
+        expect(stdout).toBe('selected-host')
+        expect(stderr).toBe('')
+      } else {
+        expect(code).not.toBe(0)
+        expect(stderr).toContain('flock addon is not built')
+      }
+    } finally { await rm(root, { recursive: true, force: true }) }
+  },
+)

@@ -1,3 +1,4 @@
+import { desktopDistribution } from './desktop-product.ts'
 /** Upload Desktop artifacts to COS and refresh production fixed downloads through EdgeOne. */
 
 import { resolve } from 'node:path'
@@ -39,7 +40,7 @@ export function resolveCredentialUploadEnvironment(
   target: DesktopPackageTargetName,
 ): NodeJS.ProcessEnv {
   const { platform, arch } = desktopTargetPlatform(target)
-  const destination = resolveDesktopUploadConfig(fileEnvironment, platform, arch)
+  const destination = resolveDesktopUploadConfig(fileEnvironment, platform, arch, desktopDistribution)
   if (destination.environment !== selected || destination.bucket !== bucket) {
     throw new DesktopUploadUsageError('desktop upload: credential launcher deployment or bucket differs from the packaged release destination')
   }
@@ -75,6 +76,9 @@ export async function uploadDesktopTarget(args: string[]): Promise<void> {
     'purge-only': { type: 'boolean' },
     'credential-launcher': { type: 'boolean' }, environment: { type: 'string' }, bucket: { type: 'string' },
   } })
+  if (desktopDistribution?.artifactStem === 'uwork-next' && (values.latest || values['purge-only'])) {
+    throw new DesktopUploadUsageError('UWork Next Preview cannot replace or purge legacy website installers')
+  }
   const target = positionals[0]
   if (target === undefined || positionals.length !== 1) {
     throw new DesktopUploadUsageError('desktop upload: expected exactly one target')

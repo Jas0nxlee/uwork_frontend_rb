@@ -87,7 +87,9 @@ describe('Windows update publisher', () => {
         DSH_DESKTOP_WINDOWS_SIGNTOOL: signTool,
         DSH_DESKTOP_WINDOWS_KEY_CONTAINER: 'test-container',
         DSH_DESKTOP_WINDOWS_TOKEN_PIN: 'test-pin',
-        DSH_DESKTOP_AUTO_UPDATE_ENV: 'production',
+        DSH_DESKTOP_AUTO_UPDATE_ENV: 'test',
+        DOWNLOAD_TEST_ORIGIN: 'https://updates.example.com', DOWNLOAD_TEST_RELEASE_ID: 'a'.repeat(32),
+        DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
       }, 'win32', 'x64')
       expect(config.win.forceCodeSigning).toBe(true)
       expect(config.artifactName).toBe('uwork-next-${version}-${os}-${arch}.${ext}')

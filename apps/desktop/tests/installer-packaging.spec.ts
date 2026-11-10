@@ -57,13 +57,16 @@ describe('installer preparation preserves application dependencies', () => {
         expect(expandMacro(config.nsis.uninstallDisplayName, null, appInfo, {}, false)).toBe('UWork Next Preview')
         expect(config.nsis.installerLanguages).toEqual(readInstallerLocales().map(locale => locale.id))
       }
+      expect(config.mac.icon).toMatch(/uwork[/\\]icon\.icns$/)
+      expect(config.win.icon).toMatch(/uwork[/\\]icon\.png$/)
+      expect(config.mac.extendInfo.NSMicrophoneUsageDescription).toContain('UWork Next Preview')
       const aboutIcon = config.extraResources.find(resource => resource.to === 'icon.png')
       expect(aboutIcon).toBeDefined()
-      expect(readFileSync(aboutIcon!.from)).toEqual(readFileSync(new URL('../resources/icon-windows.png', import.meta.url)))
+      expect(readFileSync(aboutIcon!.from)).toEqual(readFileSync(new URL('../resources/uwork/icon.png', import.meta.url)))
       // Only the Windows package carries the tray bitmaps; macOS keeps the Dock.
       const trayIcon = config.extraResources.find(resource => resource.to === 'tray.ico')
       if (platform === 'win32') {
-        expect(readFileSync(trayIcon!.from)).toEqual(readFileSync(new URL('../resources/tray-windows.ico', import.meta.url)))
+        expect(readFileSync(trayIcon!.from)).toEqual(readFileSync(new URL('../resources/uwork/icon.ico', import.meta.url)))
       } else {
         expect(trayIcon).toBeUndefined()
       }
@@ -114,7 +117,10 @@ describe('installer preparation preserves application dependencies', () => {
     const { createElectronBuilderConfig } = await import('../scripts/electron-builder-config.mjs')
     const config = createElectronBuilderConfig({
       DSH_DESKTOP_APP_ID: 'com.example.installer',
-      DSH_DESKTOP_AUTO_UPDATE_ENV: 'production',
+      DSH_DESKTOP_AUTO_UPDATE_ENV: 'test',
+      DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
+      DOWNLOAD_TEST_ORIGIN: 'https://preview.example.com',
+      DOWNLOAD_TEST_RELEASE_ID: '0123456789abcdef0123456789abcdef',
       DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://harness-test.deepseek.com',
       DSH_DESKTOP_MANDATORY_UPDATE_PROD_ORIGIN: 'https://policy.example.com',
       DSH_DESKTOP_MACOS_SIGNING_IDENTITY: 'Example Company (TEAMID1234)',

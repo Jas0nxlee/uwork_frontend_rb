@@ -90,6 +90,7 @@ export function resolveDesktopAutoUpdateConfig(
   env: NodeJS.ProcessEnv,
   platform: NodeJS.Platform,
   arch: string,
+  distribution?: { readonly artifactStem?: string },
 ): DesktopAutoUpdateConfig
 
 /**
@@ -104,6 +105,7 @@ export function resolveDesktopUploadConfig(
   env: NodeJS.ProcessEnv,
   platform: NodeJS.Platform,
   arch: string,
+  distribution?: { readonly artifactStem?: string },
 ): DesktopUploadConfig
 
 /**

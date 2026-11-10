@@ -27,7 +27,10 @@ it.each(['arm64', 'x64'] as const)('embeds stable in a prerelease macOS %s packa
   const version = `${desktopBuildVersionPrefix(manifest.version)}20261103.1`
   const config = createElectronBuilderConfig({
     DSH_DESKTOP_APP_ID: 'com.example.channel-test',
-    DSH_DESKTOP_AUTO_UPDATE_ENV: 'production',
+    DSH_DESKTOP_AUTO_UPDATE_ENV: 'test',
+    DOWNLOAD_TEST_ORIGIN: 'https://preview.example.com', DOWNLOAD_TEST_RELEASE_ID: 'a'.repeat(32),
+    DSH_DESKTOP_MANDATORY_UPDATE_TEST_ORIGIN: 'https://policy.example.com',
+    DSH_DESKTOP_MANDATORY_UPDATE_CONFIG: JSON.stringify({ allowedAuthOrigins: ['https://login.example.com'] }),
     DSH_DESKTOP_UPDATE_CHANNEL: 'stable',
     DSH_DESKTOP_BUILD_VERSION: version,
     DSH_DESKTOP_MANDATORY_UPDATE_PROD_ORIGIN: 'https://policy.example.com',
@@ -36,7 +39,7 @@ it.each(['arm64', 'x64'] as const)('embeds stable in a prerelease macOS %s packa
     APPLE_KEYCHAIN_PROFILE: 'channel-test',
   }, 'darwin', arch)
   expect(config.extraMetadata).toMatchObject({ version, dshDesktopUpdateChannel: 'stable' })
-  expect(config.publish).toEqual([{ provider: 'generic', url: `https://download.deepseek.com/dsh-desk/feeds/mac-${arch}/`, channel: 'stable' }])
+  expect(config.publish).toEqual([{ provider: 'generic', url: `https://preview.example.com/uwork-next/${'a'.repeat(32)}/feeds/mac-${arch}/`, channel: 'stable' }])
 })
 
 it('accepts a stable prerelease in an unsigned Windows x64 configuration', () => {

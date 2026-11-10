@@ -41,6 +41,8 @@ describe('desktop release metadata', () => {
     }
     expect(() => parseDesktopRelease({ ...base, version: 'stable' })).toThrow(/invalid desktop release metadata/u)
     expect(() => parseDesktopRelease({ ...base, hostProtocolVersion: 999 })).toThrow(/invalid desktop release metadata/u)
+    // v4 Hosts cannot answer the mandatory native authorization state request, even for standard products.
+    expect(() => parseDesktopRelease({ ...base, hostProtocolVersion: 4 })).toThrow(/invalid desktop release metadata/u)
   })
 })
 

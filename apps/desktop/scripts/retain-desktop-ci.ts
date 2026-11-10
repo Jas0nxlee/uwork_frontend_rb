@@ -1,5 +1,6 @@
 /** Retain completed CI packages for later manual publication. */
 import { desktopArtifactStem } from './desktop-product.ts'
+import { desktopProduct } from '../../desktop-host/src/product.ts'
 import { appendFile, readFile } from 'node:fs/promises'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { desktopTargetBuildPaths, resolveDesktopBuildTarget } from './desktop-build-paths.mjs'
@@ -63,6 +64,7 @@ export async function retainDesktopCi(env: NodeJS.ProcessEnv, appRoot = resolve(
   const qualification = windows ? (env.PACKAGE_SIGNING === 'signed' ? 'signed' : 'unsigned')
     : (env.PACKAGE_SKIP_NOTARIZATION === 'true' ? 'unnotarized' : 'notarized')
   const product: { version: string } = JSON.parse(await readFile(join(appRoot, 'package.json'), 'utf8'))
+  const distribution = desktopProduct(product)
   const version = validateDesktopBuildVersion(required(env, 'PACKAGE_VERSION'), product.version)
   const source: DesktopRetainedSource = {
     repository: required(env, 'GITHUB_REPOSITORY'), runId: required(env, 'GITHUB_RUN_ID'),
@@ -72,6 +74,7 @@ export async function retainDesktopCi(env: NodeJS.ProcessEnv, appRoot = resolve(
     runnerName: required(env, 'RUNNER_NAME'), target, preset, productVersion: product.version, version,
     testReleaseId: preset === 'test' ? (settings.DOWNLOAD_TEST_RELEASE_ID || null) : null,
     qualification,
+    ...(distribution === undefined ? {} : { distribution: { artifactStem: distribution.artifactStem } }),
   }
   const paths = desktopTargetBuildPaths(target)
   // The CLI's checkout owns these paths; alternate app roots are used by fixtures.

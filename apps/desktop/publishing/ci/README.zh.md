@@ -54,6 +54,8 @@ job 排队时，先对照 job 页面请求的标签与 **Settings → Actions �
 
 保持 `DSH_PACKAGING_CONFIG_DIR` 指向现有机器打包目录。完成的构建复制到其同级 `releases/<run-id>/<attempt>/`；`DSH_DESKTOP_RELEASES_DIR` 可用绝对路径覆盖该根目录。文件清单包含安装包、更新归档、blockmap、完成记录和不含凭据的 manifest。调试包会留存，但不能发布。复制内容通过校验后才开放 attempt 目录，已有 attempt 不能被替换。GitHub 保留相同文件清单 14 天。本地文件保留到操作员删除；校验或发布期间不要删除对应 attempt。
 
+留存格式继续使用 schema version 1。新定制包仅记录从打包应用 manifest 提取的 `source.distribution.artifactStem`。发布使用该留存身份，不借用当前 checkout 的身份。缺少该字段的旧 manifest 保留原 dsh 命名空间。完成记录中的 feed URL 必须与所选命名空间一致，因此 Preview 元数据缺失或错误会拒绝发布，不会悄悄改路由。UWork Next Preview 必须使用独立 test origin，不能发布到旧 production feed 或替换其网站安装包。拒绝这个新增字段的旧发布器必须先升级，才能发布新定制包。
+
 从 [macOS test](../../config/publishing/macos/test.json.example)、[macOS production](../../config/publishing/macos/production.json.example)、[Windows test](../../config/publishing/windows/test.json.example) 或 [Windows production](../../config/publishing/windows/production.json.example) 模板开始，创建 `publishing/` 目录，将所选文件复制到 `DSH_PACKAGING_CONFIG_DIR` 下的 `publishing/<preset>.json`。用机器实际配置替换示例 bucket、test origin、绝对路径、macOS 签名身份和 Team ID 或 Windows 证书指纹，以及 production App client ID；保留固定的 production origin。模板不含凭据，也不授予 COS、GitHub 或签名权限。引用的秘密文件保存在 Git 之外，只允许发布账户访问。macOS 的 arm64 和 x64 共用配置，目标由留存包决定。
 
 每份配置声明 `bucket`、不带路径的 HTTPS `origin` 和绝对路径 `credentialsFile`。凭据文件只包含 `secretId` 和 `secretKey`。macOS 还需 `macOS.signingIdentity` 和 `macOS.teamId`；Windows 需要 `windows.certificateThumbprint`。production 必须使用 origin `https://download.deepseek.com`，并提供 `githubApp.clientId` 和绝对路径 `githubApp.privateKeyFile`。上传器支持长期 COS 凭据，不支持 STS 会话凭据。管理员必须维持 test 和 production bucket 未启用版本控制（不能是已启用或已暂停状态）。发布流程以此为部署前提，不调用 `GetBucketVersioning`，也不要求该权限。二进制 PUT 仍携带 `x-cos-forbid-overwrite`；防覆盖保证依赖管理员维持桶配置。

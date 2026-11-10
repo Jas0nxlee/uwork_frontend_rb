@@ -5,7 +5,7 @@ export interface DesktopElectronBuilderConfig {
   readonly appId: string
   readonly copyright: string
   readonly artifactName: string
-  readonly protocols: readonly [{ readonly name: 'DeepSeek Harness'; readonly schemes: readonly ['dsh'] }]
+  readonly protocols: readonly [{ readonly name: string; readonly schemes: readonly [string] }]
   readonly directories: {
     readonly output: string
   }
@@ -22,6 +22,7 @@ export interface DesktopElectronBuilderConfig {
     ...{ readonly from: string, readonly to: 'tray.ico' }[],
   ]
   readonly mac: {
+    readonly icon: string
     readonly extendInfo: {
       readonly CFBundleLocalizations: readonly string[]
       readonly NSMicrophoneUsageDescription: string
@@ -39,6 +40,7 @@ export interface DesktopElectronBuilderConfig {
     readonly writeUpdateInfo: boolean
   }
   readonly win: {
+    readonly icon: string
     readonly forceCodeSigning: boolean
     readonly signtoolOptions: {
       readonly publisherName: string | undefined
@@ -70,6 +72,7 @@ export interface DesktopElectronBuilderConfig {
  * @param hostArch - Build-host architecture used when no explicit target is present.
  * @param preparedRuntime - Verified private qualification runtime; ordinary releases use target-owned resources.
  * @param preparedRuntimeVersion - Version that private runtime declares, which qualification rewrites away from the product version.
+ * @param distribution - Checkout identity by default; null selects a separate unbranded qualification carrier.
  * @returns electron-builder configuration.
  */
 export function createElectronBuilderConfig(
@@ -78,6 +81,7 @@ export function createElectronBuilderConfig(
   hostArch?: string,
   preparedRuntime?: string,
   preparedRuntimeVersion?: string,
+  distribution?: import('../desktop-host/src/product.ts').DesktopProduct | null,
 ): DesktopElectronBuilderConfig
 
 declare const electronBuilderConfig: DesktopElectronBuilderConfig

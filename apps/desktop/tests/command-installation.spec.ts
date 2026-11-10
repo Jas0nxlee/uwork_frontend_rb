@@ -78,6 +78,7 @@ describe.skipIf(process.platform === 'win32')('macOS command entry ownership', (
     const f = await fixture()
     const bytes = Buffer.from([0, 1, 2, 255])
     await writeFile(f.options.destination, bytes, { mode: 0o751 })
+    await chmod(f.options.destination, 0o751)
     const installed = await installFileCommand(f.options, (await inspectFileCommand(f.options)).fingerprint)
     await removeFileCommand(f.options, installed.fingerprint)
     expect(await readFile(f.options.destination)).toEqual(bytes)

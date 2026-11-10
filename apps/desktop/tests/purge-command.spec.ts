@@ -36,6 +36,8 @@ it('forwards the documented pnpm purge command through both package scripts to t
   }
   // Only command forwarding and parsing are under test; all external work fails closed.
   const stubs = {
+    // This command-routing carrier has no Preview metadata, matching its package.json.
+    'desktop-product.ts': 'export const desktopDistribution = undefined',
     'desktop-package-environment.mjs': "export const loadDesktopPackageEnvironment = () => ({ DSH_DESKTOP_AUTO_UPDATE_ENV: 'production' })",
     'desktop-cos.ts': "export const createDesktopCos = () => { throw new Error('unexpected COS') }",
     'desktop-upload-plan.ts': "export const createDesktopUploadPlan = () => { throw new Error('unexpected installer read') }",

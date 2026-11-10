@@ -12,7 +12,7 @@ import { prepareDesktopPublication } from '../scripts/publish-desktop-ci.ts'
 const roots: string[] = []
 afterEach(async () => { await Promise.all(roots.splice(0).map(root => rm(root, { recursive: true, force: true }))) })
 
-async function retainedFixture(target: 'win-x64' | 'mac-x64' | 'mac-arm64', qualification: 'unsigned' | 'signed' | 'notarized' | 'unnotarized') {
+async function retainedFixture(target: 'win-x64' | 'mac-x64' | 'mac-arm64', qualification: 'unsigned' | 'signed' | 'notarized' | 'unnotarized', preview = false) {
   const root = await mkdtemp(join(tmpdir(), 'retain-ci-'))
   roots.push(root)
   const appRoot = join(root, 'checkout')
@@ -21,7 +21,10 @@ async function retainedFixture(target: 'win-x64' | 'mac-x64' | 'mac-arm64', qual
   const artifacts = join(appRoot, '.desktop-build', 'targets', target, debug ? `${qualification}-artifacts` : 'artifacts')
   await mkdir(artifacts, { recursive: true })
   await mkdir(join(config, 'presets'), { recursive: true })
-  await writeFile(join(appRoot, 'package.json'), '{"version":"1.0.0"}')
+  await writeFile(join(appRoot, 'package.json'), JSON.stringify({ version: '1.0.0',
+    ...(preview ? { dshDesktopProduct: { name: 'UWork Next Preview', appId: 'com.uwork.next.preview',
+      userData: 'uwork-next-preview', defaultHome: '~/.uwork/harness-preview', protocol: 'uwork-next', artifactStem: 'uwork-next' } } : {}),
+  }))
   await writeFile(join(config, 'presets/test.env'), `DSH_DESKTOP_AUTO_UPDATE_ENV=test\nDOWNLOAD_TEST_RELEASE_ID=${'a'.repeat(32)}\n`)
   const names = debug ? (target === 'win-x64' ? [`uwork-next-1.0.0-win-x64-${qualification}.exe`]
     : [`uwork-next-1.0.0-${target}-${qualification}.dmg`, `uwork-next-1.0.0-${target}-${qualification}.zip`]) : target === 'win-x64'
@@ -41,6 +44,14 @@ async function retainedFixture(target: 'win-x64' | 'mac-x64' | 'mac-arm64', qual
     DESKTOP_PACKAGE_ATTEMPT: '2', DESKTOP_PACKAGE_RUNNER: env.RUNNER_NAME }
   return { root, debug, names, env, directory, archiveEnv }
 }
+
+it('retains only the packaged distribution feed identity and preserves legacy omission', async () => {
+  for (const preview of [false, true]) {
+    const { directory } = await retainedFixture('win-x64', 'signed', preview)
+    const manifest = JSON.parse(await readFile(join(directory, 'manifest.json'), 'utf8')) as { source: { distribution?: { artifactStem: string } } }
+    expect(manifest.source.distribution).toEqual(preview ? { artifactStem: 'uwork-next' } : undefined)
+  }
+})
 
 const archiveScript = join(import.meta.dirname, '../scripts/archive-desktop-ci.ts')
 

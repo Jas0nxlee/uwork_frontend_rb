@@ -1,5 +1,5 @@
 /** Build one release target with matching Electron and dsh architecture. */
-import { desktopProductName, desktopArtifactStem } from './desktop-product.ts'
+import { desktopDistribution, desktopProductName, desktopArtifactStem } from './desktop-product.ts'
 
 import { spawn } from 'node:child_process'
 import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
@@ -147,7 +147,7 @@ function writeReleaseRecord(
   }
   const buildVersion = resolveDesktopBuildVersion(environment, dshVersion)
   const packaged = resolveDesktopBuildCommit(environment)
-  const update = resolveDesktopAutoUpdateConfig(environment, target.platform, target.arch)
+  const update = resolveDesktopAutoUpdateConfig(environment, target.platform, target.arch, desktopDistribution)
   const recordPath = join(artifactsRoot, desktopBuildRecordFilename(target.name))
   const temporaryPath = `${recordPath}.tmp`
   writeFileSync(temporaryPath, `${JSON.stringify({

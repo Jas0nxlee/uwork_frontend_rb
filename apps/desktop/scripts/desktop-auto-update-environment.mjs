@@ -157,13 +157,18 @@ function httpsOrigin(value, name) {
  * @param {NodeJS.ProcessEnv} env - Packaging or upload environment.
  * @param {NodeJS.Platform} platform - Target Node.js platform.
  * @param {string} arch - Target Node.js architecture.
+ * @param {{ artifactStem?: string } | undefined} distribution - Optional product identity; Preview cannot use legacy feeds.
  * @returns {{ environment: 'test' | 'production', channel: 'nightly' | 'stable', target: 'mac-arm64' | 'mac-x64' | 'win-x64', origin: string, publicUrl: string, keyPrefix: string, binaryKeyPrefix: string }} Resolved updater configuration.
  * @throws {Error} When the test deployment lacks a valid HTTPS origin or a 32-character lowercase hexadecimal release ID.
  */
-export function resolveDesktopAutoUpdateConfig(env, platform, arch) {
+export function resolveDesktopAutoUpdateConfig(env, platform, arch, distribution) {
   const channel = resolveDesktopUpdateChannel(env)
   const environment = resolveDesktopAutoUpdateEnvironment(env)
   const target = resolveDesktopAutoUpdateTarget(platform, arch)
+  const preview = distribution?.artifactStem === 'uwork-next'
+  if (preview && environment === 'production') {
+    throw new Error('UWork Next Preview cannot use the legacy production deployment')
+  }
   const deployment = UPDATE_ENVIRONMENTS[environment]
   let origin = deployment.fixedOrigin
   if (origin === undefined) {
@@ -171,7 +176,10 @@ export function resolveDesktopAutoUpdateConfig(env, platform, arch) {
     if (originEnvName === undefined) throw new Error('desktop auto-update: selected deployment has no origin')
     origin = httpsOrigin(requiredEnvironmentValue(env, originEnvName), originEnvName)
   }
-  let releasePrefix = 'dsh-desk'
+  if (preview && /(^|\.)deepseek\.com$/u.test(new URL(origin).hostname.replace(/\.$/u, ''))) {
+    throw new Error('UWork Next Preview requires an independent update origin')
+  }
+  let releasePrefix = preview ? 'uwork-next' : 'dsh-desk'
   if (environment === 'test') {
     const releaseId = requiredEnvironmentValue(env, 'DOWNLOAD_TEST_RELEASE_ID')
     if (!/^[a-f0-9]{32}$/u.test(releaseId)) {
@@ -196,11 +204,12 @@ export function resolveDesktopAutoUpdateConfig(env, platform, arch) {
  * @param {NodeJS.ProcessEnv} env - Upload environment.
  * @param {NodeJS.Platform} platform - Target Node.js platform.
  * @param {string} arch - Target Node.js architecture.
+ * @param {{ artifactStem?: string } | undefined} distribution - Optional product identity; Preview cannot use legacy feeds.
  * @returns {{ environment: 'test' | 'production', channel: 'nightly' | 'stable', target: 'mac-arm64' | 'mac-x64' | 'win-x64', origin: string, publicUrl: string, keyPrefix: string, binaryKeyPrefix: string, bucket: string, secretIdEnvName: string, secretKeyEnvName: string }} Resolved upload configuration.
  * @throws {Error} When the selected deployment lacks a bucket or valid updater configuration.
  */
-export function resolveDesktopUploadConfig(env, platform, arch) {
-  const update = resolveDesktopAutoUpdateConfig(env, platform, arch)
+export function resolveDesktopUploadConfig(env, platform, arch, distribution) {
+  const update = resolveDesktopAutoUpdateConfig(env, platform, arch, distribution)
   const deployment = UPDATE_ENVIRONMENTS[update.environment]
   return {
     ...update,

@@ -1,3 +1,4 @@
+import { desktopDistribution } from './desktop-product.ts'
 /** Select local test defaults or platform release settings without changing the caller's environment. */
 
 import { accessSync, constants, statSync } from 'node:fs'
@@ -125,7 +126,7 @@ export function validateDesktopPackageEnvironment(environment, target, options =
   if (target.platform === 'darwin') resolveMacOSPackageSettings(environment)
   else resolveWindowsPackageSettings(environment)
   if (options.unsigned) return
-  if (!options.prepareOnly) resolveDesktopAutoUpdateConfig(environment, target.platform, target.arch)
+  if (!options.prepareOnly) resolveDesktopAutoUpdateConfig(environment, target.platform, target.arch, desktopDistribution)
   if (target.platform === 'win32') {
     if (!options.prepareOnly) createWindowsTokenSigner({
       certificateFile: environment.DSH_DESKTOP_WINDOWS_CER_FILE,

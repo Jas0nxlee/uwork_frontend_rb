@@ -1,3 +1,4 @@
+import { desktopDistribution } from './desktop-product.ts'
 /**
  * Suggest the next build version for a product version, so the sequence number
  * is derived rather than remembered.
@@ -93,7 +94,7 @@ async function remoteVersions(options: DesktopBuildVersionSuggestionOptions): Pr
   // An unconfigured destination has nothing to be unique against; an invalid one must not be mistaken for it.
   if (options.environment[DESKTOP_AUTO_UPDATE_ENV] === undefined
     && options.environment.DOWNLOAD_TEST_ORIGIN === undefined) return undefined
-  const update = resolveDesktopUploadConfig(options.environment, platform, arch)
+  const update = resolveDesktopUploadConfig(options.environment, platform, arch, desktopDistribution)
   const secretId = options.environment[update.secretIdEnvName]?.trim()
   const secretKey = options.environment[update.secretKeyEnvName]?.trim()
   if (secretId === undefined || secretId === '' || secretKey === undefined || secretKey === '') return undefined

@@ -11,6 +11,9 @@ vi.mock('../scripts/desktop-edgeone.ts', async importOriginal => ({
   purgeDesktopInstaller: vi.fn(),
 }))
 
+// These command transport tests exercise the upstream dsh distribution.
+vi.mock('../scripts/desktop-product.ts', () => ({ desktopDistribution: undefined }))
+
 vi.mock('../scripts/desktop-package-environment.mjs', () => ({ loadDesktopPackageEnvironment: vi.fn() }))
 vi.mock('../scripts/desktop-upload-plan.ts', () => ({ createDesktopUploadPlan: vi.fn() }))
 vi.mock('../scripts/desktop-cos.ts', () => ({ createDesktopCos: vi.fn() }))

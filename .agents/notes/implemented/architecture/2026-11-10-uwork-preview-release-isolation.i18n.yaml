@@ -1,0 +1,22 @@
+# Bilingual-pair consistency record for 2026-11-10-uwork-preview-release-isolation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-11-10-uwork-preview-release-isolation.md
+/agent-note-uwork-preview-release-isolation:
+  en: 8feb4f324ad277bf
+  zh: 372756ecd794b754
+/agent-note-uwork-preview-release-isolation/problem:
+  en: f6c6ee80f7c50480
+  zh: 4beb38593d4eaeec
+/agent-note-uwork-preview-release-isolation/decision:
+  en: f01949c98254303e
+  zh: b421317ac3da4a96
+/agent-note-uwork-preview-release-isolation/alternatives-considered:
+  en: a090e28556e43303
+  zh: fc12916ff3ec8ae3
+/agent-note-uwork-preview-release-isolation/consequences:
+  en: 36dedac76dd205a0
+  zh: 1a23e591f8ccfc67
+/agent-note-uwork-preview-release-isolation/testing:
+  en: 65924536d2741d88
+  zh: 20c7b1038ff21672

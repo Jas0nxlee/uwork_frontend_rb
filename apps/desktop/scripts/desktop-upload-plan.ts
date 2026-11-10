@@ -70,6 +70,8 @@ export interface DesktopUploadPlanOptions {
   readonly artifactsRoot?: string
   /** Original product version from a verified retained build; absent reads the checkout manifests. */
   readonly packagedProductVersion?: string
+  /** Retained build's public feed identity; null denotes an explicitly unbranded legacy carrier. */
+  readonly packagedDistribution?: { readonly artifactStem: string } | null
 }
 
 interface UpdateFileInfo {
@@ -201,7 +203,13 @@ export async function createDesktopUploadPlan(
     throw new Error(`desktop upload: desktop version ${desktopVersion} does not match current dsh version ${dshVersion}`)
   }
 
-  const update = resolveDesktopUploadConfig(environment, target.platform, target.arch)
+  const distribution = options.packagedDistribution === undefined
+    ? (JSON.parse(await readFile(join(appRoot, 'package.json'), 'utf8')) as { dshDesktopProduct?: { artifactStem?: string } }).dshDesktopProduct
+    : options.packagedDistribution
+  if (distribution?.artifactStem === 'uwork-next' && options.latest) {
+    throw new Error('UWork Next Preview cannot replace legacy website installers')
+  }
+  const update = resolveDesktopUploadConfig(environment, target.platform, target.arch, distribution ?? undefined)
   const buildRecord = await jsonFile(
     join(artifactsRoot, desktopBuildRecordFilename(targetName)),
     `${targetName} package completion record`,

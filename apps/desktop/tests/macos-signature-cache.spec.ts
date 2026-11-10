@@ -13,6 +13,8 @@ function fixture(): { root: string; file: string; cache: string; signer: MacOSCa
   roots.push(root)
   const file = join(root, 'code')
   writeFileSync(file, 'original', { mode: 0o755 })
+  // The cache must preserve an explicitly selected executable mode, independent of the runner's umask.
+  if (process.platform !== 'win32') chmodSync(file, 0o755)
   return { root, file, cache: join(root, 'cache'), signer: {
     policy: 'certificate+identifier+entitlements+tools',
     sign: vi.fn(async (path: string) => { writeFileSync(path, `${readFileSync(path, 'utf8')}:signed`) }),
@@ -73,6 +75,7 @@ it.skipIf(process.platform === 'win32')('allows competing writers to publish onl
   const { root, file, cache, signer } = fixture()
   const second = join(root, 'other')
   writeFileSync(second, 'original', { mode: 0o755 })
+  chmodSync(second, 0o755)
   let ready!: () => void
   const both = new Promise<void>((resolve) => { ready = resolve })
   let count = 0
@@ -101,6 +104,7 @@ it.skipIf(process.platform === 'win32')('publishes reusable entries across indep
   const { root, file, cache } = fixture()
   const second = join(root, 'second')
   writeFileSync(second, 'original', { mode: 0o755 })
+  chmodSync(second, 0o755)
   // Windows directory replacement uses different errors; this cache is owned by macOS packaging.
   const children: ReturnType<typeof fork>[] = []
   const exits: Promise<[number | null, NodeJS.Signals | null]>[] = []

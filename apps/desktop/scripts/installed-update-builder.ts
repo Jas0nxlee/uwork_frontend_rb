@@ -1,5 +1,6 @@
 /** Select isolated qualification inputs without weakening the ordinary Windows installer or signing hooks. */
 import { join } from 'node:path'
+import { desktopArtifactStem } from './desktop-product.ts'
 import { createElectronBuilderConfig } from './electron-builder-config.mjs'
 import { readInstalledUpdateRun } from './installed-update-qualification.ts'
 import { verifyInstalledUpdateApplication } from './prepare-installed-update-application.ts'
@@ -23,9 +24,12 @@ export async function createInstalledUpdateBuilderConfig(manifest: string, versi
   const dsh = join(run.root, version, 'dsh')
   await verifyDesktopRuntime(dsh, version, { platform: 'win32', arch: 'x64' })
   const config = createElectronBuilderConfig({ ...environment, DSH_DESKTOP_APP_ID: run.appId,
-    DSH_DESKTOP_TARGET_PLATFORM: 'win32', DSH_DESKTOP_TARGET_ARCH: 'x64', DSH_DESKTOP_UNSIGNED: '0' }, 'win32', 'x64', dsh, version)
+    DSH_DESKTOP_TARGET_PLATFORM: 'win32', DSH_DESKTOP_TARGET_ARCH: 'x64', DSH_DESKTOP_UNSIGNED: '0' }, 'win32', 'x64', dsh, version, null)
   return { ...config,
     productName: run.productName,
+    // Qualification must not claim the checkout product's URI scheme or change the established artifact basename.
+    protocols: [],
+    artifactName: `${desktopArtifactStem}-\${version}-\${os}-\${arch}.\${ext}`,
     directories: { ...config.directories, output: join(run.root, version, 'installer') },
     extraMetadata: { ...config.extraMetadata, dshDesktopProduct: undefined,
       name: `dsh-update-test-${run.id}`, version, main: 'qualification-bootstrap.mjs' },

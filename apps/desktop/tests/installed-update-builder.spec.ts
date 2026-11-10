@@ -99,6 +99,8 @@ describe('installed-update application inputs and builder configuration', () => 
         expect(config.files.at(-1)).toMatchObject({ from: join(dsh, 'node_modules'), to: 'dsh/node_modules' })
         expect(config.files).toContain('!node_modules/**/*.{js,cjs,mjs,ts,cts,mts,css}.map')
         expect(config.files).toContain('!node_modules/**/*.tsbuildinfo')
+        expect(config.protocols).toEqual([])
+        expect(config.artifactName).toBe('uwork-next-${version}-${os}-${arch}.${ext}')
         expect(config.win.forceCodeSigning).toBe(true)
         expect(config.win.signtoolOptions.publisherName).toBe('CN=Fixture,O=Fixture,C=CN')
         expect(typeof config.win.signtoolOptions.sign).toBe('function')

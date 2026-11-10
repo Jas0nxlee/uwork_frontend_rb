@@ -43,6 +43,7 @@ import {
  * @param {string} hostArch - Build-host architecture used when no explicit target is present.
  * @param {string | undefined} preparedRuntime - Verified private dsh tree for installed-update qualification; ordinary releases use the target tree.
  * @param {string | undefined} preparedRuntimeVersion - Version that private tree declares, which qualification rewrites away from the product version.
+ * @param {import('../../desktop-host/src/product.ts').DesktopProduct | null | undefined} distribution - Checkout identity by default; null selects a separate unbranded qualification carrier.
  * @returns {object} electron-builder configuration.
  */
 export function createElectronBuilderConfig(
@@ -51,8 +52,11 @@ export function createElectronBuilderConfig(
   hostArch = process.arch,
   preparedRuntime = undefined,
   preparedRuntimeVersion = undefined,
+  distribution = product,
 ) {
-  const appId = resolveDesktopAppId({ ...env, DSH_DESKTOP_APP_ID: env.DSH_DESKTOP_APP_ID ?? product?.appId })
+  const brand = distribution?.artifactStem === 'uwork-next' ? '../resources/uwork/' : '../resources/'
+  const brandIcon = name => fileURLToPath(new URL(`${brand}${name}`, import.meta.url))
+  const appId = resolveDesktopAppId({ ...env, DSH_DESKTOP_APP_ID: env.DSH_DESKTOP_APP_ID ?? distribution?.appId })
   const targetPlatform = env.DSH_DESKTOP_TARGET_PLATFORM
   const resolvedPlatform = targetPlatform ?? hostPlatform
   const resolvedArch = env.DSH_DESKTOP_TARGET_ARCH ?? hostArch
@@ -100,7 +104,7 @@ export function createElectronBuilderConfig(
   if (windowsSigner !== undefined) {
     installWindowsNsisBootstrapSigner({ sign: windowsSigner })
   }
-  const update = unsigned ? undefined : resolveDesktopAutoUpdateConfig(env, resolvedPlatform, resolvedArch)
+  const update = unsigned ? undefined : resolveDesktopAutoUpdateConfig(env, resolvedPlatform, resolvedArch, distribution ?? undefined)
   if (preparedRuntime !== undefined) buildPaths.dsh = preparedRuntime
   // electron-builder merges extraMetadata into the packaged manifest, so a build version here reaches
   // the artifact names, the update feed, and the installed app.getVersion() the updater compares against.
@@ -109,20 +113,20 @@ export function createElectronBuilderConfig(
   const packaged = resolveDesktopBuildCommit(env)
   return {
     appId,
-    protocols: [{ name: product?.name ?? 'DeepSeek Harness', schemes: [product?.protocol ?? 'dsh'] }],
+    protocols: [{ name: distribution?.name ?? 'DeepSeek Harness', schemes: [distribution?.protocol ?? 'dsh'] }],
     extraMetadata: {
       dshDesktopAppId: appId,
-      ...(product === undefined ? {} : { dshDesktopProduct: { ...product, appId } }),
+      ...(distribution == null ? {} : { dshDesktopProduct: { ...distribution, appId } }),
       dshDesktopUpdateChannel: update?.channel ?? 'nightly',
       ...(policy === undefined ? {} : { dshMandatoryUpdatePolicy: policy }),
       ...buildVersion === productVersion ? {} : { version: buildVersion },
       ...packaged === undefined ? {} : { dshBuildCommit: packaged.commit, dshBuildDirty: packaged.dirty },
     },
-    productName: product?.name ?? 'DeepSeek Harness',
+    productName: distribution?.name ?? 'DeepSeek Harness',
     // The default copyright uses author.name; this line names the product instead.
     copyright: `Copyright © ${new Date().getFullYear()} \${productName}`,
     // Unsigned builds carry their own suffix so a shared file can never pass for a release artifact.
-    artifactName: `${product?.artifactStem ?? 'deepseek-harness'}-\${version}-\${os}-\${arch}${output.suffix}.\${ext}`,
+    artifactName: `${distribution?.artifactStem ?? 'deepseek-harness'}-\${version}-\${os}-\${arch}${output.suffix}.\${ext}`,
     directories: { output: output.directory },
     asar: true,
     electronDist: buildPaths.electron,
@@ -161,17 +165,17 @@ export function createElectronBuilderConfig(
     asarUnpack: unpack,
     extraResources: [
       { from: buildPaths.runtime, to: 'runtime' },
-      { from: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)), to: 'icon.png' },
+      { from: brandIcon(distribution?.artifactStem === 'uwork-next' ? 'icon.png' : 'icon-windows.png'), to: 'icon.png' },
       // Windows tray bitmaps; macOS keeps the Dock and ships no menu bar icon.
-      ...(packagesWindows ? [{ from: fileURLToPath(new URL('../resources/tray-windows.ico', import.meta.url)), to: 'tray.ico' }] : []),
+      ...(packagesWindows ? [{ from: brandIcon(distribution?.artifactStem === 'uwork-next' ? 'icon.ico' : 'tray-windows.ico'), to: 'tray.ico' }] : []),
     ],
     mac: {
-      icon: fileURLToPath(new URL('../resources/icon-macos.png', import.meta.url)),
+      icon: brandIcon(distribution?.artifactStem === 'uwork-next' ? 'icon.icns' : 'icon-macos.png'),
       category: 'public.app-category.developer-tools',
       // macOS matches the application locale against this bundle, not Electron Framework resources.
       extendInfo: {
         CFBundleLocalizations: ['en', 'zh_CN', 'ja', 'es', 'fr', 'de', 'ru', 'pt'],
-        NSMicrophoneUsageDescription: 'DeepSeek Harness uses your microphone to transcribe speech into message drafts.',
+        NSMicrophoneUsageDescription: `${distribution?.name ?? 'DeepSeek Harness'} uses your microphone to transcribe speech into message drafts.`,
       },
       // Ad-hoc signing keeps the modified Electron executable runnable without a Developer ID.
       identity: unsigned ? '-' : macOSSigning?.signingIdentity,
@@ -247,7 +251,7 @@ export function createElectronBuilderConfig(
       )
     },
     win: {
-      icon: fileURLToPath(new URL('../resources/icon-windows.png', import.meta.url)),
+      icon: brandIcon(distribution?.artifactStem === 'uwork-next' ? 'icon.png' : 'icon-windows.png'),
       forceCodeSigning: !unsigned,
       signtoolOptions: {
         sign: windowsSigner,

@@ -22,6 +22,8 @@ const sourceSchema = z.strictObject({
   productVersion: z.string().min(1),
   version: z.string().min(1),
   testReleaseId: z.string().regex(/^[a-f0-9]{32}$/u).nullable(),
+  // Absent on legacy retained builds; preserve the packaged feed identity independently of later checkouts.
+  distribution: z.strictObject({ artifactStem: z.string().regex(/^[a-z0-9][a-z0-9-]*$/u) }).optional(),
   // Older retained manifests carry this flag; manual publication does not depend on it.
   publishRequested: z.boolean().optional(),
   qualification: z.enum(['signed', 'notarized', 'unsigned', 'unnotarized']),
