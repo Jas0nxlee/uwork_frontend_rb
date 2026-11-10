@@ -31,7 +31,7 @@
 
 | 本次交付 | 必须达到的结果 |
 |---|---|
-| UWork 全套 UI 体系 | UWork 字标与 U 图标、UCAS 首页、浅暗主题、助理/开发模式、侧栏及任务导航、对话/输入/模型选择、设置和工作台呈现协调统一；已有 dsh 能力保持可用 |
+| UWork 全套 UI 体系 | UWork 字标与 U 图标、UCAS 首页、浅暗主题、侧栏及任务导航、对话/输入/模型选择、设置和工作台呈现协调统一；模式沿用 dsh 原生 Agent 预设与现有选择入口，已有 dsh 能力保持可用 |
 | 企业微信扫码及自动模型配置 | 桌面首次启动能扫码；登录后自动得到企业网关、Key、模型和默认选择；重启、失效、注销、切换账号行为完整 |
 | 插件市场的公司市场 | 对接源项目已有 PUBLIC SkillHub，完成发现、搜索、安装、更新、启停、卸载和重启恢复 |
 | 使用统计中的企业网关 | 账号、网关、套餐、周期用量、趋势、模型分布和同步状态来自企业服务端 |
@@ -79,7 +79,7 @@ flowchart TB
 | 拟定包 | 所属目录 | 职责 |
 |---|---|---|
 | `dsh-uwork-desktop` | `packages/bundle/uwork-desktop` | UWork 装配清单、默认配置、启停官方品牌/账号贡献、内置恢复集合 |
-| `dsh-client-ui-uwork` | `packages/client/ui-uwork` | 主题、品牌、首页、导航、助理/开发呈现；必要时拆出布局展示包 |
+| `dsh-client-ui-uwork` | `packages/client/ui-uwork` | 主题、品牌、首页和导航；必要时拆出布局展示包 |
 | `dsh-uwork-enterprise` | `packages/credentials/uwork-enterprise` | 企微身份状态机、企业 API、网关账号与用量读取、脱敏 Remote API、企业账号 Client 面 |
 | `dsh-uwork-model-provisioning` | `packages/llm/uwork-model-provisioning` | 企业模型目录、凭证引用、受管 provider 配置及默认模型策略；复用 pi-ai 传输 |
 | `dsh-uwork-company-market` | `packages/boot/uwork-company-market` | PUBLIC SkillHub 目录、版本、校验下载、技能启停和安装记录，含市场 Client 面 |
@@ -108,14 +108,12 @@ flowchart TB
 |---|---|---|
 | 首开与主首页 | U 图标、UWork 字标、UCAS 深浅背景、问候、企微登录状态 | 静态启动资源 + `conversation.hero.frame` + onboarding |
 | 主题与组件 | 字体层级、颜色、间距、控件尺寸、分割线、弹窗、菜单、Toast、空/错/加载状态 | `ctx.theme.register/overrideTokens`；复用 dsh primitives，必要时局部展示组件 |
-| 导航与模式 | 紧凑侧栏、项目/任务树、助理/开发单按钮、折叠与恢复 | 品牌/sidebar slots、layout、workspace/session、插件自己的偏好状态 |
+| 导航与布局 | 紧凑侧栏、项目/任务树、折叠与恢复 | 品牌/sidebar slots、layout、workspace/session |
 | 对话与输入 | 消息排版、工具卡片、模型菜单、附件、草稿、队列、停止、审批和询问 | 保留 dsh Session 事件及动作，仅调整渲染/组合 |
 | 工作台 | 文件、终端、浏览器、文档标签与既有只读预览 | dsh 资源身份、rightbar/dock slots、预览注册 |
 | 设置 | 一般、外观、账号、模型、技能/MCP、插件、使用统计及本次新增能力 | settings slots；不复制旧配置对象 |
 | 公司市场和企业网关 | 保持源入口位置和信息层级，融入统一 UWork 页面 | `plugins.tab`、settings/global panel slots |
 | 原生桌面 | 窗口标题、菜单、关于、安装界面、应用图标、拖拽区与窗口按钮避让 | 集中品牌资源及 Desktop carrier |
-
-助理/开发模式先列出源模式对导航、工具显示、工作台和快捷动作的实际影响，再映射到 dsh。纯显示差异可由 UI 状态控制；任何影响工具或模型可见内容的差异必须走 preset/Session 机制并有回放证据，不能用未记录的 Client 布尔值改变执行。
 
 主题覆盖不依赖上游内部 CSS 类名穿透。源样式与仓库的字重、圆角、焦点和可访问性规范冲突时，用 dsh 组件实现同一信息层级，不复制全局禁用焦点等规则。原生顶栏分别遵守 Mac 交通灯和 Windows 标题栏区域。
 
@@ -249,7 +247,7 @@ Electron userData/sessionData 与上述 home 分开配置。首个并行试用�
 | P1 可安装底座 | 两平台 UWork Preview 包、`.uwork` 隔离、内置 bundle、可替换 Welcome | 品牌资源与路径/打包分工 | 4–7 人日 |
 | P2 企业闭环 | 扫码、恢复、自动模型配置、账号隔离、企业网关统计 | 企业认证依赖完成后统计与 UI 可并行 | 6–10 人日 |
 | P3 公司市场 | 公开技能目录、安装/更新/启停/卸载、重启及实际调用 | 与其他 UI 并行 | 3–5 人日 |
-| P4 完整 UI | 本次范围全部页面的 UWork 视觉/交互及模式映射 | 底座稳定后按页面拆分 | 6–10 人日 |
+| P4 完整 UI | 本次范围全部页面的 UWork 视觉与交互 | 底座稳定后按页面拆分 | 6–10 人日 |
 | P6 发行验收 | 两平台签名包、真实登录/计量、离线启动、升级恢复、文档 | 平台可并行，失败须回归受影响链路 | 5–8 人日 |
 
 移除 Office 阶段后，原分项规划合计 28–46 人日，仅为估算，不是交付承诺；后续按企业服务联调、UI 差距和签名资源重新评估。关键路径为企业闭环及两平台发行验证，不能用 Web 页面通过抵扣。

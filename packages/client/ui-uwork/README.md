@@ -55,7 +55,7 @@ None.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- Only branding and home decoration are provided; navigation, modes, and the remaining page layouts are pending.
+- Only branding and home decoration are provided; navigation and the remaining page layouts are pending.
 - Native installer icons, window menus, and enterprise sign-in are outside this package.
 
 <a id="dev-note"></a>

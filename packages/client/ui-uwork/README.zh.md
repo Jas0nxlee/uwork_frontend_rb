@@ -55,7 +55,7 @@ kind: "package-reference"
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 当前只提供品牌与首页装饰；导航、模式及其余页面布局尚未迁入。
+- 当前只提供品牌与首页装饰；导航及其余页面布局尚未迁入。
 - 不负责原生安装图标、窗口菜单或企业登录。
 
 <a id="dev-note"></a>
