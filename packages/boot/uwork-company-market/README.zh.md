@@ -23,7 +23,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-将 `baseUrl` 配置为 SkillHub 部署根地址。除回环 HTTP 部署外必须使用 HTTPS。服务提供 `uworkCompanyMarket/search` Remote，参数为搜索文本、从零开始的结果页码及协作取消信号。空文本列出所有技能，否则按标题、规范 slug 或摘要做不区分大小写的子串搜索。返回页包含来源、匹配总数及下一页或 null。
+将 `baseUrl` 配置为 SkillHub 部署根地址。除回环 HTTP 部署外必须使用 HTTPS。服务提供 `uworkCompanyMarket/search` Remote，参数为搜索文本、从零开始的结果页码及协作取消信号。空文本列出所有技能，否则按标题、规范 slug 或摘要做不区分大小写的子串搜索。返回页包含来源、匹配总数及下一页或 null。全局 `global--slug` 别名返回为裸 slug，使目录与持久安装记录使用同一身份。
 
 `installations`、`installSkill`、`setEnabled` 和 `uninstallSkill` 只管理该来源的内容。默认存储目录是 `<profile.dir>/company-skills`，可用绝对路径 `installDir` 覆盖。两者均不存在时仅提供目录浏览。停用保留安装内容；卸载删除激活记录，恢复流程清理自有版本。不触碰个人技能或 npm 插件。
 

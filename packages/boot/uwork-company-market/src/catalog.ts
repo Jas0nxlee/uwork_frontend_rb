@@ -2,6 +2,7 @@
 import { z } from 'zod'
 import { RemoteError } from '@deepseek-ai/dsh-typert-protocol'
 import type { CatalogOptions, CompanySkill } from './types.ts'
+import { skillIdentity } from './download.ts'
 import { discoverApi, marketJson } from './transport.ts'
 
 const slug = z.string().min(1).max(256).regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/u)
@@ -18,6 +19,11 @@ const pageSchema = z.object({
 
 function invalid(): never {
   throw new RemoteError('uwork-company-market/unavailable', 'Invalid company market response', { reason: 'invalid' })
+}
+
+function catalogIdentity(value: string): string {
+  try { return skillIdentity(value).canonical }
+  catch (error) { void error; return invalid() }
 }
 
 /**
@@ -54,12 +60,13 @@ export async function readCatalog(options: CatalogOptions, signal: AbortSignal):
     const parsed = pageSchema.safeParse(await marketJson(url.href, options, signal))
     if (!parsed.success) invalid()
     for (const skill of parsed.data.items) {
-      if (seen.has(skill.slug)) invalid()
+      const canonical = catalogIdentity(skill.slug)
+      if (seen.has(canonical)) invalid()
       if (items.length >= options.maxItems) {
         throw new RemoteError('uwork-company-market/unavailable', 'Company market catalog exceeds its limit', { reason: 'limit' })
       }
-      seen.add(skill.slug)
-      items.push({ slug: skill.slug, title: skill.displayName, summary: skill.summary, version: skill.latestVersion.version })
+      seen.add(canonical)
+      items.push({ slug: canonical, title: skill.displayName, summary: skill.summary, version: skill.latestVersion.version })
     }
     if (parsed.data.nextCursor === null) return items
     const next = Number(parsed.data.nextCursor)

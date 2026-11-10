@@ -23,7 +23,7 @@ Read the PUBLIC SkillHub catalog selected by the [UWork desktop bundle](../../bu
 <a id="use-this-package"></a>
 ## Use this package
 
-Configure `baseUrl` with the SkillHub deployment root. HTTPS is required except for loopback HTTP deployments. The service exposes the `uworkCompanyMarket/search` Remote with text, a zero-based result page and cooperative cancellation. Empty text lists all skills; otherwise search is a case-insensitive substring of title, canonical slug or summary. The returned page includes the source, total matches and the next page or null.
+Configure `baseUrl` with the SkillHub deployment root. HTTPS is required except for loopback HTTP deployments. The service exposes the `uworkCompanyMarket/search` Remote with text, a zero-based result page and cooperative cancellation. Empty text lists all skills; otherwise search is a case-insensitive substring of title, canonical slug or summary. The returned page includes the source, total matches and the next page or null. Global `global--slug` aliases are returned as bare slugs so catalog and saved installations share one identity.
 
 `installations`, `installSkill`, `setEnabled` and `uninstallSkill` manage only this source's content. Installation storage defaults to `<profile.dir>/company-skills`; an absolute `installDir` overrides it. Without either location the service remains catalog-only. Disabled skills remain installed; uninstall removes their activation record and recovery cleans their owned versions. Personal skills and npm plugins are untouched.
 

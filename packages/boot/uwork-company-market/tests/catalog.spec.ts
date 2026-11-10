@@ -43,7 +43,7 @@ describe('company catalog', () => {
     expect(await market.search('Summary weather', 0, signal())).toMatchObject({ total: 1 })
     expect(await market.search('Title global', 0, signal())).toMatchObject({ total: 1 })
     expect(await market.search('missing', 0, signal())).toMatchObject({ total: 0, items: [], nextPage: null })
-    expect(await market.search('', 2, signal())).toMatchObject({ page: 2, nextPage: null, items: [{ slug: 'global--archive' }] })
+    expect(await market.search('', 2, signal())).toMatchObject({ page: 2, nextPage: null, items: [{ slug: 'archive' }] })
     for (const [url, options] of fetcher.mock.calls) {
       expect(typeof url === 'string' ? url : url instanceof URL ? url.href : url.url).toMatch(/^https:\/\/market.example\/skillhub\//u)
       expect(options).toMatchObject({ redirect: 'error', credentials: 'omit', headers: { accept: 'application/json, application/zip' } })
@@ -54,6 +54,8 @@ describe('company catalog', () => {
   it.each([
     [{ items: [], nextCursor: 0 }],
     [{ items: [skill(), skill()], nextCursor: null }],
+    [{ items: [skill('weather'), skill('global--weather')], nextCursor: null }],
+    [{ items: [skill('team--')], nextCursor: null }],
     [{ items: [skill()], nextCursor: 1 }, { items: [skill()], nextCursor: null }],
     [{ items: [], nextCursor: '' }],
     [{ items: [], nextCursor: -1 }],
