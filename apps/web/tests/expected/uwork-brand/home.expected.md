@@ -1,0 +1,7 @@
+- img "UWork"
+- text: Preview
+- button "Choose workspace"
+- button "Standard mode"
+- textbox "Choose workspace"
+- button "Add files or run commands" [disabled]
+- button "Send message" [disabled]

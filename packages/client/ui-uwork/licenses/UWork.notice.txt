@@ -1,0 +1,4 @@
+UWork brand artwork adapted from https://github.com/Jas0nxlee/UWork
+Source revision: 48d84801c064907aad0b7c7994f1c2f59231db9c
+Original files: packages/ui/src/components/ui/UWorkLogo.tsx; packages/ui/src/assets/UCAS.svg
+Original license: Apache-2.0 (UWork.Apache-2.0.txt).

@@ -1,0 +1,33 @@
+.sidebarWordmark,
+.heroWordmark {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+  color: var(--dsw-alias-label-primary);
+  background: currentColor;
+  mask: url('./assets/wordmark.svg') left center / contain no-repeat;
+}
+
+.sidebarWordmark {
+  width: 67.5px;
+  height: 24px;
+}
+
+.heroWordmark {
+  width: 90px;
+  height: 32px;
+}
+
+.frame {
+  display: contents;
+}
+
+.ucas {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  color: var(--dsw-alias-label-primary);
+  background: currentColor;
+  mask: url('./assets/ucas.svg') center calc(50% - 120px) / min(80%, 480px) auto no-repeat;
+}

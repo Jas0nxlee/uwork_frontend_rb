@@ -638,3 +638,22 @@ it('requires the OAR license while rejecting unrelated payload files', () => {
       .toEqual([expect.stringContaining('package.json files must be')])
   }
 })
+
+it('requires both UWork artwork notices while rejecting unrelated package payloads', () => {
+  const dir = 'packages/client/ui-uwork'
+  const manifest = JSON.parse(readFileSync(new URL(`../${dir}/package.json`, import.meta.url), 'utf8')) as WorkspaceManifest['manifest']
+  const files = [
+    'locale/*.json', 'lib/index.js', 'lib/client.js', 'lib/assets',
+    'licenses/UWork.Apache-2.0.txt', 'licenses/UWork.notice.txt', 'lib/types/**/*.d.ts',
+  ]
+  expect(expectedDshPackageFiles(manifest)).toEqual(files)
+  expect(checkWorkspaceManifest({ dir, manifest })).toEqual([])
+  for (const invalidFiles of [
+    files.filter(file => file !== 'licenses/UWork.Apache-2.0.txt'),
+    files.filter(file => file !== 'licenses/UWork.notice.txt'),
+    [...files, 'licenses/unrelated.txt'],
+  ]) {
+    expect(checkWorkspaceManifest({ dir, manifest: { ...manifest, files: invalidFiles } }))
+      .toEqual([expect.stringContaining('package.json files must be')])
+  }
+})

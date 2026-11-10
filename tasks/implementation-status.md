@@ -2,7 +2,7 @@
 
 ## 当前进展
 
-2026-11-10，在 `codex/uwork-desktop-migration` 分支开始实施。当前完成的是桌面身份与路径基础改造，整个迁移尚未完成。[执行清单](todo.md)保留尚未验收的事项。
+2026-11-10，在 `codex/uwork-desktop-migration` 分支开始实施。当前已完成桌面身份与路径基础改造，并增加可选的 UWork 品牌层；整个迁移尚未完成。[执行清单](todo.md)保留尚未验收的事项。
 
 发行元数据集中在 `apps/desktop/package.json` 的 `dshDesktopProduct`，由 Electron Main、捆绑 CLI、构建与产物脚本共同读取。默认产品名和 Electron 存储目录为 UWork Next Preview，home 为 `.uwork/harness-preview`，外部协议为 `uwork-next`，安装包前缀为 `uwork-next`。显式 DSH_HOME 优先，未声明发行元数据的普通 dsh 清单保持原行为。
 
@@ -18,7 +18,7 @@
 
 ## 尚未完成
 
-UWork UI、企微与模型自动配置、公司 SkillHub 市场、企业网关统计尚未接入。图标、原生文案、独立更新部署及 bundle 恢复集合尚未完成。当前只是可编译、经源码测试的基础改造，没有生成并验收 Windows x64 或 Mac ARM 安装包，也没有进行真实登录或安装升级验收。
+UWork UI 目前只有可选的品牌层；企微与模型自动配置、公司 SkillHub 市场、企业网关统计尚未接入。原生图标、文案、独立更新部署及 bundle 恢复集合尚未完成。当前没有生成并验收 Windows x64 或 Mac ARM 安装包，也没有进行真实登录或安装升级验收。
 
 Office 编辑按用户最新要求延期。正式发布前仍须完成执行清单全部必交付项。
 
@@ -30,6 +30,10 @@ Office 编辑按用户最新要求延期。正式发布前仍须完成执行清�
 
 ## UWork 界面插件接入
 
-空白首页新增独立的 `conversation.hero.brand.title` 插槽，和既有图标、背景插槽共同支持品牌呈现。没有占用者时仍显示原本的本地化标题；替换标题保留预览标记和常驻输入框。UWork 品牌插件及桌面 bundle 尚未接入，T06/T19 继续待验收。
+空白首页新增独立的 `conversation.hero.brand.title` 插槽，和既有图标、背景插槽共同支持品牌呈现。没有占用者时仍显示原本的本地化标题；替换标题保留预览标记和常驻输入框。
 
 Conversation 相关 55 个测试文件、904 项测试通过；build:artifacts 八项及其后的 build:check 两项通过；默认页面构建产物启动两项通过；doc-sync 43 项通过。此检查验证默认页面和标题扩展能力，不代表 UWork 全套 UI 或桌面发行已完成。
+
+已增加可选的 `client/ui-uwork` 和 `bundle/uwork-desktop`，通过侧栏、首页标题、图标和背景插槽显示 UWork/UCAS 资源，bundle 同时禁用默认品牌层。源资产保留 Apache-2.0 许可与来源记录，许可文件列入严格发行清单。真实 CLI 的临时 profile 按 base → web-app → uwork-desktop 顺序成功解析；真实浏览器固定快照重放通过，并检查了 1680/1000px 窗口中的浅暗品牌页面。当前还没有内置到默认桌面 profile 和签名 runtime，T06 只完成建立 bundle 的子项；完整布局、模式、问候和其余 UI 仍待迁入，T19 未整项验收。
+
+新品牌插件与 bundle 共七项测试通过，源码语句、分支、函数和行覆盖率均为 100%。发行约束测试与品牌测试共 174 项通过；约束和八语言元数据检查通过。最新运行时代码 build:artifacts 八项及其后的 build:check 两项通过，doc-sync 43 项通过。完整 lint 只有未改动文件中的既有 unused-disable 警告，新增文件最终 lint 通过。两个新包的独立 publint 通过，保留仓库既有 src 导出提示；完整 hygiene 的 vendor rescope 检查有六个迁移前问题，publint 读取 inspector 生成目录中的副本文件阻塞后被终止，不能报为全量通过。

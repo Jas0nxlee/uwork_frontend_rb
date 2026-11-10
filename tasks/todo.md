@@ -53,7 +53,7 @@
 
 ### T06 UWork bundle 装配
 
-- [ ] 建立 UWork Desktop bundle，先以最小可挂载服务验证构建图。
+- [x] 建立 UWork Desktop bundle，先以最小可挂载服务验证构建图。
 - [ ] 纳入签名 runtime、Desktop 内置 bundles、profile 初始化及恢复集合。
 - [ ] 禁用 UWork 组成中的官方品牌/强制账号引导贡献，不移除用户自定义模型能力。
 

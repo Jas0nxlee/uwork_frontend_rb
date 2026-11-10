@@ -1,0 +1,2 @@
+<!-- Adapted from UWorkLogo.tsx: trimmed the transparent right margin; Apache-2.0, see licenses/UWork.notice.txt. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 64"><text x="0" y="49" fill="currentColor" font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif" font-size="54" font-weight="800" letter-spacing="-2">UWork</text></svg>
