@@ -45,3 +45,13 @@ Conversation 相关 55 个测试文件、904 项测试通过；build:artifacts �
 真实构建后的 Desktop Host 已完成初始化、启动、故障恢复和再次启动。两次启动图均包含 UWork 且不含默认品牌模块，首页 HTML 包含 UWork Client 启动数据。此测试不调用模型或真实企业服务；两个独立进程并发执行同一流程也通过。必需包声明、补丁缺失及补丁损坏的回归检查通过。测试不构成 Electron GUI、签名资源或安装包验收，T06 的跨平台成品检查仍待后续打包完成。
 
 相关九个单元测试文件通过；后续新增的缺失 bundle 声明回归用例及所在文件共 40 项通过，一项既有 Windows 路径大小写用例在 Mac 跳过。最终 build:artifacts 八项和后续 build:check 两项通过；构建后 Host 测试通过。冻结锁文件安装、包依赖策略和 workspace 发行约束检查通过。完整 lint 仅报告未修改文件中既有的 unused-disable 警告。
+
+## 续接开发：页面基线、公开协议与 home 隔离
+
+2026-11-10 从远端迁移分支续接；按用户最新指定读取 `Jas0nxlee/UWork_frontend` 的 `main`。新增[页面与状态基线](ui-baseline.md)，覆盖 U01–U12 的源组件、现有目标插槽、导航、状态和两平台检查维度；T01 的源码表已完成，源实际页面截图及交互验收仍待执行。原 `Jas0nxlee/UWork` 只作为前期调研来源，后续迁移以用户指定仓库的当前源码为准。
+
+[企业与市场协议基线](protocol-baseline.md)记录匿名组织、SkillHub 发现、目录、版本解析和实际技能下载结果，五个请求均返回 HTTP 200。weather 1.0.0 的复合文件指纹与服务端一致；脱敏公开样本保存在 `tasks/fixtures/public-services/`，下载技能没有安装或执行。真实企微、Key、模型、统计及签名输入尚未取得，不将公开请求结果计为 T02 全项通过。
+
+扩展既有 built Desktop profile 测试：在中文和空格用户路径内创建旧 `.uwork/v2`、`.uwork/cli`、`.dsh` 哨兵，先通过构建后的发行 bootstrap 解析默认 home，再启动真实 Host、调用捆绑 CLI 与其 pnpm 子进程、恢复必需 bundles 并再次启动。CLI 的 `list --depth=0 --json` 返回新 home 的真实 desktop profile 路径；显式 DSH_HOME 指向没有 desktop profile 的旧根时正确拒绝，未偷偷回到产品默认。全过程旧哨兵 SHA-256 和 mtime 不变。该测试在本次 Linux x64 环境已通过单进程及两个独立并发进程，不构成原生 Electron、跨平台安装或全部插件写路径验收，T05/T06 剩余项继续保留。
+
+本次环境初始 Node 缺少开发头文件，首次 build:artifacts 在 native addon 阶段失败；改用工作区内官方同版本 Node 24.22.1（包含头文件）后，build:artifacts 八项通过。最新测试编辑后的 build:check 两项通过；相关产品身份/bundles 单元测试共 20 项通过，test:docs 21 项及 doc-sync 43 项通过。完整 lint 通过，仅有未改动 `client-ui-cot-translation` 文件中的既有 unused-disable 警告；任务目录五份文档的链接/段落及四份 JSON 另行检查通过。测试没有修改生产运行时代码或模型/Session 输出。

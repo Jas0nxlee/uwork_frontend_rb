@@ -16,6 +16,8 @@ weather 版本响应中的 `downloadUrl` 为 `/api/v1/skills/global/weather/vers
 
 本轮对 ZIP 非目录文件按路径排序，逐文件 SHA-256 后拼成 `path:fileSha256` 加真实 LF，再计算 SHA-256，得到 `sha256:0f94e922d372c96950684af5fa48cccc91f7f374335f2be9acb53eabd7cf3dd0`，与 resolve 一致。这只验证该样本的内容一致性，不构成发布签名或技能安装验收。
 
+匿名请求 `/api/keys`、`/api/usage`、`/api/usage/models`、`/api/usage/stats?period=7d&metric=requests` 均返回 HTTP 401 与包含 `error` 的 JSON；这验证未认证拒绝，尚不确定有效登录后的 403/429 或过期语义。
+
 匿名 `GET /api/auth/authorize` 在北京 org_id 和源文档回调地址下返回 HTTP 200，内容是 `open.weixin.qq.com/connect/oauth2/authorize` 的 `snsapi_base` 链接，含微信网页应用 appid，不含原生 CorpApp 扫码需要的 agentId。未跟随链接或登录；不能把此 appid 当 CorpID，也不能据此补造桌面扫码配置。
 
 ## 企业协议来源与待固定样本

@@ -1,9 +1,12 @@
 /** Built Desktop profile startup and recovery without model calls or installed application data. */
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs'
+import { execFile } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { promisify } from 'node:util'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { expect, it, onTestFinished } from 'vitest'
 import { loadProfileDirectory } from '@deepseek-ai/dsh-app-boot'
 import { desktopProduct } from '../../desktop-host/src/product.ts'
@@ -29,7 +32,20 @@ it('boots the configured UWork layer and preserves it after external-plugin reco
   const manifest = JSON.parse(readFileSync(appManifest, 'utf8')) as { version: string }
   const bundles = resolveDesktopProfileBundles(desktopProduct(manifest))
   expect(bundles).toEqual(['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-uwork-desktop'])
-  const home = join(root, 'home')
+  const userHome = join(root, '用户 home')
+  const home = join(userHome, '.uwork/harness-preview')
+  const legacyFiles = ['.uwork/v2/settings.json', '.uwork/cli/settings.json', '.dsh/settings.json']
+    .map(name => join(userHome, name))
+  for (const file of legacyFiles) {
+    mkdirSync(join(file, '..'), { recursive: true })
+    writeFileSync(file, '{"legacy":"must remain unchanged"}\n')
+  }
+  const legacySnapshot = () => legacyFiles.map(file => ({
+    hash: createHash('sha256').update(readFileSync(file)).digest('hex'),
+    mtime: statSync(file).mtimeMs,
+  }))
+  const originalLegacy = legacySnapshot()
+  writeFileSync(join(root, 'package.json'), JSON.stringify(manifest))
   const runtime = prepareDevelopmentProject({ projectDir: join(root, 'project'),
     cliDir: join(repository, 'apps/cli'), hostDir: join(repository, 'apps/desktop-host'),
     dependencyDir: join(repository, 'node_modules/.pnpm/node_modules'),
@@ -60,9 +76,30 @@ it('boots the configured UWork layer and preserves it after external-plugin reco
   writeFileSync(profileManifest, JSON.stringify(current))
   const environment = { ...Object.fromEntries(Object.entries(process.env).filter(([name]) =>
     /^(?:path|systemroot|windir|comspec|pathext)$/iu.test(name))),
-  DSH_HOME: home, HOME: home, USERPROFILE: home, DSH_TELEMETRY_MODE: 'DISABLED' }
+  HOME: userHome, USERPROFILE: userHome, DSH_TELEMETRY_MODE: 'DISABLED' }
+  const bootstrap = await promisify(execFile)(process.execPath, ['--input-type=module', '--eval', `
+    import { initializeDesktopHome } from ${JSON.stringify(pathToFileURL(join(repository, 'apps/desktop-host/lib/product.js')).href)};
+    initializeDesktopHome(${JSON.stringify(manifest)}, process.env);
+    console.log(process.env.DSH_HOME);
+  `], { env: environment })
+  expect(bootstrap.stdout.trim()).toBe(home)
+  const hostEnvironment = { ...environment, DSH_HOME: home }
+  const pnpmDir = join(root, 'runtime/primary-runtime/dependencies/pnpm')
+  cpSync(realpathSync(join(repository, 'apps/desktop/node_modules/pnpm')), pnpmDir, { recursive: true })
+  const runCli = (launchEnvironment: NodeJS.ProcessEnv) =>
+    promisify(execFile)(process.execPath, ['--input-type=module', '--eval', `
+      import { runDesktopCli } from ${JSON.stringify(pathToFileURL(join(repository, 'apps/desktop-host/lib/cli.js')).href)};
+      process.argv = [process.execPath, 'dsh', 'plugin', '--profile', 'desktop', 'list', '--depth=0', '--json'];
+      await runDesktopCli(${JSON.stringify(runtime)}, ${JSON.stringify(join(root, 'runtime'))});
+    `], { env: launchEnvironment, maxBuffer: 4 * 1024 * 1024 })
+  const checkCli = async () => {
+    const result = await runCli(environment)
+    expect(JSON.parse(result.stdout)).toMatchObject([{ name: 'dsh-profile-desktop', path: paths.profile }])
+    expect(legacySnapshot()).toEqual(originalLegacy)
+  }
+  await checkCli()
   const boot = async () => {
-    resources.host = new DesktopHostProcess(process.execPath, runtime, paths.profile, undefined, environment)
+    resources.host = new DesktopHostProcess(process.execPath, runtime, paths.profile, undefined, hostEnvironment)
     const ready = await resources.host.start()
     expect(JSON.stringify(ready.injections)).toContain('@deepseek-ai/dsh-client-ui-uwork')
     expect(JSON.stringify(ready.injections)).not.toContain('@deepseek-ai/dsh-client-ui-brand-official')
@@ -80,4 +117,9 @@ it('boots the configured UWork layer and preserves it after external-plugin reco
   expect(readFileSync(join(userBundle, 'bundle.yml'), 'utf8')).toBe('[]\n')
   await manager.applyRelease()
   await boot()
+  await checkCli()
+  const uninitialized = runCli({ ...environment, DSH_HOME: join(userHome, '.dsh') })
+  await expect(uninitialized).rejects.toMatchObject({ code: 1 })
+  await expect(uninitialized).rejects.toThrow('initialize its profile')
+  expect(legacySnapshot()).toEqual(originalLegacy)
 })
