@@ -44,7 +44,7 @@
     "@deepseek-ai/dsh-tool-executor-native": "workspace:*"
   },
   "exports": {
-    "./product": {
+    ".": {
       "types": "./lib/types/product.d.ts",
       "default": "./lib/product.js"
     }

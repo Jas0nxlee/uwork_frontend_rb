@@ -71,7 +71,7 @@ import { DesktopUpdateOverlays } from './update-overlay.ts'
 import { DesktopQuitConfirmation } from './quit-confirmation.ts'
 import { DesktopTray } from './tray.ts'
 import { DesktopBackgroundNotice } from './background-notice.ts'
-import { desktopProduct, initializeDesktopHome } from '@deepseek-ai/dsh-desktop-host/product'
+import { desktopProduct, initializeDesktopHome } from '@deepseek-ai/dsh-desktop-host'
 
 const productManifest: unknown = JSON.parse(await readFile(join(app.getAppPath(), 'package.json'), 'utf8'))
 const product = desktopProduct(productManifest)
