@@ -70,6 +70,8 @@ Queue 预览启用空白折叠和文档边缘 trim，保留 emoji，并使用 CS
 
 root 作用域的 hoc Slot `conversation.hero.frame` 在所有阶段都包裹滚动区，因此首页结束时各层不会让输入框重新挂载。它的所有者 props 提供 `hero`，仅在独立 Conversation 的空白首页时为 true。各层需让滚动区仍是 body 的直接 flex 子项，例如使用 `display: contents`。首页阶段，绘制背景的 Conversation 根元素隔离层叠上下文：层中负 `z-index` 的装饰画在该背景之上、所有 Conversation 内容之下，包括输入区的接管面板。其他阶段根元素不参与层叠隔离，未经 portal 的 Conversation 浮层仍能盖住悬浮在中栏上方的 AppFrame 元素。各层自行处理输入。没有占用者时，body 保持原样。
 
+空白首页通过独立的 root 作用域 Slot `conversation.hero.brand.mark` 和 `conversation.hero.brand.title` 提供品牌图标与标题。标题默认使用本地化首页文案；替换标题保留预览标记和常驻输入框。
+
 宽度小于 768px 时，Web 的 View 标签与页头的 20px 左内边距对齐。桌面客户端和较宽的 Web 窗口保留标签额外的 8px 左内边距。
 
 共享图片插槽属性将展示选择与持久化引用分开：`thumbnail` 请求完整缩放的附件列表缩略图，`compact` 请求裁剪的图片方块。每张图片可通过可选的 `label` 提供无障碍展示名称；加载和缓存标识仍使用原始附件引用。`MessageImagesContentInput` 为 root 作用域的 `conversation.images.content` Factory 增加可选的完整 `MessageImageLabels`。消息、工具及 Factory 输入显式携带视图提供的授权 `loadImage` 回调；读取和 URL 缓存仍由资源所有者负责。[ui-attachment](../ui-attachment/README.zh.md) 提供该 Factory，负责渲染与灯箱。
