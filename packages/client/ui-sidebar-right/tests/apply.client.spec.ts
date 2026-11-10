@@ -403,37 +403,3 @@ it('closes captured pane tabs and rechecks tabs moved or closed while their menu
   expect(instance.getSnapshot().bySession[SESSION]!.layout.tabs[fresh.id]).toBeUndefined()
   instance.clearPersisted()
 })
-
-it('waits for each dirty tab in a batch close and stops after cancellation', async () => {
-  const h = await boot()
-  onTestFinished(async () => { await h.ctx.fiber.dispose() })
-  vi.stubGlobal('document', { activeElement: null, querySelectorAll: () => [] })
-  onTestFinished(() => { vi.unstubAllGlobals() })
-  const handle = h.seat('rightbar.session').store as ReturnType<typeof createSidebarRightStore>
-  const instance = handle.create(SESSION)
-  instance.clearPersisted()
-  instance.actions.open(SESSION)
-  const add = (title: string) => {
-    instance.actions.openContent(SESSION, { kind: 'text', contentId: `dsh-resource://file/session/s/${title}`, title }, () => {})
-    return Object.values(instance.getSnapshot().bySession[SESSION]!.layout.tabs).find(tab => tab.title === title)!
-  }
-  const anchor = add('anchor'), first = add('dirty-first'), second = add('dirty-second'), third = add('dirty-third')
-  const answers: Array<(allow: boolean) => void> = []
-  const prepare = vi.fn(() => new Promise<boolean>((resolve) => { answers.push(resolve) }))
-  const release = h.ctx.sidebarRight.registerCloseGuard('text', { prepare, failed: vi.fn() })
-  onTestFinished(release)
-  const paneId = instance.getSnapshot().bySession[SESSION]!.layout.activePaneId
-  const menu = h.menus.resolve({ kind: 'tab', value: { sessionId: SESSION, paneId, tab: anchor } })
-  menu.select('sidebar.close/right')
-  await vi.waitFor(() => { expect(answers).toHaveLength(1) })
-  expect(instance.getSnapshot().bySession[SESSION]!.layout.tabs[first.id]).toBeDefined()
-  answers[0]!(true)
-  await vi.waitFor(() => { expect(answers).toHaveLength(2) })
-  expect(instance.getSnapshot().bySession[SESSION]!.layout.tabs[first.id]).toBeUndefined()
-  answers[1]!(false)
-  await new Promise<void>((resolve) => { setTimeout(resolve, 0) })
-  expect(prepare).toHaveBeenCalledTimes(2)
-  expect(instance.getSnapshot().bySession[SESSION]!.layout.tabs[second.id]).toBeDefined()
-  expect(instance.getSnapshot().bySession[SESSION]!.layout.tabs[third.id]).toBeDefined()
-  instance.clearPersisted()
-})

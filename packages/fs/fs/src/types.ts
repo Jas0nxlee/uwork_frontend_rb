@@ -124,14 +124,6 @@ export type FsWriteIntent =
   | { kind: 'createIfAbsent' }
   | { kind: 'replaceIfVersion'; version: FsVersion }
 
-/** Outcome of a raw-byte publication, without text decoding or a diff basis. */
-export interface FsBinaryWriteOutcome {
-  /** Whether the target was created or replaced. */
-  operation: 'create' | 'update'
-  /** Opaque version produced by publication. */
-  version: FsVersion
-}
-
 /** Outcome of a full-file write. */
 export interface FsWriteOutcome {
   /** Whether the write created a new file or replaced an existing one. */

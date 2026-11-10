@@ -6,7 +6,7 @@ import { SubprocessExecutableNotFoundError } from '@deepseek-ai/dsh-subprocess'
 import { LocalSubprocessRuntime } from '@deepseek-ai/dsh-subprocess-local'
 import { z } from 'zod'
 import { createHelperHarness as helper } from './fixtures/helper.ts'
-import { binaryWriteResultSchema, hunkSchema, moveOptionsSchema, moveResultSchema, deleteResultSchema, targetSchema, writeResultSchema, editResultSchema, infoSchema, entriesSchema } from '../src/schemas.ts'
+import { hunkSchema, moveOptionsSchema, moveResultSchema, deleteResultSchema, targetSchema, writeResultSchema, editResultSchema, infoSchema, entriesSchema } from '../src/schemas.ts'
 
 
 const policy = (workspaceRoot: string) => ({ mode: 'workspace-write', workspaceRoot })
@@ -26,32 +26,6 @@ describe.skipIf(process.platform === 'win32')('SSH helper runtime', () => {
       expect(await test.client.request('fs.resolve', { path: '.' }, targetSchema)).toMatchObject({ targetKey: test.root })
       await test.client.request('close', {}, z.null())
       await expect(test.client.request('fs.stat', {}, z.unknown())).rejects.toThrow('not accepting')
-    } finally { await test.close() }
-  })
-
-  it('publishes binary documents through guarded and policy-checked helper dispatch', async () => {
-    const test = await helper()
-    try {
-      const target = await test.client.request('fs.resolve', { path: 'office.docx' }, targetSchema)
-      const created = await test.client.request('fs.writeBytes', {
-        target, content: 'AP8=', expected: { kind: 'createIfAbsent' }, policy: policy(test.root),
-      }, binaryWriteResultSchema)
-      expect([...await readFile(`${test.root}/office.docx`)]).toEqual([0, 255])
-      await expect(test.client.request('fs.writeBytes', {
-        target, content: 'AQ==', expected: { kind: 'replaceIfVersion', version: 'stale' }, policy: policy(test.root),
-      }, binaryWriteResultSchema)).rejects.toMatchObject({ code: 'FS_STALE_VERSION' })
-      await expect(test.client.request('fs.writeBytes', {
-        target, content: 'AQ==', expected: { kind: 'replaceIfVersion', version: created.version },
-        policy: { mode: 'read-only', workspaceRoot: test.root },
-      }, binaryWriteResultSchema)).rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
-      await expect(test.client.request('fs.writeBytes', {
-        target, content: Buffer.alloc(8 * 1024 * 1024 + 1).toString('base64'),
-        expected: { kind: 'replaceIfVersion', version: created.version }, policy: policy(test.root),
-      }, binaryWriteResultSchema)).rejects.toMatchObject({ code: 'FS_TOO_LARGE' })
-      expect([...await readFile(`${test.root}/office.docx`)]).toEqual([0, 255])
-      await expect(test.client.request('fs.writeBytes', {
-        target, content: 'not-base64', expected: { kind: 'createIfAbsent' }, policy: policy(test.root),
-      }, binaryWriteResultSchema)).rejects.toThrow()
     } finally { await test.close() }
   })
 

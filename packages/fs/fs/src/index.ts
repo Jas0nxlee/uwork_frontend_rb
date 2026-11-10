@@ -13,7 +13,6 @@ import type { SandboxExecutionPolicy, SandboxMode } from '@deepseek-ai/dsh-sandb
 import type { PatchHunk } from '@deepseek-ai/dsh-fs-patch'
 import { FsError } from './types.ts'
 import type {
-  FsBinaryWriteOutcome,
   FsDeleteOutcome,
   FsMoveOutcome,
   FsDirEntry,
@@ -35,7 +34,6 @@ export {
   FsVersion,
 } from './types.ts'
 export type {
-  FsBinaryWriteOutcome,
   FsDeleteOutcome,
   FsMoveOutcome,
   FsMoveSourceFailure,
@@ -268,20 +266,6 @@ export abstract class FileSystem extends Service {
    * @returns one entry per direct child, in stable name order.
    */
   abstract listDir(target: FsTarget, signal?: AbortSignal): Promise<FsDirEntry[]>
-
-  /**
-   * Atomically publish raw bytes with an explicit create or versioned replacement intent.
-   * @param target - resolved destination in this provider.
-   * @param content - full binary document snapshot.
-   * @param expected - required create-only or observed-version intent.
-   * @param signal - aborts before publication.
-   * @param sandboxPolicy - per-call write policy; omission uses the provider default.
-   * @returns publication kind and resulting version, without decoded content.
-   */
-  abstract writeBytes(
-    target: FsTarget, content: Uint8Array, expected: FsWriteIntent,
-    signal?: AbortSignal, sandboxPolicy?: SandboxExecutionPolicy,
-  ): Promise<FsBinaryWriteOutcome>
 
   /**
    * Atomically create or replace UTF-8 text. `expected` guards intent and

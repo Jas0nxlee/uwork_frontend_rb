@@ -2781,11 +2781,6 @@
       "doc": "docs/subsystems/forge.md",
       "symbol": "ForgeReviewResult",
       "source": "packages/experimental/forge/src/types.ts"
-    },
-    {
-      "doc": "docs/subsystems/filesystem.md",
-      "symbol": "FsBinaryWriteOutcome",
-      "source": "packages/fs/fs/src/types.ts"
     }
   ]
 }

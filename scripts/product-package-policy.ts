@@ -16,8 +16,6 @@ export interface ProductPackagePolicy {
  * Optional integrations may be reached by an optional bundle without becoming default capabilities.
  */
 export const PRODUCT_PACKAGE_POLICY: Readonly<Record<string, ProductPackagePolicy>> = {
-  'packages/bundle/uwork-office-editor': { category: 'optional', reason: 'Explicit Office editor layer for UWork profiles.' },
-  'packages/client/ui-uwork-office-editor': { category: 'optional', reason: 'Office editing UI selected by the UWork Office bundle.' },
   'packages/core/agent-tool-presentation': { category: 'optional', reason: 'Deprecated selector retained for existing executor configurations.' },
   'packages/browser-use/browser-use': { category: 'optional', reason: 'Service definition used by explicitly selected browser providers.' },
   'packages/computer-use/computer-use': { category: 'optional', reason: 'Service definition used by explicitly selected computer providers.' },

@@ -64,19 +64,6 @@ describe('SSH filesystem provider', () => {
     expect(fs.sandboxMode).toBe('read-only')
   })
 
-  it('transfers raw-byte saves with explicit intent and sandbox policy', async () => {
-    const { fs, dispatch } = await setup()
-    const result = { operation: 'create', version: 'binary-v1' }
-    dispatch.mockResolvedValue(result)
-    expect(await fs.writeBytes(target, new Uint8Array([0, 255]), { kind: 'createIfAbsent' })).toEqual(result)
-    expect(dispatch).toHaveBeenCalledWith('fs.writeBytes', {
-      target, content: 'AP8=', expected: { kind: 'createIfAbsent' },
-      policy: { mode: 'read-only', workspaceRoot: '/remote/work' },
-    }, undefined)
-    dispatch.mockRejectedValue(new RemoteOperationError('denied', 'FS_SANDBOX_DENIED'))
-    await expect(fs.writeBytes(target, new Uint8Array(), { kind: 'createIfAbsent' })).rejects.toBeInstanceOf(FsError)
-  })
-
   it('compares POSIX canonical identities without accepting a sibling prefix', async () => {
     const { fs } = await setup()
     const makeTarget = (path: string): FsTarget => ({ targetKey: FsTargetKey(path), displayPath: path })

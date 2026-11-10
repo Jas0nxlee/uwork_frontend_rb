@@ -605,7 +605,7 @@ function writeIoError(path: string, error: unknown): unknown {
  * onto the empty temp before writing and preserves the target descriptor at publication.
  * Node write errors become FsError; permission refusals use FS_PERMISSION_DENIED and other I/O uses FS_IO_ERROR.
  * @param absolutePath - destination; missing parent directories are created.
- * @param content - the full UTF-8 text or raw bytes to write.
+ * @param content - the full UTF-8 text to write.
  * @param mode - POSIX mode to apply, or undefined to retain the new-file default.
  * @param signal - cancellation checked before final publication.
  * @param internals - Test hook for pinning temp names and observing the staged file.
@@ -613,16 +613,15 @@ function writeIoError(path: string, error: unknown): unknown {
  * `createIfAbsent` publishes with a hard-link no-replace primitive, so a concurrent creator's
  * file is preserved and this write is rejected with `FS_NOT_OBSERVED`; `existingDestination`
  * states whether Windows must preserve destination security and defaults to mode presence,
- * while moves pass destination presence separately from the source mode. `beforePublish`
- * rechecks a caller-owned version after staging and before publication.
+ * while moves pass destination presence separately from the source mode.
  */
 export async function writeFileAtomic(
   absolutePath: string,
-  content: string | Uint8Array,
+  content: string,
   mode: number | undefined,
   signal: AbortSignal | undefined,
   internals: FsIoInternals = {},
-  options: { displayPath?: string; createIfAbsent?: boolean; existingDestination?: boolean; beforePublish?: () => Promise<void> } = {},
+  options: { displayPath?: string; createIfAbsent?: boolean; existingDestination?: boolean } = {},
 ): Promise<void> {
   const displayPath = options.displayPath ?? absolutePath
   const existingDestination = options.existingDestination ?? mode !== undefined
@@ -662,8 +661,6 @@ export async function writeFileAtomic(
     await handle.close()
     handle = undefined
 
-    throwIfAborted(signal, 'write')
-    await options.beforePublish?.()
     throwIfAborted(signal, 'write')
     if (options.createIfAbsent) {
       try {

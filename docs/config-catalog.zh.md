@@ -744,26 +744,6 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-client-ui-trajectory -->
 
-<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-client-ui-uwork-office-editor -->
-<a id="deepseek-aidsh-client-ui-uwork-office-editor"></a>
-
-## `@deepseek-ai/dsh-client-ui-uwork-office-editor`
-
-- `source`: [`packages/client/ui-uwork-office-editor/src/config.ts:5`](../packages/client/ui-uwork-office-editor/src/config.ts)
-
-```ts config-catalog
-/** Word parser admission and export validation settings. */
-export interface Config {
-  /** Maximum expanded main-document XML size before engine import. */
-  maxDocumentXmlBytes: number
-  /** Minimum retained visible text proportion on export. */
-  minRetainedTextRatio: number
-  /** Author attributed to edits recorded as Word revisions. */
-  revisionAuthor: string
-}
-```
-<!-- END GENERATED config-catalog:@deepseek-ai/dsh-client-ui-uwork-office-editor -->
-
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-compaction-basic -->
 <a id="deepseek-aidsh-compaction-basic"></a>
 
@@ -1578,7 +1558,7 @@ export interface Config {
 
 ## `@deepseek-ai/dsh-fs-local`
 
-- `source`: [`packages/fs/fs-local/src/index.ts:52`](../packages/fs/fs-local/src/index.ts)
+- `source`: [`packages/fs/fs-local/src/index.ts:51`](../packages/fs/fs-local/src/index.ts)
 
 ```ts config-catalog
 /** Configuration for the local filesystem backend. */
@@ -4656,25 +4636,6 @@ export type ApprovalPolicy = 'ask' | 'never'
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-user-approval -->
 
-<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-uwork-office-storage -->
-<a id="deepseek-aidsh-uwork-office-storage"></a>
-
-## `@deepseek-ai/dsh-uwork-office-storage`
-
-- `inject`: `fs` · `sandboxPolicy`
-- `source`: [`packages/document/uwork-office-storage/src/index.ts:20`](../packages/document/uwork-office-storage/src/index.ts)
-
-```ts config-catalog
-/** Deployment limits applied to every read and save. */
-export interface Config {
-  /** Inclusive complete document byte cap, before Base64 encoding. */
-  readonly maxDocumentBytes: number
-  /** Concurrent reads and saves admitted by this provider. */
-  readonly maxConcurrentOperations: number
-}
-```
-<!-- END GENERATED config-catalog:@deepseek-ai/dsh-uwork-office-storage -->
-
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-web -->
 <a id="deepseek-aidsh-web"></a>
 
@@ -5160,6 +5121,5 @@ export interface Config {
 | `@deepseek-ai/dsh-util-time` | — | [`packages/util/time/src/index.ts`](../packages/util/time/src/index.ts) |
 | `@deepseek-ai/dsh-util-values` | — | [`packages/util/values/src/index.ts`](../packages/util/values/src/index.ts) |
 | `@deepseek-ai/dsh-util-workspace-path` | — | [`packages/util/workspace-path/src/index.ts`](../packages/util/workspace-path/src/index.ts) |
-| `@deepseek-ai/dsh-uwork-office-editor` | — | [`packages/bundle/uwork-office-editor/src/index.ts`](../packages/bundle/uwork-office-editor/src/index.ts) |
 | `@deepseek-ai/dsh-win32-process` | — | [`packages/subprocess/win32-process/src/index.ts`](../packages/subprocess/win32-process/src/index.ts) |
 <!-- END GENERATED config-catalog:library -->

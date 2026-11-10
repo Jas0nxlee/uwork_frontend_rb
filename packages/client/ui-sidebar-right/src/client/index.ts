@@ -60,7 +60,7 @@ export type { ExpandButtonProps } from './shell/ExpandButton.tsx'
 export type { SidebarRightState, SurfaceState } from './stores.ts'
 export type {
   ISidebarRight, SidebarRightOpenResourceOptions, SidebarRightOpenTabOptions,
-  SidebarRightPlacement, SidebarRightCloseHandler, SidebarRightCloseGuard, SurfaceActions,
+  SidebarRightPlacement, SidebarRightCloseHandler, SurfaceActions,
 } from './service.ts'
 export type {
   SidebarRightGuideBox, SidebarRightGuideEntry, SidebarRightTabClaim, SidebarRightTabDefinition,
@@ -144,16 +144,15 @@ export function apply(ctx: ClientContext): void {
       const tabId = tab.id
       const tabs = controller.menuTabs(sessionId, paneId, tabId)
       if (!tabs.close && tabs.all.length === 0) return []
-      const closeMany = async (ids: readonly TabId[]): Promise<void> => {
+      const closeMany = (ids: readonly TabId[]) => {
         for (const id of ids) {
-          if (controller.menuTabs(sessionId, paneId, tabId).all.includes(id)
-            && !await controller.requestCloseIn(sessionId, id)) return
+          if (controller.menuTabs(sessionId, paneId, tabId).all.includes(id)) controller.closeIn(sessionId, id)
         }
       }
       return [
         { id: 'close', commandId: 'page.close' as ShortcutCommandId, icon: { key: 'sidebar.close' }, label: t('menu.close'), disabled: !tabs.close, run: () => { if (controller.menuTabs(sessionId, paneId, tabId).close) controller.closeIn(sessionId, tabId) } },
-        { id: 'others', label: t('menu.closeOthers'), disabled: tabs.all.length === 0, run: () => closeMany(tabs.all) },
-        ...tabs.right.length === 0 ? [] : [{ id: 'right', label: t('menu.closeRight'), run: () => closeMany(tabs.right) }],
+        { id: 'others', label: t('menu.closeOthers'), disabled: tabs.all.length === 0, run: () => { closeMany(tabs.all) } },
+        ...tabs.right.length === 0 ? [] : [{ id: 'right', label: t('menu.closeRight'), run: () => { closeMany(tabs.right) } }],
       ]
     },
   }), 'sidebar: menu actions')

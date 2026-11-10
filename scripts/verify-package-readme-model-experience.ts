@@ -85,9 +85,6 @@ const SENTENCE_MODEL_EXPERIENCE: Readonly<Record<string, SentenceContract>> = {
   'packages/browser-use/browser-use': { kind: 'none', reason: 'The registry only reserves a provider name; providers own browser tools and Session resources.' },
   'packages/experimental/browser-use-runtime': { kind: 'indirect', reason: 'Browser providers call the library to own resources and expose upstream MCP tools.' },
   'packages/computer-use/computer-use': { kind: 'none', reason: 'The registry only reserves provider names; providers own all model-facing tools and guidance.' },
-  'packages/client/ui-uwork-office-editor': { kind: 'none', reason: 'Office editing and file publication add no model input.' },
-  'packages/bundle/uwork-office-editor': { kind: 'none', reason: 'Composes Office editing without model-facing contributions.' },
-  'packages/document/uwork-office-storage': { kind: 'none', reason: 'Office editor file operations do not construct model input or Session events.' },
   'packages/document/office-to-pdf': { kind: 'none', reason: 'The provider returns PDF bytes without constructing model input.' },
 
   'packages/credentials/deepseek-account': { kind: 'none', reason: 'Account authorization registers no model context or tools; credentials affect HTTP authentication only.' },

@@ -1551,12 +1551,6 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'one entry per direct child, in stable name order.',
       },
       {
-        signature: 'abstract writeBytes( target: FsTarget, content: Uint8Array, expected: FsWriteIntent, signal?: AbortSignal, sandboxPolicy?: SandboxExecutionPolicy, ): Promise<FsBinaryWriteOutcome>',
-        description: 'Atomically publish raw bytes with an explicit create or versioned replacement intent.',
-        parameters: [{ name: 'target', description: 'resolved destination in this provider.' }, { name: 'content', description: 'full binary document snapshot.' }, { name: 'expected', description: 'required create-only or observed-version intent.' }, { name: 'signal', description: 'aborts before publication.' }, { name: 'sandboxPolicy', description: 'per-call write policy; omission uses the provider default.' }],
-        returns: 'publication kind and resulting version, without decoded content.',
-      },
-      {
         signature: 'abstract writeText( target: FsTarget, content: string, expected?: FsWriteIntent, signal?: AbortSignal, sandboxPolicy?: SandboxExecutionPolicy, ): Promise<FsWriteOutcome>',
         description: 'Atomically create or replace UTF-8 text. `expected` guards intent and staleness; omission allows unconditional overwrite.',
         parameters: [{ name: 'target', description: 'the resolved target to write.' }, { name: 'content', description: 'the full new file content.' }, { name: 'expected', description: 'the write intent guarding the write; omit for unconditional.' }, { name: 'signal', description: 'aborts before atomic publication takes effect.' }, { name: 'sandboxPolicy', description: 'the per-call mode and workspace root this write runs under; a sandboxing backend fences the write by it, the bare backend ignores it. Omit to leave the backend its own default.' }],
@@ -4303,37 +4297,6 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
-    key: 'uworkOfficeStorage',
-    summary: 'Optional Office editor backend; every mutation uses the calling Session\'s current write policy.',
-    description: 'Optional Office editor backend; every mutation uses the calling Session\'s current write policy.',
-    methods: [
-      {
-        signature: '@Remote capabilities(session: Session, signal: AbortSignal): Promise<OfficeEditorCapabilities>',
-        description: 'Query editor admission hints without granting file access or changing policy.',
-        parameters: [{ name: 'session', description: 'authorized live Session whose current policy is reported.' }, { name: 'signal', description: 'caller cancellation.' }],
-        returns: 'document cap and current Session policy; saving remains subject to workspace and filesystem checks.',
-      },
-      {
-        signature: '@Remote stat(session: Session, path: string, signal: AbortSignal): Promise<OfficeFileStatus>',
-        description: 'Inspect a regular Office file without reading its bytes.',
-        parameters: [{ name: 'session', description: 'authorized live Session used to resolve relative paths.' }, { name: 'path', description: 'absolute source or Session-relative path.' }, { name: 'signal', description: 'caller cancellation.' }],
-        returns: 'canonical source identity and byte size when the backend reports it.',
-      },
-      {
-        signature: '@Remote read(session: Session, path: string, signal: AbortSignal): Promise<OfficeFileSnapshot>',
-        description: 'Read a complete DOCX, XLSX, or PPTX with a stable observed filesystem version.',
-        parameters: [{ name: 'session', description: 'authorized live Session supplied by the Remote lookup.' }, { name: 'path', description: 'absolute source or path relative to the Session workspace.' }, { name: 'signal', description: 'caller cancellation; plugin unload also cancels the read.' }],
-        returns: 'the complete bytes and the version to use for a later guarded save.',
-      },
-      {
-        signature: '@Remote save(session: Session, request: OfficeFileSaveRequest, signal: AbortSignal): Promise<OfficeFileSaved>',
-        description: 'Publish a complete serialized document under an explicit create or observed-version intent.',
-        parameters: [{ name: 'session', description: 'authorized live Session whose current policy controls the mutation.' }, { name: 'request', description: 'destination, complete Base64 snapshot, and required write intent.' }, { name: 'signal', description: 'cancellation before publication; an interrupted response requires reloading before retry.' }],
-        returns: 'confirmed publication metadata; never implies that newer editor changes were saved.',
-      },
-    ],
-  },
-  {
     key: 'web',
     summary: 'The web access service.',
     description: 'The web access service. Registered as `ctx.web` (one instance per context) and exposed to Clients as the `web` Remote namespace (`listProviders`).\n\nSelection semantics (resolved at execution time, never order-dependent):\n\n- A configured id that is registered and `available()` → that provider.\n- A configured id not registered → `WEB_PROVIDER_CONFIGURED_MISSING`.\n- A configured id registered but unavailable → `WEB_PROVIDER_CONFIGURED_UNAVAILABLE`.\n- No id configured, exactly one registered usable provider → that provider.\n- No id configured, multiple usable providers → `WEB_PROVIDER_AMBIGUOUS`.\n- No id configured, no usable provider → `WEB_PROVIDER_UNAVAILABLE`.',
@@ -6597,10 +6560,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ForgeWorktreeWaiting = \'creation\' | \'restoration\';',
   },
   {
-    name: 'FsBinaryWriteOutcome',
-    declaration: 'export interface FsBinaryWriteOutcome {\n    operation: \'create\' | \'update\';\n    version: FsVersion;\n}',
-  },
-  {
     name: 'FsDeleteOutcome',
     declaration: 'export interface FsDeleteOutcome {\n    before: string | null;\n}',
   },
@@ -7445,28 +7404,8 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ObjectJsonSchema = JsonSchemaNode & {\n    type: \'object\';\n};',
   },
   {
-    name: 'OfficeEditorCapabilities',
-    declaration: 'export interface OfficeEditorCapabilities {\n    readonly maxDocumentBytes: number;\n    readonly writePolicy: SandboxMode;\n}',
-  },
-  {
     name: 'OfficeExtension',
     declaration: 'export type OfficeExtension = \'doc\' | \'docx\' | \'xls\' | \'xlsx\' | \'ppt\' | \'pptx\';',
-  },
-  {
-    name: 'OfficeFileSaved',
-    declaration: 'export interface OfficeFileSaved {\n    readonly absolutePath: string;\n    readonly version: FsVersion;\n    readonly bytes: number;\n    readonly operation: \'create\' | \'update\';\n}',
-  },
-  {
-    name: 'OfficeFileSaveRequest',
-    declaration: 'export interface OfficeFileSaveRequest {\n    readonly path: string;\n    readonly contentBase64: string;\n    readonly expected: FsWriteIntent;\n}',
-  },
-  {
-    name: 'OfficeFileSnapshot',
-    declaration: 'export interface OfficeFileSnapshot extends OfficeFileStatus {\n    readonly bytes: number;\n    readonly data: Uint8Array;\n}',
-  },
-  {
-    name: 'OfficeFileStatus',
-    declaration: 'export interface OfficeFileStatus {\n    readonly absolutePath: string;\n    readonly version: FsVersion;\n    readonly bytes?: number;\n}',
   },
   {
     name: 'OfficeSourceKey',

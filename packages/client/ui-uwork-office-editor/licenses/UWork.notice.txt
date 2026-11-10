@@ -1,7 +1,0 @@
-Adapted Office editing code from Jas0nxlee/UWork
-Source: https://github.com/Jas0nxlee/UWork
-Source revision: 48d84801c064907aad0b7c7994f1c2f59231db9c
-Included test document: apps/zcode-cli/packages/office-runtime/fixtures/report.docx.
-Original license: Apache-2.0 (UWork.txt).
-Adaptations: DSH plugin integration, structured diagnostics, guarded asynchronous saves, and localized presentation.
-The MIT declaration covers the DSH integration; adapted UWork source retains Apache-2.0.

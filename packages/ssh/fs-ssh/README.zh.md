@@ -25,8 +25,6 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
-二进制保存传输 Base64 内容，并携带显式写入意图和沙箱策略。Helper 在调用文件系统 provider 前拒绝非法编码或超过 8 MiB 二进制传输限制的内容。
-
 将本提供方与 [`dsh-ssh`](../ssh/README.zh.md) 及 `sandboxPolicy` 一同挂载，并使用配套 SSH 子进程与沙箱提供方执行程序。本提供方没有配置字段：连接身份和默认工作区属于 `dsh-ssh`，文件效果模式属于 `sandboxPolicy`。
 
 `resolve()` 在远端主机上规范化路径。`processPath()` 与 `fileUrl()` 在同一个远端命名空间中标识文件，并不授予主机侧访问能力。文件 URL 对字面的百分号、反斜杠和换行进行编码，保留原文件名。`processPathFromHostPath()` 返回 `undefined`，因此需要已安装可执行文件或引导程序的消费方必须显式提供远端产物。
