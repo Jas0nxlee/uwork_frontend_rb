@@ -30,6 +30,9 @@ flowchart LR
   pkg_plugin_manager["plugin-manager"]
   svc_pluginManager["ctx.pluginManager<br/>Current-profile plugin and bundle management"]
   pkg_ui_settings_plugin_inventory["ui-settings-plugin-inventory"]
+  pkg_uwork_company_market["uwork-company-market"]
+  svc_uworkCompanyMarket["ctx.uworkCompanyMarket<br/>Public company skill catalog"]
+  pkg_client_ui_uwork_company_market["client-ui-uwork-company-market"]
   pkg_plugin_market["plugin-market"]
   svc_pluginMarket["ctx.pluginMarket<br/>Plugin market index reader"]
   pkg_client_ui_plugin_market["client-ui-plugin-market"]
@@ -472,6 +475,7 @@ flowchart LR
   pkg_typert_registry --> svc_typert
   pkg_user_approval --> svc_approval
   pkg_user_questions --> svc_userQuestions
+  pkg_uwork_company_market --> svc_uworkCompanyMarket
   pkg_web --> svc_web
   pkg_web_app --> svc_webApp
   pkg_web_deepseek_api --> svc_web
@@ -629,6 +633,7 @@ flowchart LR
   svc_typert --> pkg_api_gateway
   svc_typert --> pkg_typert_loader
   svc_userQuestions --> pkg_tool_ask_user
+  svc_uworkCompanyMarket --> pkg_client_ui_uwork_company_market
   svc_web --> pkg_tool_web
   svc_webApp --> pkg_harness_dev_context
   svc_webServer --> pkg_client_connection
@@ -659,6 +664,7 @@ flowchart LR
 | `ctx.hmr` | `core` | [`hmr`](../packages/boot/hmr) | - | [`app-boot`](../packages/boot/app-boot) | - | 负责模块和精确配置监听；应用修改共用其队列，自动重载等待应用文件锁。 |
 | `ctx.pluginRegistryProbe` | `core` | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | 在 Host 上并发比较公共安装源响应；初始安装源推荐由 Client 负责。 |
 | `ctx.pluginManager` | `core` | [`plugin-manager`](../packages/boot/plugin-manager) | - | [`plugin-manager`](../packages/boot/plugin-manager), `ui-settings-plugin-inventory` | - | 与 CLI 共享 profile 包操作，并向 Web 和 Agent 调用方分别报告持久状态与运行状态。 |
+| `ctx.uworkCompanyMarket` | `service` | [`uwork-company-market`](../packages/boot/uwork-company-market) | - | [`client-ui-uwork-company-market`](../packages/client/ui-uwork-company-market) | - | 发现并搜索配置的匿名 SkillHub 目录；技能内容安装由独立的所有者负责。 |
 | `ctx.pluginMarket` | `core` | [`plugin-market`](../packages/boot/plugin-market) | - | [`client-ui-plugin-market`](../packages/client/ui-plugin-market), [`plugin-market`](../packages/boot/plugin-market) | - | 获取并校验用户配置的索引源；安装通过插件管理器完成。 |
 | `ctx.profileContext` | `core` | [`app-boot`](../packages/boot/app-boot) | - | [`plugin-manager`](../packages/boot/plugin-manager) | - | dsh launcher 提供纯数据形式的 profile 位置与组合输入；重载调度由 dsh-hmr 负责。 |
 | `ctx.connection` | `core` | [`client-connection`](../packages/client/connection) | - | [`api-gateway`](../packages/api/gateway), [`host-frontend-static`](../packages/host/frontend-static) | - | 负责浏览器认证与共享 HTTP 请求分发；API 适配器注册端点和流。 |

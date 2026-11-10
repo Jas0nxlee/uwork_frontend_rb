@@ -1,0 +1,42 @@
+{
+  "extends": "../../../tsconfig.base.client.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../api/remotes/tsconfig.client.json"
+    },
+    {
+      "path": "../../boot/uwork-company-market"
+    },
+    {
+      "path": "../../typert/protocol"
+    },
+    {
+      "path": "../ui-renderer"
+    },
+    {
+      "path": "../ui-plugin-manager/tsconfig.client.json"
+    },
+    {
+      "path": "../ui-slots"
+    },
+    {
+      "path": "../ui-primitives"
+    },
+    {
+      "path": "../store"
+    },
+    {
+      "path": "../locale/tsconfig.client.json"
+    }
+  ]
+}

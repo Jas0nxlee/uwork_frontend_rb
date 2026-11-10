@@ -28,6 +28,10 @@
     // not declaration path aliases, keep each package/vendor source compiled
     // under its own tsconfig boundary.
     "paths": {
+      "@deepseek-ai/dsh-uwork-company-market": ["./packages/boot/uwork-company-market/src/index.ts"],
+      "@deepseek-ai/dsh-uwork-company-market/types": ["./packages/boot/uwork-company-market/src/types.ts"],
+      "@deepseek-ai/dsh-client-ui-uwork-company-market": ["./packages/client/ui-uwork-company-market/src/index.ts"],
+      "@deepseek-ai/dsh-client-ui-uwork-company-market/client": ["./packages/client/ui-uwork-company-market/src/client/index.ts"],
       "@deepseek-ai/dsh-client-ui-uwork": ["./packages/client/ui-uwork/src/index.ts"],
       "@deepseek-ai/dsh-client-ui-uwork/client": ["./packages/client/ui-uwork/src/client/index.ts"],
       "@deepseek-ai/dsh-desktop-host": ["./apps/desktop-host/src/product.ts"],

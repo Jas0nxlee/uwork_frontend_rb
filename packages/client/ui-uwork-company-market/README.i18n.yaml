@@ -1,0 +1,37 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/client/ui-uwork-company-market/README.md
+/:
+  en: 2abc50a1c39d0d91
+  zh: dbd8493b4057d619
+/deepseek-ai-dsh-client-ui-uwork-company-market:
+  en: 48ee596160968979
+  zh: c855794f7936fb99
+/deepseek-ai-dsh-client-ui-uwork-company-market/summary:
+  en: 4b10de206fa1cbfa
+  zh: 749a0a4c1014060c
+/deepseek-ai-dsh-client-ui-uwork-company-market/table-of-contents:
+  en: 23386452a66b2fbd
+  zh: 9a71b7a52fe624ac
+/deepseek-ai-dsh-client-ui-uwork-company-market/use-this-package:
+  en: b385392b41717763
+  zh: cbe35e16c654e504
+/deepseek-ai-dsh-client-ui-uwork-company-market/understand-the-implementation:
+  en: 485f5bbba2bfa113
+  zh: d66bcf556c7b4478
+/deepseek-ai-dsh-client-ui-uwork-company-market/further-exploration:
+  en: 2beb84a32a0ce304
+  zh: 4391877de409d676
+/deepseek-ai-dsh-client-ui-uwork-company-market/model-experience:
+  en: 09e7c14c5ba48367
+  zh: 0737a78e973fef91
+/deepseek-ai-dsh-client-ui-uwork-company-market/model-experience/kv-cache-effect:
+  en: 4f0eadf94828e66e
+  zh: 97d3eb3e79199354
+/deepseek-ai-dsh-client-ui-uwork-company-market/known-limitations-and-deferred-work:
+  en: 70a4457e48fa9b64
+  zh: f6fc9ced04409dda
+/deepseek-ai-dsh-client-ui-uwork-company-market/known-limitations-and-deferred-work/dev-note:
+  en: e0be0d9ecc26d87f
+  zh: 5e16beac03fc2169

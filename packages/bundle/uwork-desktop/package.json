@@ -36,7 +36,9 @@
     }
   },
   "dependencies": {
-    "@deepseek-ai/dsh-client-ui-uwork": "workspace:*"
+    "@deepseek-ai/dsh-client-ui-uwork": "workspace:*",
+    "@deepseek-ai/dsh-uwork-company-market": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-uwork-company-market": "workspace:*"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~"

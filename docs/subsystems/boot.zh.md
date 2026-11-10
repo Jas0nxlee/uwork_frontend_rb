@@ -61,6 +61,10 @@ interface PendingModule {
 }
 ```
 
+## 公司技能目录
+
+`CompanyMarketPage` 是公开公司目录的搜索结果：`source` 为配置的部署根地址；`items` 包含技能的规范 `slug`、显示 `title`、纯文本 `summary` 和发布 `version`；`total` 为完整目录中的匹配数，`page` 从零开始，`nextPage` 为下一结果页或 null。[公司市场服务](../../packages/boot/uwork-company-market/README.zh.md)负责匿名发现和有界分页；浏览不会创建已安装技能状态。
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -448,6 +452,25 @@ Source: [`packages/client/ui-plugin-manager/src/index.ts`](../../packages/client
 Current profile facts; scheduling and mutation belong to their callers.
 
 Source: [`packages/boot/app-boot/src/profile-context.ts`](../../packages/boot/app-boot/src/profile-context.ts)
+
+<a id="ctxuworkcompanymarket--companymarket"></a>
+
+### `ctx.uworkCompanyMarket` — `CompanyMarket`
+
+Reads and searches the complete configured PUBLIC SkillHub catalog.
+
+```ts cordis-catalog
+/**
+ * Search title, canonical slug and summary after reading the complete public catalog.
+ * @param text - case-insensitive substring; empty text lists all skills.
+ * @param page - zero-based result page.
+ * @param signal - caller cancellation, combined with the service lifetime and catalog deadline.
+ * @returns one bounded page, its total matches and the next result page.
+ */
+@Remote async search(text: string, page: number, signal: AbortSignal): Promise<CompanyMarketPage>
+```
+
+Source: [`packages/boot/uwork-company-market/src/index.ts`](../../packages/boot/uwork-company-market/src/index.ts)
 
 <a id="app-boot-events"></a>
 

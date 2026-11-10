@@ -1,0 +1,11 @@
+.section { display: flex; flex-direction: column; gap: 16px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.search { flex: 1; min-width: 120px; }
+.list { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.card { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: var(--dsw-radius-xl); border: 0.5px solid var(--dsw-alias-settings-card-stroke); background: var(--dsw-alias-settings-card-fill); }
+.heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.title { font-size: 14px; line-height: 20px; font-weight: 500; overflow-wrap: anywhere; }
+.meta { margin: 0; font-size: 12px; line-height: 18px; color: var(--dsw-alias-label-tertiary); overflow-wrap: anywhere; }
+.summary { margin: 0; font-size: 13px; line-height: 20px; color: var(--dsw-alias-label-secondary); overflow-wrap: anywhere; }
+.failure { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--dsw-alias-state-error-primary); }
+.skeleton { height: 72px; margin-bottom: 12px; border-radius: var(--dsw-radius-xl); background: var(--dsw-alias-bg-skeleton); }

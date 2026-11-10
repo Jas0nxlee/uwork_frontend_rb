@@ -10,6 +10,7 @@
   "include": [
     "apps/web/tests/home-whale.e2e.ts",
     "apps/web/tests/uwork-brand.e2e.ts",
+    "apps/web/tests/uwork-company-market.e2e.ts",
     "apps/web/tests/sidebar-drawer.e2e.ts",
     "apps/web/tests/creation-recommendations.e2e.ts",
     "apps/web/tests/plugin-recommendations.e2e.ts",
@@ -586,6 +587,7 @@
     { "path": "./packages/host/plugin-inventory" },
     { "path": "./packages/boot/plugin-manager" },
     { "path": "./packages/boot/plugin-market" },
+    { "path": "./packages/boot/uwork-company-market" },
     { "path": "./packages/llm/plugin-package-inventory-deepseek" },
     { "path": "./packages/host/webserver" },
     { "path": "./packages/sdk/client" },

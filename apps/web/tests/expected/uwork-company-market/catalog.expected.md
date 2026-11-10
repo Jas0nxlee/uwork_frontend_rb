@@ -1,0 +1,19 @@
+- region "Company market":
+  - textbox "Search company skills"
+  - button "Search"
+  - button "Refresh"
+  - paragraph: "Source: https://company.example/skillhub"
+  - paragraph: "Skills: 3"
+  - list:
+    - listitem:
+      - text: Weather Version 1.0.0
+      - paragraph: weather
+      - paragraph: Forecasts for travel and planning
+    - listitem:
+      - text: Video frames Version 2.0.0
+      - paragraph: video-frames
+      - paragraph: Extract video frames
+  - navigation "Page 1":
+    - button "Previous" [disabled]
+    - text: Page 1
+    - button "Next"

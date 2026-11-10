@@ -61,6 +61,10 @@ interface PendingModule {
 }
 ```
 
+## Company skill catalog
+
+`CompanyMarketPage` is the public company catalog search result: `source` is its configured deployment root; `items` contains each skill’s canonical `slug`, display `title`, plain `summary` and published `version`; `total` counts matches in the complete catalog, `page` is zero-based and `nextPage` is the next result page or null. The [company market service](../../packages/boot/uwork-company-market/README.md) owns anonymous discovery and bounded pagination; browsing creates no installed skill state.
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -448,6 +452,25 @@ Source: [`packages/client/ui-plugin-manager/src/index.ts`](../../packages/client
 Current profile facts; scheduling and mutation belong to their callers.
 
 Source: [`packages/boot/app-boot/src/profile-context.ts`](../../packages/boot/app-boot/src/profile-context.ts)
+
+<a id="ctxuworkcompanymarket--companymarket"></a>
+
+### `ctx.uworkCompanyMarket` — `CompanyMarket`
+
+Reads and searches the complete configured PUBLIC SkillHub catalog.
+
+```ts cordis-catalog
+/**
+ * Search title, canonical slug and summary after reading the complete public catalog.
+ * @param text - case-insensitive substring; empty text lists all skills.
+ * @param page - zero-based result page.
+ * @param signal - caller cancellation, combined with the service lifetime and catalog deadline.
+ * @returns one bounded page, its total matches and the next result page.
+ */
+@Remote async search(text: string, page: number, signal: AbortSignal): Promise<CompanyMarketPage>
+```
+
+Source: [`packages/boot/uwork-company-market/src/index.ts`](../../packages/boot/uwork-company-market/src/index.ts)
 
 <a id="app-boot-events"></a>
 

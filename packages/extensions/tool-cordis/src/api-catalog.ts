@@ -4297,6 +4297,19 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'uworkCompanyMarket',
+    summary: 'Reads and searches the complete configured PUBLIC SkillHub catalog.',
+    description: 'Reads and searches the complete configured PUBLIC SkillHub catalog.',
+    methods: [
+      {
+        signature: '@Remote async search(text: string, page: number, signal: AbortSignal): Promise<CompanyMarketPage>',
+        description: 'Search title, canonical slug and summary after reading the complete public catalog.',
+        parameters: [{ name: 'text', description: 'case-insensitive substring; empty text lists all skills.' }, { name: 'page', description: 'zero-based result page.' }, { name: 'signal', description: 'caller cancellation, combined with the service lifetime and catalog deadline.' }],
+        returns: 'one bounded page, its total matches and the next result page.',
+      },
+    ],
+  },
+  {
     key: 'web',
     summary: 'The web access service.',
     description: 'The web access service. Registered as `ctx.web` (one instance per context) and exposed to Clients as the `web` Remote namespace (`listProviders`).\n\nSelection semantics (resolved at execution time, never order-dependent):\n\n- A configured id that is registered and `available()` → that provider.\n- A configured id not registered → `WEB_PROVIDER_CONFIGURED_MISSING`.\n- A configured id registered but unavailable → `WEB_PROVIDER_CONFIGURED_UNAVAILABLE`.\n- No id configured, exactly one registered usable provider → that provider.\n- No id configured, multiple usable providers → `WEB_PROVIDER_AMBIGUOUS`.\n- No id configured, no usable provider → `WEB_PROVIDER_UNAVAILABLE`.',
@@ -5934,6 +5947,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CompactionTrigger',
     declaration: 'export type CompactionTrigger = \'pressure\' | \'context-overflow\';',
+  },
+  {
+    name: 'CompanyMarketPage',
+    declaration: 'export interface CompanyMarketPage {\n    readonly source: string;\n    readonly items: readonly CompanySkill[];\n    readonly total: number;\n    readonly page: number;\n    readonly nextPage: number | null;\n}',
+  },
+  {
+    name: 'CompanySkill',
+    declaration: 'export interface CompanySkill {\n    readonly slug: string;\n    readonly title: string;\n    readonly summary: string;\n    readonly version: string;\n}',
   },
   {
     name: 'CompositionRowEnablement',

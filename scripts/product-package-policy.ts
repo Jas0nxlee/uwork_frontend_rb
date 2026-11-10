@@ -17,6 +17,8 @@ export interface ProductPackagePolicy {
  */
 export const PRODUCT_PACKAGE_POLICY: Readonly<Record<string, ProductPackagePolicy>> = {
   'packages/bundle/uwork-desktop': { category: 'optional', reason: 'Product presentation selected by the UWork desktop distribution.' },
+  'packages/boot/uwork-company-market': { category: 'optional', reason: 'Public skill catalog selected by the UWork desktop bundle.' },
+  'packages/client/ui-uwork-company-market': { category: 'optional', reason: 'Company skill catalog presentation selected by the UWork desktop bundle.' },
   'packages/client/ui-uwork': { category: 'optional', reason: 'UWork brand presentation selected by its desktop bundle.' },
   'packages/core/agent-tool-presentation': { category: 'optional', reason: 'Deprecated selector retained for existing executor configurations.' },
   'packages/browser-use/browser-use': { category: 'optional', reason: 'Service definition used by explicitly selected browser providers.' },

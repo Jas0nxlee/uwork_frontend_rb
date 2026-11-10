@@ -171,6 +171,14 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'Shares profile package operations with the CLI and reports persisted and running state to Web and agent callers.',
   },
   {
+    key: 'uworkCompanyMarket',
+    pkg: 'uwork-company-market',
+    title: 'Public company skill catalog',
+    mode: 'service',
+    consumers: ['client-ui-uwork-company-market'],
+    note: 'Discovers and searches the configured anonymous SkillHub catalog; content installation has a separate owner.',
+  },
+  {
     key: 'pluginMarket',
     pkg: 'plugin-market',
     title: 'Plugin market index reader',

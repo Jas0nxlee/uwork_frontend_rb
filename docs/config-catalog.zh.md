@@ -4636,6 +4636,40 @@ export type ApprovalPolicy = 'ask' | 'never'
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-user-approval -->
 
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-uwork-company-market -->
+<a id="deepseek-aidsh-uwork-company-market"></a>
+
+## `@deepseek-ai/dsh-uwork-company-market`
+
+- `source`: [`packages/boot/uwork-company-market/src/index.ts:9`](../packages/boot/uwork-company-market/src/index.ts)
+
+```ts config-catalog
+/** Company market deployment and query limits. */
+export interface Config extends CatalogOptions {
+  /** Maximum search text length in UTF-16 code units. */
+  readonly maxQueryLength: number
+}
+
+/** Configured transport and catalog limits. */
+export interface CatalogOptions {
+  /** SkillHub deployment root; HTTPS except for loopback HTTP. */
+  readonly baseUrl: string
+  /** Deadline in milliseconds for discovery and every catalog page together. */
+  readonly timeoutMs: number
+  /** Maximum bytes in one discovery or catalog response. */
+  readonly maxResponseBytes: number
+  /** Requested skills per upstream page. */
+  readonly upstreamPageSize: number
+  /** Maximum upstream pages before refusing an incomplete catalog. */
+  readonly maxPages: number
+  /** Maximum skills retained while reading the complete catalog. */
+  readonly maxItems: number
+  /** Maximum matches returned in a search result page. */
+  readonly resultPageSize: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-uwork-company-market -->
+
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-web -->
 <a id="deepseek-aidsh-web"></a>
 
@@ -4959,6 +4993,7 @@ export interface Config {
 | `@deepseek-ai/dsh-client-ui-tool` | — | [`packages/client/ui-tool/src/index.ts`](../packages/client/ui-tool/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-user-questions` | — | [`packages/client/ui-user-questions/src/index.ts`](../packages/client/ui-user-questions/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-uwork` | — | [`packages/client/ui-uwork/src/index.ts`](../packages/client/ui-uwork/src/index.ts) |
+| `@deepseek-ai/dsh-client-ui-uwork-company-market` | — | [`packages/client/ui-uwork-company-market/src/index.ts`](../packages/client/ui-uwork-company-market/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-workflow-run` | — | [`packages/client/ui-workflow-run/src/index.ts`](../packages/client/ui-workflow-run/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-workspace` | — | [`packages/client/ui-workspace/src/index.ts`](../packages/client/ui-workspace/src/index.ts) |
 | `@deepseek-ai/dsh-command-compact` | `commands` · `compaction` | [`packages/compaction/command-compact/src/index.ts`](../packages/compaction/command-compact/src/index.ts) |

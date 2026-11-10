@@ -18,7 +18,7 @@
 
 ## 尚未完成
 
-UWork UI 目前只有品牌层；企微与模型自动配置、公司 SkillHub 市场、企业网关统计尚未接入。原生图标、文案和独立更新部署尚未完成。当前没有生成并验收 Windows x64 或 Mac ARM 安装包，也没有进行真实登录或安装升级验收。
+UWork UI 目前只有品牌层；企微与模型自动配置、公司技能安装和企业网关统计尚未接入；公司市场匿名目录已接入，见后续记录。原生图标、文案和独立更新部署尚未完成。当前没有生成并验收 Windows x64 或 Mac ARM 安装包，也没有进行真实登录或安装升级验收。
 
 Office 编辑按用户最新要求延期。正式发布前仍须完成执行清单全部必交付项。
 
@@ -55,3 +55,15 @@ Conversation 相关 55 个测试文件、904 项测试通过；build:artifacts �
 扩展既有 built Desktop profile 测试：在中文和空格用户路径内创建旧 `.uwork/v2`、`.uwork/cli`、`.dsh` 哨兵，先通过构建后的发行 bootstrap 解析默认 home，再启动真实 Host、调用捆绑 CLI 与其 pnpm 子进程、恢复必需 bundles 并再次启动。CLI 的 `list --depth=0 --json` 返回新 home 的真实 desktop profile 路径；显式 DSH_HOME 指向没有 desktop profile 的旧根时正确拒绝，未偷偷回到产品默认。全过程旧哨兵 SHA-256 和 mtime 不变。该测试在本次 Linux x64 环境已通过单进程及两个独立并发进程，不构成原生 Electron、跨平台安装或全部插件写路径验收，T05/T06 剩余项继续保留。
 
 本次环境初始 Node 缺少开发头文件，首次 build:artifacts 在 native addon 阶段失败；改用工作区内官方同版本 Node 24.22.1（包含头文件）后，build:artifacts 八项通过。最新测试编辑后的 build:check 两项通过；相关产品身份/bundles 单元测试共 20 项通过，test:docs 21 项及 doc-sync 43 项通过。完整 lint 通过，仅有未改动 `client-ui-cot-translation` 文件中的既有 unused-disable 警告；任务目录五份文档的链接/段落及四份 JSON 另行检查通过。测试没有修改生产运行时代码或模型/Session 输出。
+
+## 公司市场匿名目录（T14）
+
+`boot/uwork-company-market` 提供独立的 `uworkCompanyMarket/search` Remote，`client/ui-uwork-company-market` 通过既有 `plugins.tab` 提供公司市场。UWork bundle 装配两者并固定初始 SkillHub 来源；普通 dsh Web 未启用此产品层时不增加入口。客户端不访问企业身份或 npm 安装动作，服务请求不携带授权头，内置来源没有删除操作。当前目录只读，技能内容安装、启停和 provider 仍由 T15–T16 实现。
+
+Host 校验 HTTPS（回环测试允许 HTTP）、同源发现、数值游标、唯一技能和发布版本；拒绝跳转、畸形响应、循环游标及超限的不完整目录。全查询时限、字节、上游/结果页大小、页数、技能数及文本长度均为 Config 字段。搜索跨完整上游目录匹配标题、slug 和摘要；每次请求重新读取，无凭据、持久化缓存或安装写入。调用者取消和插件卸载会终止读取，卸载等待活动读取结束。
+
+Client 取消旧查询并丢弃迟到结果，刷新失败保留最近结果、提示旧数据并提供重试；读取成功前不对旧查询翻页。注册和生成的 Remote 命名空间随插件及 slot 所有者释放。真实浏览器发现并修复了动态 Remote 挂载后仍需单独声明 Cordis 注入的问题；这不是仅靠手工 Context 单测能证明的装配行为。
+
+构建后的 Host 实调 `https://aihub.ucas.com.cn/skillhub`，匿名读取 36 个技能。浏览器测试使用真实 Loader、Host、生成的 Remote 和 Plugins 页面，仅以本地 HTTP 服务替代外部 SkillHub；覆盖上游分页、结果分页、搜索、空结果、429 保留结果、重试、中文和英文。已生成并只读重放 owner-local ARIA 期望；原 UWork 品牌页面回放及构建后 Desktop Host/捆绑 CLI/恢复测试均通过；两个独立浏览器测试进程并发运行同一公司市场流程也通过。浅暗主题的 760px/1680px 页面及中文窄窗截图已经检查，长标题和翻页动作无裁切；本地证据在 `.artifacts/uwork-company-market/`。这不等于两平台原生 GUI 或安装包验收，整体产品/设计审查仍在 T22/T40。
+
+验证：新包聚焦测试 61 项通过，源码语句、分支、函数和行覆盖率均为 100%；完整 `test:gui` 为 748 个文件通过、13,116 项通过、两项跳过。相关 bundle/包集合单元测试 26 项通过。最新 build:artifacts 八项及其后的 build:check 两项通过。doc-sync 43 项通过。完整 lint 通过，仅有未改动文件的既有 unused-disable 警告；冻结锁文件安装、workspace 约束、Client 本地化与发布依赖策略检查通过。两个新包的 publint 返回成功，保留仓库既有 src 导出提示和浏览器 closure-factory 的已知格式提示；未运行全量 hygiene。

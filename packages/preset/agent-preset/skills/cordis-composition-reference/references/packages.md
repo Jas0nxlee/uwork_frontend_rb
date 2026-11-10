@@ -39,6 +39,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-hmr` | yes | Coordinated module and profile configuration hot reload |
 | `@deepseek-ai/dsh-plugin-manager` | yes | Current-profile plugin and bundle management shared by dsh CLI, Web and agent tools |
 | `@deepseek-ai/dsh-plugin-market` | yes | Configured plugin market indexes for the Web Discover page and the plugin_market agent tool |
+| `@deepseek-ai/dsh-uwork-company-market` | yes | Anonymous PUBLIC SkillHub catalog for the UWork company market |
 
 ## browser-use
 
@@ -124,6 +125,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-client-ui-trajectory` | yes | Trajectory event ledger and timing overview with live tool-result inspection |
 | `@deepseek-ai/dsh-client-ui-user-questions` | no | Web ask_user_question composer takeover and plan-review presentation UI |
 | `@deepseek-ai/dsh-client-ui-uwork` | no | UWork sidebar branding and blank-home presentation |
+| `@deepseek-ai/dsh-client-ui-uwork-company-market` | no | Browse and search public company skills in the UWork Plugins page |
 | `@deepseek-ai/dsh-client-ui-workflow-run` | no | Durable workflow-run Conversation Node and nested member disclosure for dsh web |
 | `@deepseek-ai/dsh-client-ui-workspace` | no | Workspace picker plugin: one WorkspacePicker registered into the sidebar and empty-state workspace slots |
 

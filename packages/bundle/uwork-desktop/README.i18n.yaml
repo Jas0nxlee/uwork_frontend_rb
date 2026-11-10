@@ -3,14 +3,14 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/bundle/uwork-desktop/README.md
 /:
-  en: a8b7b2f7ccbb9aaf
-  zh: b26cb5f0413bf746
+  en: e4b875ea3789ad9a
+  zh: 823f2f39c5a70032
 /deepseek-ai-dsh-uwork-desktop:
   en: a618cd41e40ce77e
   zh: 38f342945bd237ad
 /deepseek-ai-dsh-uwork-desktop/summary:
-  en: d81f21042fbbfb75
-  zh: 4ed2028c2df727ac
+  en: 231569fc2d4f29f9
+  zh: 1c96280286d2856c
 /deepseek-ai-dsh-uwork-desktop/table-of-contents:
   en: 23386452a66b2fbd
   zh: 541d91ae8f263104
@@ -18,20 +18,20 @@
   en: 6d6bd915362bba2f
   zh: 6f8f968731e2af5c
 /deepseek-ai-dsh-uwork-desktop/understand-the-implementation:
-  en: 21026f05e47e5c4d
-  zh: ea6874256230276d
+  en: e5692742d293df9a
+  zh: 7a5a3138932869f8
 /deepseek-ai-dsh-uwork-desktop/further-exploration:
-  en: 2326edf72bf05550
-  zh: 7eb512e946a6c3b0
+  en: a7e06966d9a4b758
+  zh: 84ada223b2d40caf
 /deepseek-ai-dsh-uwork-desktop/model-experience:
-  en: 8c0692097dd50ad2
-  zh: a27a2964adbb37e5
+  en: 63a72335d715d3cf
+  zh: 166d33b6d96b8c56
 /deepseek-ai-dsh-uwork-desktop/model-experience/kv-cache-effect:
   en: 4f0eadf94828e66e
   zh: 97d3eb3e79199354
 /deepseek-ai-dsh-uwork-desktop/known-limitations-and-deferred-work:
-  en: 2704df55ea952672
-  zh: c95f49cd6724e2ef
+  en: f6b5fddcf5e25331
+  zh: 1628e062f93ac6e4
 /deepseek-ai-dsh-uwork-desktop/known-limitations-and-deferred-work/dev-note:
   en: b836f01bd0bceb4a
   zh: 25e979141fbe5501
