@@ -4634,6 +4634,25 @@ export type ApprovalPolicy = 'ask' | 'never'
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-user-approval -->
 
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-uwork-office-storage -->
+<a id="deepseek-aidsh-uwork-office-storage"></a>
+
+## `@deepseek-ai/dsh-uwork-office-storage`
+
+- `inject`: `fs` · `sandboxPolicy`
+- `source`: [`packages/document/uwork-office-storage/src/index.ts:20`](../packages/document/uwork-office-storage/src/index.ts)
+
+```ts config-catalog
+/** Deployment limits applied to every read and save. */
+export interface Config {
+  /** Inclusive complete document byte cap, before Base64 encoding. */
+  readonly maxDocumentBytes: number
+  /** Concurrent reads and saves admitted by this provider. */
+  readonly maxConcurrentOperations: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-uwork-office-storage -->
+
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-web -->
 <a id="deepseek-aidsh-web"></a>
 

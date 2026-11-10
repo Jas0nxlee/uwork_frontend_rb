@@ -27,6 +27,7 @@ Each package owns its configuration and lifetime rules; the subsystem reference 
 | Package | Role | ctx key |
 |---|---|---|
 | [office-to-pdf](office-to-pdf/README.md) | Authorized Office bytes to complete PDFs with bounded queues and caching | `ctx.officeToPdf` |
+| [uwork-office-storage](uwork-office-storage/README.md) | Office editor snapshots and guarded binary saves | `ctx.uworkOfficeStorage` |
 
 -----
 
@@ -36,6 +37,7 @@ Each package owns its configuration and lifetime rules; the subsystem reference 
 Consumers own source authorization and presentation.
 
 - [Document conversion](../../docs/subsystems/office-to-pdf.md) — shared operation and generated service reference.
+- [UWork Office editing](../../docs/subsystems/uwork-office-editor.md) — editor file operations.
 - [Independent kit ownership](../../.agents/notes/implemented/architecture/2026-09-14-independent-libreoffice-kit.md) — engine distribution and application integration.
 - [Workspace Files](../api/workspace-files/README.md) — authorized bounded source reads.
 

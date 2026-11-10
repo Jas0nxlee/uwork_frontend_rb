@@ -186,6 +186,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | Package | Config | Description |
 |---|---|---|
 | `@deepseek-ai/dsh-office-to-pdf` | yes | Shared Office-to-PDF conversion with bounded queues and caching |
+| `@deepseek-ai/dsh-uwork-office-storage` | yes | Bounded Office editor snapshots and guarded binary saves |
 
 ## experimental
 

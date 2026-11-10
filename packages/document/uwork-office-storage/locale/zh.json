@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "UWork Office 文件",
+    "description": "读取和保存 Office 编辑文档，并检查文件版本。"
+  }
+}

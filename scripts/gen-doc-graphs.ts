@@ -269,6 +269,11 @@ const SERVICE_ROLES: ServiceRole[] = [
     note: 'The native provider owns application consent and cancellation; the optional Client page queries and changes those decisions through its Remote.',
   },
   {
+    key: 'uworkOfficeStorage', pkg: 'uwork-office-storage', title: 'Office editor file operations',
+    mode: 'core', consumers: [],
+    note: 'Optional Host plugin for bounded complete reads and Session-policy guarded binary saves.',
+  },
+  {
     key: 'officeToPdf', pkg: 'office-to-pdf', title: 'Office to PDF conversion',
     mode: 'core', consumers: ['client-ui-sidebar-documentpreview'],
     note: 'Authorized Office bytes are converted on the Host using the declared native target engine, or Node WASM when no native target is declared.',
