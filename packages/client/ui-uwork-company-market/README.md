@@ -1,5 +1,5 @@
 ---
-description: "Public company skill catalog and browsing"
+description: "Public company skill browsing and installation management"
 kind: "package-reference"
 ---
 
@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Browse and search public company skills from the Plugins page. The [UWork bundle](../../bundle/uwork-desktop/README.md) mounts this tab and its [catalog Host](../../boot/uwork-company-market/README.md) together.
+Browse, install, update and manage public company skills from the Plugins page. The [UWork bundle](../../bundle/uwork-desktop/README.md) mounts this tab and its [catalog Host](../../boot/uwork-company-market/README.md) together.
 
 ## Table of Contents
 
@@ -23,12 +23,12 @@ Browse and search public company skills from the Plugins page. The [UWork bundle
 <a id="use-this-package"></a>
 ## Use this package
 
-The Company market tab uses `plugins.tab` and has no configuration fields. Enter a search and submit it, navigate result pages, or refresh the requested query. Source, canonical slug, summary and published version are displayed without requiring enterprise sign-in. No placeholder install action is shown.
+The Company market tab uses `plugins.tab` and has no configuration fields. Enter a search and submit it, navigate result pages, or refresh the requested query. Source, canonical slug, summary and published version are displayed without requiring enterprise sign-in. When the Host has profile-owned storage, install or update exact published versions and manage installed skills independently of the catalog. Enable, disable, uninstall and refresh remain available for installed skills even if they disappear from the public catalog. Catalog-only Hosts display installation unavailability.
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-One root-owned controller retains the query and its last result across tab mounts. A new query cancels the old invocation; late results cannot overwrite the new query. Failure retains previous rows with a notice and retry action, while pagination waits for a successful result. Unload aborts requests, releases the tab and dictionaries, and removes the generated Remote namespace. Copy is provided in eight application languages; controls and cards use shared primitives and theme tokens.
+One root-owned controller retains the query and its last result across tab mounts. A new query cancels the old invocation; late results cannot overwrite the new query. Failure retains previous rows with a notice and retry action, while pagination waits for a successful result. Unload aborts requests, releases the tab and dictionaries, and removes the generated Remote namespace. Management serializes writes and reconciles the saved installation list after success, rejection or a lost acknowledgement. Failed reads preserve previous rows and block writes until a successful refresh. Unknown or committed outcomes receive distinct feedback. Copy is provided in eight application languages; controls and cards use shared primitives and theme tokens.
 
 <a id="further-exploration"></a>
 ## Further Exploration
@@ -50,7 +50,8 @@ None.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- This tab is read-only until the skill-content installation transaction and provider are available.
+- Installation requires a profile-owned store or explicit Host installation directory.
+- Package integrity failures and unknown transaction outcomes are reported without rendering upstream diagnostics.
 - Private-market authentication and editing the built-in source are unsupported.
 
 <a id="dev-note"></a>

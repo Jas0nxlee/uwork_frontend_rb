@@ -1,4 +1,8 @@
 - region "Company market":
+  - region "Installed skills":
+    - heading "Installed skills" [level=2]
+    - button "Refresh installed skills"
+    - paragraph: No company skills installed
   - textbox "Search company skills"
   - button "Search"
   - button "Refresh"
@@ -9,10 +13,12 @@
       - text: Weather Version 1.0.0
       - paragraph: weather
       - paragraph: Forecasts for travel and planning
+      - button "Install"
     - listitem:
       - text: Video frames Version 2.0.0
       - paragraph: video-frames
       - paragraph: Extract video frames
+      - button "Install"
   - navigation "Page 1":
     - button "Previous" [disabled]
     - text: Page 1

@@ -1,4 +1,5 @@
 /** Root-owned company catalog state, with cancellation and obsolete-result suppression. */
+import { InstallationController, type InstallationState } from './installations.ts'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { TypertClientRemote } from '@deepseek-ai/dsh-typert-protocol'
 import type { HostObservable } from '@deepseek-ai/dsh-client-ui-slots'
@@ -21,11 +22,19 @@ export type MarketState = {
 
 /** Narrow state and actions injected into the company market tab. */
 export interface MarketFace {
-  readonly hooks: { readonly market: HostObservable<MarketState> }
+  readonly hooks: { readonly market: HostObservable<MarketState>; readonly installations: HostObservable<InstallationState> }
   /** Read the catalog when the tab first mounts; subsequent mounts retain the current query. */
   readonly start: () => void
   /** Replace the query or retry a requested result page. */
   readonly load: (text: string, page: number) => void
+  /** Refresh saved installation state. */
+  readonly refreshInstallations: () => void
+  /** Install a selected exact catalog version. */
+  readonly installSkill: (slug: string, version: string) => void
+  /** Change an installed skill's discovery state. */
+  readonly setSkillEnabled: (slug: string, enabled: boolean) => void
+  /** Remove only a company-owned installation. */
+  readonly uninstallSkill: (slug: string) => void
 }
 
 /** One root's company market query and request lifetime. */
@@ -36,12 +45,18 @@ export class MarketController {
   readonly face: MarketFace
   private request: AbortController | undefined
   private disposed = false
+  private readonly installations: InstallationController
 
   constructor(private readonly market: TypertClientRemote['uworkCompanyMarket']) {
+    this.installations = new InstallationController(market)
     this.face = {
-      hooks: { market: this.store },
-      start: () => { if (this.store.getSnapshot().status === 'idle') this.load('', 0) },
+      hooks: { market: this.store, installations: this.installations.store },
+      start: () => { this.installations.start(); if (this.store.getSnapshot().status === 'idle') this.load('', 0) },
       load: (text, page) => { this.load(text, page) },
+      refreshInstallations: () =>{  this.installations.refresh() },
+      installSkill: (slug, version) =>{  this.installations.install(slug, version) },
+      setSkillEnabled: (slug, enabled) =>{  this.installations.setEnabled(slug, enabled) },
+      uninstallSkill: (slug) =>{  this.installations.uninstall(slug) },
     }
   }
 
@@ -74,6 +89,7 @@ export class MarketController {
   /** Abort the owned invocation before the root contribution disappears. */
   dispose(): void {
     this.disposed = true
+    this.installations.dispose()
     this.request?.abort()
   }
 }

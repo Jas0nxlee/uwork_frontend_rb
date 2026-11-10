@@ -90,3 +90,15 @@ it('ignores a rejected old request and a request that finishes after disposal', 
   await current.promise
   expect(h.snapshot()).toMatchObject({ text: 'new', status: 'loading' })
 })
+
+
+it('owns installation actions and their state in the same root face', async () => {
+  const h = setup()
+  h.face.start()
+  await vi.waitFor(() =>{  expect(h.face.hooks.installations.getSnapshot().loading).toBe(false) })
+  h.face.refreshInstallations()
+  h.face.installSkill('weather', '1')
+  h.face.setSkillEnabled('weather', false)
+  h.face.uninstallSkill('weather')
+  expect(h.face.hooks.installations.getSnapshot().value).toEqual({ available: false, skills: [] })
+})
