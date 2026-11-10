@@ -199,7 +199,7 @@
 
 ### T23 二进制原子写与版本 API
 
-- [ ] 定义带 FsVersion/文件标识的受控 writeBytes 或等价公开能力，保存必须带 expectedRevision。
+- [x] 定义带 FsVersion/文件标识的受控 writeBytes，必须指定 createIfAbsent 或 replaceIfVersion；更新本地、沙箱和 SSH 提供方。
 - [ ] 实现 local provider 的同卷临时写、校验/备份、版本复核和错误语义，不绕过策略。
 
 验收：两个窗口/Agent与外部应用并发修改可检测，拒绝时保留原文及草稿。验证：权限拒绝、版本冲突、文件锁、磁盘/中断故障；能力有效及非法路径测试。依赖：T03。落点：`packages/fs/fs`、local provider。规模：定义/本地实现各 M。

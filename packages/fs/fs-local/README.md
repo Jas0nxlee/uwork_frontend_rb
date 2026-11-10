@@ -25,6 +25,8 @@ Use `dsh-fs-local` to read, list, watch, write, edit, patch, delete, and move fi
 <a id="use-this-package"></a>
 ## Use this package
 
+Binary saves snapshot the supplied bytes, serialize on the same target lock as text writes, and recheck the required intent after staging. Cancellation and conflicts preserve the destination. External writers do not participate in the lock; a change after the final version check remains a filesystem race.
+
 Mount this backend when a composition needs `ctx.fs` backed by the real host filesystem and accepts a process-local implementation. The common path is explicit: load the backend, give it a base directory, and the model-facing tools (`dsh-tool-fs`) or your own plugins can read, write, and edit files.
 
 ### When to choose it

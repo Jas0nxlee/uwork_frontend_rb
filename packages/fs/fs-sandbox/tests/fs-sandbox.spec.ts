@@ -288,3 +288,26 @@ describe('patch, delete, and move fences', () => {
     }
   })
 })
+
+
+describe('binary document saves', () => {
+  it('denies a binary save under read-only policy without creating a file', async () => {
+    await boot('read-only')
+    const destination = await target('document.docx')
+    await expect(fs.writeBytes(destination, new Uint8Array([0, 255]), { kind: 'createIfAbsent' }))
+      .rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    expect(existsSync(join(workspace, 'document.docx'))).toBe(false)
+  })
+
+  it('contains binary saves and rejects a symlink escape', async () => {
+    await boot('workspace-write')
+    const destination = await target('document.xlsx')
+    await fs.writeBytes(destination, new Uint8Array([0, 255]), { kind: 'createIfAbsent' })
+    expect([...await readFile(join(workspace, 'document.xlsx'))]).toEqual([0, 255])
+    await expect(fs.writeBytes(await target(join(outside, 'document.xlsx')), new Uint8Array([1]), { kind: 'createIfAbsent' }))
+      .rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+    await symlink(outside, join(workspace, 'escape'), 'junction')
+    await expect(fs.writeBytes(await target('escape/document.xlsx'), new Uint8Array([1]), { kind: 'createIfAbsent' }))
+      .rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
+  })
+})

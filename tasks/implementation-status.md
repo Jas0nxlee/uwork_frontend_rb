@@ -21,3 +21,10 @@
 UWork UI、企微与模型自动配置、公司 SkillHub 市场、企业网关统计和 Office 编辑 bundle 尚未接入。图标、原生文案、独立更新部署及 bundle 恢复集合尚未完成。当前只是可编译、经源码测试的基础改造，没有生成并验收 Windows x64 或 Mac ARM 安装包，也没有进行真实登录、Office 往返保存或安装升级验收。
 
 下一实现单元为 UWork/Office bundle 装配，以及 Office 二进制保存和关闭守卫所需的通用接口。正式发布前仍须完成执行清单全部必交付项。
+
+
+## Office 二进制保存进展
+
+已增加 `FileSystem.writeBytes` 及不含文本 diff 的结果类型，并接入 LocalFileSystem、SandboxedFileSystem 和 SSH helper。保存捕获固定字节快照，与文本操作共用目标锁；必填新建或版本替换意图，暂存后重新检查版本再发布。Windows 沿用已有 DACL/替换逻辑，取消和冲突保留目标文件。备份与编辑器关闭保护仍由后续 Office 服务实现。
+
+本轮验证了二进制往返、陈旧版本、并发保存、暂存时外部修改、取消清理、调用方继续修改 Uint8Array/Buffer、沙箱只读/越界/链接逃逸，以及 SSH 实际 helper 分发和非法编码拒绝。已有文件工具、技能和指令读取消费方回归 614 项通过。此证据仍不代表 Office 编辑器或真实两平台文件往返验收完成。

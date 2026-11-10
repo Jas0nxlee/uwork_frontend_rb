@@ -34,7 +34,9 @@ export const entriesSchema = z.array(z.object({ name: z.string(), type: z.enum([
 export const intentSchema = z.discriminatedUnion('kind', [z.object({ kind: z.literal('createIfAbsent') }).strict(), z.object({ kind: z.literal('replaceIfVersion'), version: z.string() }).strict()])
 /** Literal text edit. */
 export const editSchema = z.object({ oldString: z.string(), newString: z.string(), replaceAll: z.boolean() }).strict()
-/** Atomic write observation. */
+/** Raw-byte publication metadata without a text diff. */
+export const binaryWriteResultSchema = z.object({ operation: z.enum(['create', 'update']), version: z.string() }).strict()
+/** Text publication metadata including the diff basis. */
 export const writeResultSchema = z.object({ operation: z.enum(['create', 'update']), version: z.string(), before: z.string().nullable(), after: z.string() }).strict()
 /** Atomic edit observation. */
 export const editResultSchema = z.object({ version: z.string(), before: z.string(), after: z.string() }).strict()

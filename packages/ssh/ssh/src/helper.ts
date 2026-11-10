@@ -232,6 +232,13 @@ export async function runSshHelper(transport: HelperTransport): Promise<void> {
         }, signal)
       return Buffer.from(bytes).toString('base64')
     }
+    if (method === 'fs.writeBytes') {
+      const input = z.object({ target: targetSchema, content: z.base64(), expected: intentSchema,
+        policy: policySchema }).strict().parse(raw)
+      const bytes = Buffer.from(input.content, 'base64')
+      if (bytes.length > MAX_TEXT_BYTES) throw new FsError('SSH binary write exceeds the payload limit', 'FS_TOO_LARGE')
+      return ctx.fs.writeBytes(asTarget(input.target), bytes, input.expected as FsWriteIntent, signal, await policy(input.policy, signal))
+    }
     if (method === 'fs.write' || method === 'fs.edit') {
       const input = z.object({
         target: targetSchema, content: z.string().optional(), edit: editSchema.optional(),

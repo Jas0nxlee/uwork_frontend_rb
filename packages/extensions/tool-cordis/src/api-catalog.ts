@@ -1551,6 +1551,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'one entry per direct child, in stable name order.',
       },
       {
+        signature: 'abstract writeBytes( target: FsTarget, content: Uint8Array, expected: FsWriteIntent, signal?: AbortSignal, sandboxPolicy?: SandboxExecutionPolicy, ): Promise<FsBinaryWriteOutcome>',
+        description: 'Atomically publish raw bytes with an explicit create or versioned replacement intent.',
+        parameters: [{ name: 'target', description: 'resolved destination in this provider.' }, { name: 'content', description: 'full binary document snapshot.' }, { name: 'expected', description: 'required create-only or observed-version intent.' }, { name: 'signal', description: 'aborts before publication.' }, { name: 'sandboxPolicy', description: 'per-call write policy; omission uses the provider default.' }],
+        returns: 'publication kind and resulting version, without decoded content.',
+      },
+      {
         signature: 'abstract writeText( target: FsTarget, content: string, expected?: FsWriteIntent, signal?: AbortSignal, sandboxPolicy?: SandboxExecutionPolicy, ): Promise<FsWriteOutcome>',
         description: 'Atomically create or replace UTF-8 text. `expected` guards intent and staleness; omission allows unconditional overwrite.',
         parameters: [{ name: 'target', description: 'the resolved target to write.' }, { name: 'content', description: 'the full new file content.' }, { name: 'expected', description: 'the write intent guarding the write; omit for unconditional.' }, { name: 'signal', description: 'aborts before atomic publication takes effect.' }, { name: 'sandboxPolicy', description: 'the per-call mode and workspace root this write runs under; a sandboxing backend fences the write by it, the bare backend ignores it. Omit to leave the backend its own default.' }],
@@ -6558,6 +6564,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ForgeWorktreeWaiting',
     declaration: 'export type ForgeWorktreeWaiting = \'creation\' | \'restoration\';',
+  },
+  {
+    name: 'FsBinaryWriteOutcome',
+    declaration: 'export interface FsBinaryWriteOutcome {\n    operation: \'create\' | \'update\';\n    version: FsVersion;\n}',
   },
   {
     name: 'FsDeleteOutcome',

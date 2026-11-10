@@ -234,6 +234,16 @@ type FsWriteIntent =
 ```
 
 ```ts type-equiv
+/** Outcome of a raw-byte publication, without text decoding or a diff basis. */
+interface FsBinaryWriteOutcome {
+  /** Whether the target was created or replaced. */
+  operation: 'create' | 'update'
+  /** Opaque version produced by publication. */
+  version: FsVersion
+}
+```
+
+```ts type-equiv
 /** Outcome of a full-file write. */
 interface FsWriteOutcome {
   /** Whether the write created a new file or replaced an existing one. */
@@ -537,6 +547,17 @@ abstract readByteRange(target: FsTarget, range: { offset: number; length: number
  * @returns one entry per direct child, in stable name order.
  */
 abstract listDir(target: FsTarget, signal?: AbortSignal): Promise<FsDirEntry[]>
+
+/**
+ * Atomically publish raw bytes with an explicit create or versioned replacement intent.
+ * @param target - resolved destination in this provider.
+ * @param content - full binary document snapshot.
+ * @param expected - required create-only or observed-version intent.
+ * @param signal - aborts before publication.
+ * @param sandboxPolicy - per-call write policy; omission uses the provider default.
+ * @returns publication kind and resulting version, without decoded content.
+ */
+abstract writeBytes( target: FsTarget, content: Uint8Array, expected: FsWriteIntent, signal?: AbortSignal, sandboxPolicy?: SandboxExecutionPolicy, ): Promise<FsBinaryWriteOutcome>
 
 /**
  * Atomically create or replace UTF-8 text. `expected` guards intent and

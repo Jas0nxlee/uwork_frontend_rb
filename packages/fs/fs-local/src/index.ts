@@ -15,6 +15,7 @@ import { pathToFileURL } from 'node:url'
 import z from '@deepseek-ai/schemastery'
 import { FileSystem, FsError, FsVersion } from '@deepseek-ai/dsh-fs'
 import type {
+  FsBinaryWriteOutcome,
   FsDeleteOutcome,
   FsMoveOutcome,
   FsDirEntry,
@@ -211,6 +212,21 @@ export class LocalFileSystem extends FileSystem {
       ...(entry.version !== undefined ? { version: entry.version } : {}),
       ...(entry.size !== undefined ? { size: entry.size } : {}),
     }))
+  }
+
+  override async writeBytes(
+    target: FsTarget, content: Uint8Array, expected: FsWriteIntent, signal?: AbortSignal,
+  ): Promise<FsBinaryWriteOutcome> {
+    const snapshot = Uint8Array.from(content)
+    return this.withLock(target.targetKey, async () => {
+      const existing = await this.writeTarget(target, expected)
+      await writeFileAtomic(target.targetKey, snapshot, existing?.mode, signal, this.internals, {
+        displayPath: target.displayPath, createIfAbsent: expected.kind === 'createIfAbsent',
+        beforePublish: async () => { await this.writeTarget(target, expected) },
+      })
+      return { operation: existing ? 'update' : 'create',
+        version: this.versionAfterWrite(await probe(target.targetKey), target) }
+    })
   }
 
   override async writeText(
