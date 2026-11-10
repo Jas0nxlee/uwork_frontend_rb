@@ -46,7 +46,7 @@ describe('company catalog', () => {
     expect(await market.search('', 2, signal())).toMatchObject({ page: 2, nextPage: null, items: [{ slug: 'global--archive' }] })
     for (const [url, options] of fetcher.mock.calls) {
       expect(typeof url === 'string' ? url : url instanceof URL ? url.href : url.url).toMatch(/^https:\/\/market.example\/skillhub\//u)
-      expect(options).toMatchObject({ redirect: 'error', credentials: 'omit', headers: { accept: 'application/json' } })
+      expect(options).toMatchObject({ redirect: 'error', credentials: 'omit', headers: { accept: 'application/json, application/zip' } })
       expect(options?.headers).not.toHaveProperty('authorization')
     }
   })
