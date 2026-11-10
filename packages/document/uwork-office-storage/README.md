@@ -31,7 +31,7 @@ Compose the plugin beside `fs` and `sandboxPolicy` in a profile layer. Remote ca
 
 `capabilities(session, signal)` reports the document cap and current write policy; it does not grant access. `stat(session, path, signal)` reads regular-file metadata without content. `read(session, path, signal)` returns complete native bytes and checks the filesystem version before and after reading. `save(session, request, signal)` accepts canonical padded Base64 and an explicit `createIfAbsent` or `replaceIfVersion` intent. A successful result reports only the saved snapshot; it does not clear subsequent editor changes. The plugin refuses targets outside the Session workspace and read-only saves. Other write checks use `sandboxPolicy.resolve({ session })` in the composed filesystem provider.
 
-The [Office editing subsystem](../../../docs/subsystems/uwork-office-editor.md) owns the generated service and result reference. Client consumers mount this package’s generated `/remote` descriptor; it is not part of the ordinary `api/remotes` assembly.
+The [Office editing subsystem](../../../docs/subsystems/uwork-office-editor.md) owns the generated service and result reference. The `api/remotes` Client assembly mounts this package’s generated `/remote` descriptor; the Host provider remains optional.
 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation

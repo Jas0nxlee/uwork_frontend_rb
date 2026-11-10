@@ -1,0 +1,13 @@
+- region "Word document":
+  - toolbar "Document tools":
+    - button "Save"
+    - button "Reload"
+    - button "Undo"
+    - button "Redo"
+    - button "Bold"
+    - button "Italic"
+    - button "Underline"
+    - checkbox "Track changes" [checked]
+    - text: Track changes
+  - status: {{cwd}}/workspace/report.docx Unsaved changes
+  - textbox

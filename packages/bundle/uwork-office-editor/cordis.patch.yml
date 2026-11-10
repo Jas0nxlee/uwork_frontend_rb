@@ -1,0 +1,6 @@
+# Optional editor layer over a Web or Desktop profile.
+- insert:
+    - id: uwork-office-storage
+      name: '@deepseek-ai/dsh-uwork-office-storage'
+    - id: ui-uwork-office-editor
+      name: '@deepseek-ai/dsh-client-ui-uwork-office-editor'

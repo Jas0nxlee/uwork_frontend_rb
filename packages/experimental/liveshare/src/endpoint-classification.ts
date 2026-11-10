@@ -162,6 +162,10 @@ export const VIEWER_ENDPOINT_CLASSES = {
   'productAnalytics/watchPolicy': 'owner-only', // owner product analytics
   'pluginRegistryProbe/fastest': 'owner-only', // owner plugin registry probe
   'sessionReferenceResolver/candidates': 'owner-only', // owner composer reference resolution
+  'uworkOfficeStorage/capabilities': 'owner-only', // owner document policy
+  'uworkOfficeStorage/stat': 'owner-only', // owner document metadata
+  'uworkOfficeStorage/read': 'owner-only', // owner document bytes
+  'uworkOfficeStorage/save': 'owner-only', // owner document publication
   'officeToPdf/generation': 'owner-only', // owner document export
   'officeToPdf/render': 'owner-only', // owner document export
   'speech/cancelPreparation': 'owner-only', // owner voice input

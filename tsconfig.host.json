@@ -229,6 +229,7 @@
     "apps/web/tests/client-ui-stats-panel.e2e.ts",
     "apps/web/tests/sidebar-right.e2e.ts",
     "apps/web/tests/sidebar-terminal.e2e.ts",
+    "apps/web/tests/uwork-office-editor.e2e.ts",
     "apps/web/tests/chat-scroll-fixture.ts",
     "apps/web/tests/chat-scroll-contract.e2e.ts",
     "apps/web/tests/chat-long-interactions.e2e.ts",
@@ -276,6 +277,7 @@
     "scripts/client-bundle-purity.spec.ts"
   ],
   "references": [
+    { "path": "./packages/client/ui-uwork-office-editor/tsconfig.host.json" },
     { "path": "./packages/experimental/action-cards" },
     { "path": "./packages/experimental/creation-recommendations" },
     { "path": "./packages/experimental/plugin-recommendations" },
@@ -526,6 +528,7 @@
     { "path": "./packages/bundle/sdk-app" },
     { "path": "./packages/bundle/sdk-minimal" },
     { "path": "./packages/bundle/web-app" },
+    { "path": "./packages/bundle/uwork-office-editor" },
     { "path": "./packages/util/official-bundles" },
     { "path": "./packages/boot/app-boot" },
     { "path": "./packages/boot/cmdline" },

@@ -31,7 +31,7 @@ kind: "package-reference"
 
 `capabilities(session, signal)` 报告文档上限及当前写入策略，不授予访问权。`stat(session, path, signal)` 只读普通文件元数据。`read(session, path, signal)` 返回完整原生字节，并核对读取前后的文件系统版本。`save(session, request, signal)` 接受带标准补位的规范 Base64 和显式 `createIfAbsent` 或 `replaceIfVersion` 意图。成功结果只对应已保存快照，不能清除之后的编辑改动。本插件拒绝工作区外目标及只读保存。其他写入检查由组合的文件系统提供者按 `sandboxPolicy.resolve({ session })` 执行。
 
-[Office 编辑子系统](../../../docs/subsystems/uwork-office-editor.zh.md)包含生成的服务及结果参考。Client 消费者须挂载本包生成的 `/remote` 描述符；普通 `api/remotes` 装配不包含它。
+[Office 编辑子系统](../../../docs/subsystems/uwork-office-editor.zh.md)包含生成的服务及结果参考。`api/remotes` Client 装配加载本包生成的 `/remote` 描述符；Host 提供者仍为可选项。
 
 <a id="understand-the-implementation"></a>
 ## 理解实现

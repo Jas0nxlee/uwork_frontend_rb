@@ -742,6 +742,26 @@ export interface Config {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-client-ui-trajectory -->
 
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-client-ui-uwork-office-editor -->
+<a id="deepseek-aidsh-client-ui-uwork-office-editor"></a>
+
+## `@deepseek-ai/dsh-client-ui-uwork-office-editor`
+
+- `source`: [`packages/client/ui-uwork-office-editor/src/config.ts:5`](../packages/client/ui-uwork-office-editor/src/config.ts)
+
+```ts config-catalog
+/** Word parser admission and export validation settings. */
+export interface Config {
+  /** Maximum expanded main-document XML size before engine import. */
+  maxDocumentXmlBytes: number
+  /** Minimum retained visible text proportion on export. */
+  minRetainedTextRatio: number
+  /** Author attributed to edits recorded as Word revisions. */
+  revisionAuthor: string
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-client-ui-uwork-office-editor -->
+
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-compaction-basic -->
 <a id="deepseek-aidsh-compaction-basic"></a>
 
@@ -5138,5 +5158,6 @@ Imported as libraries by other packages; a `cordis.yml` cannot load them.
 | `@deepseek-ai/dsh-util-time` | — | [`packages/util/time/src/index.ts`](../packages/util/time/src/index.ts) |
 | `@deepseek-ai/dsh-util-values` | — | [`packages/util/values/src/index.ts`](../packages/util/values/src/index.ts) |
 | `@deepseek-ai/dsh-util-workspace-path` | — | [`packages/util/workspace-path/src/index.ts`](../packages/util/workspace-path/src/index.ts) |
+| `@deepseek-ai/dsh-uwork-office-editor` | — | [`packages/bundle/uwork-office-editor/src/index.ts`](../packages/bundle/uwork-office-editor/src/index.ts) |
 | `@deepseek-ai/dsh-win32-process` | — | [`packages/subprocess/win32-process/src/index.ts`](../packages/subprocess/win32-process/src/index.ts) |
 <!-- END GENERATED config-catalog:library -->

@@ -4363,6 +4363,7 @@ export const CLIENT_SLOT_API: readonly ClientSlotEntry[] = [
       'client-ui-sidebar-right GuideBody',
       'client-ui-sidebar-terminal LazyTerminalBody',
       'client-ui-subagent SidebarChatTab',
+      'client-ui-uwork-office-editor OfficeBody',
       'experimental-client-ui-forge ForgeTab',
       'experimental-client-ui-forge ChangesTab',
       'experimental-liveshare ViewerSharePathBody',
