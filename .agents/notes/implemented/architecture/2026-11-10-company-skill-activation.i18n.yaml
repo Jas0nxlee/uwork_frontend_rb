@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-11-10-company-skill-activation.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-11-10-company-skill-activation.md
+/agent-note-company-skill-activation-through-immutable-content:
+  en: a5e1044a88592f9a
+  zh: 6a7a50ff9dabb105
+/agent-note-company-skill-activation-through-immutable-content/problem:
+  en: 9c4f257439cac87f
+  zh: f8c1e2e9c76cdda7
+/agent-note-company-skill-activation-through-immutable-content/decision:
+  en: efcca5b68a366624
+  zh: ad8c853b0578b724
+/agent-note-company-skill-activation-through-immutable-content/alternatives-considered:
+  en: dfb61bafcfcf5f14
+  zh: 5f94f612a1c3dc4c
+/agent-note-company-skill-activation-through-immutable-content/consequences:
+  en: 77f840f85b99bac4
+  zh: 182b0975c72261fc

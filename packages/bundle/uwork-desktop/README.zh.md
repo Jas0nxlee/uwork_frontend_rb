@@ -1,5 +1,5 @@
 ---
-description: "UWork 桌面 profile 的品牌与公开公司技能目录。"
+description: "UWork 桌面 profile 的品牌与公开公司技能。"
 kind: "package-bundle"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-bundle"
 
 ## 概述
 
-为 dsh Web 界面加入 UWork 侧栏、首页品牌和 PUBLIC 公司技能目录，关闭默认鲸鱼品牌层。此 bundle 必须排在基础与 Web bundle 之后；此 fork 的 Desktop 产品配置将该层纳入初始化、打包和恢复。
+为 dsh Web 界面加入 UWork 侧栏、首页品牌及支持校验安装的 PUBLIC 公司技能目录，关闭默认鲸鱼品牌层。此 bundle 必须排在基础与 Web bundle 之后；此 fork 的 Desktop 产品配置将该层纳入初始化、打包和恢复。
 
 ## 目录
 
@@ -44,7 +44,7 @@ kind: "package-bundle"
 <details>
 <summary>实现内部说明</summary>
 
-补丁关闭 ui-brand-official 行，再加入 ui-uwork、匿名公司目录 Host 及其插件标签页。目录来源配置在 Host 行，浏览不需要企业身份。其余模型、会话、权限和工作台贡献沿用前面各层；后续 profile 补丁仍能覆盖这些行。
+补丁关闭 ui-brand-official 行，再加入 ui-uwork、匿名公司目录 Host 及其插件标签页。目录来源配置在 Host 行，浏览和内容安装不需要企业身份。已启用安装通过原生技能 provider 提供。其余模型、会话、权限和工作台贡献沿用前面各层；后续 profile 补丁仍能覆盖这些行。
 
 </details>
 
@@ -59,17 +59,17 @@ kind: "package-bundle"
 <a id="model-experience"></a>
 ## 模型体验
 
-无；品牌呈现和只读目录浏览不添加模型输入。
+通过 `dsh-uwork-company-market` 间接影响；已启用安装的技能由 `dsh-tool-skill` 渲染。品牌和目录浏览不添加模型输入。
 
 #### KV Cache effect
 
-无。
+公司技能启用状态变化可在后续模型请求中追加替换技能目录。
 
 ## 已知限制与后续工作
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 企业身份和网关用量尚未装配；公司技能安装与启用仍待完成。
+- 企业身份和网关用量尚未装配。
 - Windows x64 和 Mac ARM 签名安装包及原生验收尚待完成。
 
 <a id="dev-note"></a>

@@ -173,10 +173,10 @@ const SERVICE_ROLES: ServiceRole[] = [
   {
     key: 'uworkCompanyMarket',
     pkg: 'uwork-company-market',
-    title: 'Public company skill catalog',
+    title: 'Public company skills and installations',
     mode: 'service',
     consumers: ['client-ui-uwork-company-market'],
-    note: 'Discovers and searches the configured anonymous SkillHub catalog; content installation has a separate owner.',
+    note: 'Owns anonymous SkillHub discovery, verified content transactions and company-only installation management.',
   },
   {
     key: 'pluginMarket',
@@ -685,7 +685,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'skill',
     title: 'Skill provider registry',
     mode: 'seam',
-    implementations: ['sandbox-windows-acl', 'skill-badge', 'skill-filesystem', 'skill-office'],
+    implementations: ['sandbox-windows-acl', 'skill-badge', 'skill-filesystem', 'skill-office', 'uwork-company-market'],
     consumers: ['tool-skill'],
     note: 'Merges provider skill catalogs; tool-skill renders the session-prefix catalog and loads complete skill bodies.',
   },

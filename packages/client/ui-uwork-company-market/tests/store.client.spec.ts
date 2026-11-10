@@ -10,7 +10,10 @@ const ok = (value = page): RemoteResult<CompanyMarketPage> => ({ ok: true, value
 
 function setup() {
   const search = vi.fn<TypertClientRemote['uworkCompanyMarket']['search']>(async () => ok())
-  const controller = new MarketController({ search })
+  const controller = new MarketController({
+    search, installations: async () => ({ ok: true, value: { available: false, skills: [] } }),
+    installSkill: vi.fn(), setEnabled: vi.fn(), uninstallSkill: vi.fn(),
+  })
   onTestFinished(() => { controller.dispose() })
   return { search, controller, face: controller.face, snapshot: () => controller.store.getSnapshot() }
 }

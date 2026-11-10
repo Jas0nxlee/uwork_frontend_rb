@@ -3,35 +3,35 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write packages/boot/uwork-company-market/README.md
 /:
-  en: 2abc50a1c39d0d91
-  zh: dbd8493b4057d619
+  en: 9ed3b9153dbbadae
+  zh: 27f8c37d1a159c44
 /deepseek-ai-dsh-uwork-company-market:
   en: 88bfa02c8f1f292f
   zh: 21a6d19985b218bf
 /deepseek-ai-dsh-uwork-company-market/summary:
-  en: b2e4d58fa5bd97c0
-  zh: 849442c658e5effb
+  en: 45faa84464e2ed24
+  zh: 7522a495e682018d
 /deepseek-ai-dsh-uwork-company-market/table-of-contents:
   en: 23386452a66b2fbd
   zh: 9a71b7a52fe624ac
 /deepseek-ai-dsh-uwork-company-market/use-this-package:
-  en: 3dac37f609b3650d
-  zh: 7ac792cfc1d7172b
+  en: 9be0356807ba6ebc
+  zh: 8234727f40e5f9f6
 /deepseek-ai-dsh-uwork-company-market/understand-the-implementation:
-  en: d2c2532f537a9643
-  zh: feef3f8e5a2d63c2
+  en: 06448957110e31f7
+  zh: 6db14520edc03635
 /deepseek-ai-dsh-uwork-company-market/further-exploration:
   en: d2d34690bbc12d74
   zh: ac4e392411433db9
 /deepseek-ai-dsh-uwork-company-market/model-experience:
-  en: 6114a3544ff2ee66
-  zh: bab0640af7d4f827
+  en: 74e5fcf2a6fc9445
+  zh: 214fce8e4c6b48b5
 /deepseek-ai-dsh-uwork-company-market/model-experience/kv-cache-effect:
-  en: 4f0eadf94828e66e
-  zh: 97d3eb3e79199354
+  en: 89edafb869e10149
+  zh: ee32cd979bb495be
 /deepseek-ai-dsh-uwork-company-market/known-limitations-and-deferred-work:
-  en: ca5f616edf97b5c6
-  zh: f0ad51b13328f853
+  en: b4253414f1e34684
+  zh: d30810fec16786f2
 /deepseek-ai-dsh-uwork-company-market/known-limitations-and-deferred-work/dev-note:
   en: ddf2e8c2d7512222
   zh: 78943a05313ee58d

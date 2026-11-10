@@ -4298,14 +4298,38 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
   },
   {
     key: 'uworkCompanyMarket',
-    summary: 'Reads and searches the complete configured PUBLIC SkillHub catalog.',
-    description: 'Reads and searches the complete configured PUBLIC SkillHub catalog.',
+    summary: 'Reads the PUBLIC SkillHub catalog and activates verified company skills.',
+    description: 'Reads the PUBLIC SkillHub catalog and activates verified company skills.',
     methods: [
       {
         signature: '@Remote async search(text: string, page: number, signal: AbortSignal): Promise<CompanyMarketPage>',
         description: 'Search title, canonical slug and summary after reading the complete public catalog.',
         parameters: [{ name: 'text', description: 'case-insensitive substring; empty text lists all skills.' }, { name: 'page', description: 'zero-based result page.' }, { name: 'signal', description: 'caller cancellation, combined with the service lifetime and catalog deadline.' }],
         returns: 'one bounded page, its total matches and the next result page.',
+      },
+      {
+        signature: '@Remote async installations(signal: AbortSignal): Promise<CompanyInstallations>',
+        description: 'Read current installed versions, recovering only owned staging and never-activated candidates.',
+        parameters: [{ name: 'signal', description: 'caller cancellation.' }],
+        returns: 'installation availability and current versions; catalog-only compositions report unavailable.',
+      },
+      {
+        signature: '@Remote async installSkill(slug: string, version: string, signal: AbortSignal): Promise<InstalledCompanySkill>',
+        description: 'Install or update one exact public version through a verified content transaction.',
+        parameters: [{ name: 'slug', description: 'selected canonical SkillHub slug.' }, { name: 'version', description: 'exact published version.' }, { name: 'signal', description: 'caller cancellation; an admitted atomic commit may complete after cancellation.' }],
+        returns: 'the current installed version after activation, or the same version on an idempotent retry.',
+      },
+      {
+        signature: '@Remote async setEnabled(slug: string, enabled: boolean, signal: AbortSignal): Promise<CompanyInstallations>',
+        description: 'Change whether one installed company skill participates in future discovery.',
+        parameters: [{ name: 'slug', description: 'canonical installed slug.' }, { name: 'enabled', description: 'next discovery state.' }, { name: 'signal', description: 'caller cancellation.' }],
+        returns: 'the refreshed installation list after the change.',
+      },
+      {
+        signature: '@Remote async uninstallSkill(slug: string, signal: AbortSignal): Promise<CompanyInstallations>',
+        description: 'Remove only the selected company installation from future discovery.',
+        parameters: [{ name: 'slug', description: 'canonical company-owned slug; personal skills are unaffected.' }, { name: 'signal', description: 'caller cancellation.' }],
+        returns: 'the refreshed installation list after removal.',
       },
     ],
   },
@@ -5949,6 +5973,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type CompactionTrigger = \'pressure\' | \'context-overflow\';',
   },
   {
+    name: 'CompanyInstallations',
+    declaration: 'export interface CompanyInstallations {\n    readonly available: boolean;\n    readonly skills: readonly InstalledCompanySkill[];\n}',
+  },
+  {
     name: 'CompanyMarketPage',
     declaration: 'export interface CompanyMarketPage {\n    readonly source: string;\n    readonly items: readonly CompanySkill[];\n    readonly total: number;\n    readonly page: number;\n    readonly nextPage: number | null;\n}',
   },
@@ -6791,6 +6819,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'InstallBundleOptions',
     declaration: 'export interface InstallBundleOptions {\n    enabled?: boolean;\n    saveExact?: boolean;\n    requestId?: PluginInstallRequestId;\n    approvedBuilds?: string[];\n    registry?: Registry;\n}',
+  },
+  {
+    name: 'InstalledCompanySkill',
+    declaration: 'export interface InstalledCompanySkill {\n    readonly slug: string;\n    readonly version: string;\n    readonly fingerprint: string;\n    readonly enabled: boolean;\n    readonly fileCount: number;\n}',
   },
   {
     name: 'InstallSpecKind',

@@ -8,7 +8,7 @@
   "types": "lib/types/index.d.ts",
   "license": "MIT",
   "name": "@deepseek-ai/dsh-uwork-company-market",
-  "description": "Anonymous PUBLIC SkillHub catalog for the UWork company market",
+  "description": "Anonymous PUBLIC SkillHub catalog, verified content installation and native skill discovery",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/deepseek-ai/deepseek-harness.git",
@@ -33,7 +33,11 @@
     },
     "./src/*": "./src/*",
     "./package.json": "./package.json",
-    "./locale/*.json": "./locale/*.json"
+    "./locale/*.json": "./locale/*.json",
+    "./installation-types": {
+      "types": "./lib/types/install-types.d.ts",
+      "default": "./lib/types/install-types.js"
+    }
   },
   "files": [
     "locale/*.json",
@@ -46,7 +50,12 @@
     "lib/typert.remote-client.d.ts"
   ],
   "dependencies": {
+    "@deepseek-ai/dsh-atomic-write": "workspace:*",
+    "@deepseek-ai/dsh-brand": "workspace:*",
+    "@deepseek-ai/dsh-skill": "workspace:*",
+    "@deepseek-ai/dsh-skill-filesystem": "workspace:*",
     "@deepseek-ai/schemastery": "workspace:~",
+    "yauzl": "^3.4.0",
     "zod": "^4.4.3"
   },
   "peerDependencies": {
@@ -55,6 +64,9 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "workspace:~",
-    "@deepseek-ai/dsh-typert-protocol": "workspace:*"
+    "@deepseek-ai/dsh-app-boot": "workspace:*",
+    "@deepseek-ai/dsh-typert-protocol": "workspace:*",
+    "@types/yauzl": "^2.10.3",
+    "fflate": "^0.8.3"
   }
 }

@@ -65,6 +65,8 @@ interface PendingModule {
 
 `CompanyMarketPage` 是公开公司目录的搜索结果：`source` 为配置的部署根地址；`items` 包含技能的规范 `slug`、显示 `title`、纯文本 `summary` 和发布 `version`；`total` 为完整目录中的匹配数，`page` 从零开始，`nextPage` 为下一结果页或 null。[公司市场服务](../../packages/boot/uwork-company-market/README.zh.md)负责匿名发现和有界分页；浏览不会创建已安装技能状态。
 
+`CompanyInstallations` 表明当前组成是否具备自有存储，并返回当前安装摘要。每个 `InstalledCompanySkill` 包含规范 slug、准确版本、已校验内容指纹、启用状态和文件数。安装、启停和删除只操作公司市场自有记录；失败结果区分激活未变化、已提交或未知。存储、限制与恢复详见[公司市场包](../../packages/boot/uwork-company-market/README.zh.md)。
+
 <!-- BEGIN GENERATED cordis-surface (gen-cordis-catalog.ts) — do not edit between markers -->
 
 <a id="cordis-surface"></a>
@@ -457,7 +459,7 @@ Source: [`packages/boot/app-boot/src/profile-context.ts`](../../packages/boot/ap
 
 ### `ctx.uworkCompanyMarket` — `CompanyMarket`
 
-Reads and searches the complete configured PUBLIC SkillHub catalog.
+Reads the PUBLIC SkillHub catalog and activates verified company skills.
 
 ```ts cordis-catalog
 /**
@@ -468,6 +470,39 @@ Reads and searches the complete configured PUBLIC SkillHub catalog.
  * @returns one bounded page, its total matches and the next result page.
  */
 @Remote async search(text: string, page: number, signal: AbortSignal): Promise<CompanyMarketPage>
+
+/**
+ * Read current installed versions, recovering only owned staging and never-activated candidates.
+ * @param signal - caller cancellation.
+ * @returns installation availability and current versions; catalog-only compositions report unavailable.
+ */
+@Remote async installations(signal: AbortSignal): Promise<CompanyInstallations>
+
+/**
+ * Install or update one exact public version through a verified content transaction.
+ * @param slug - selected canonical SkillHub slug.
+ * @param version - exact published version.
+ * @param signal - caller cancellation; an admitted atomic commit may complete after cancellation.
+ * @returns the current installed version after activation, or the same version on an idempotent retry.
+ */
+@Remote async installSkill(slug: string, version: string, signal: AbortSignal): Promise<InstalledCompanySkill>
+
+/**
+ * Change whether one installed company skill participates in future discovery.
+ * @param slug - canonical installed slug.
+ * @param enabled - next discovery state.
+ * @param signal - caller cancellation.
+ * @returns the refreshed installation list after the change.
+ */
+@Remote async setEnabled(slug: string, enabled: boolean, signal: AbortSignal): Promise<CompanyInstallations>
+
+/**
+ * Remove only the selected company installation from future discovery.
+ * @param slug - canonical company-owned slug; personal skills are unaffected.
+ * @param signal - caller cancellation.
+ * @returns the refreshed installation list after removal.
+ */
+@Remote async uninstallSkill(slug: string, signal: AbortSignal): Promise<CompanyInstallations>
 ```
 
 Source: [`packages/boot/uwork-company-market/src/index.ts`](../../packages/boot/uwork-company-market/src/index.ts)

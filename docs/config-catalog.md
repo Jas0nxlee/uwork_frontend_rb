@@ -4639,13 +4639,17 @@ export type ApprovalPolicy = 'ask' | 'never'
 
 ## `@deepseek-ai/dsh-uwork-company-market`
 
-- `source`: [`packages/boot/uwork-company-market/src/index.ts:9`](../packages/boot/uwork-company-market/src/index.ts)
+- `source`: [`packages/boot/uwork-company-market/src/index.ts:15`](../packages/boot/uwork-company-market/src/index.ts)
 
 ```ts config-catalog
 /** Company market deployment and query limits. */
-export interface Config extends CatalogOptions {
+export interface Config extends CatalogOptions, InstallLimits {
+  /** Absolute owned store directory; absent uses company-skills in the current profile, or catalog-only mode without a profile. */
+  readonly installDir?: string
   /** Maximum search text length in UTF-16 code units. */
   readonly maxQueryLength: number
+  /** Cross-process installation-index observation interval in milliseconds. */
+  readonly installationWatchMs: number
 }
 
 /** Configured transport and catalog limits. */
@@ -4664,6 +4668,34 @@ export interface CatalogOptions {
   readonly maxItems: number
   /** Maximum matches returned in a search result page. */
   readonly resultPageSize: number
+}
+
+/** Installation storage and transport budgets. */
+export interface InstallLimits extends ArchiveLimits {
+  /** Maximum downloaded ZIP bytes. */
+  readonly maxArchiveBytes: number
+  /** Complete installation deadline in milliseconds, including lock acquisition. */
+  readonly installTimeoutMs: number
+  /** Maximum wait for another process's installation writer, in milliseconds. */
+  readonly lockWaitMs: number
+  /** Maximum bytes in the activation index or one version manifest. */
+  readonly maxManifestBytes: number
+  /** Maximum installed skills in this store. */
+  readonly maxInstalledSkills: number
+  /** Maximum retained immutable versions across all installed skills. */
+  readonly maxStoredVersions: number
+}
+
+/** Limits enforced before and during decompression. */
+export interface ArchiveLimits {
+  /** Maximum entries, including directory entries. */
+  readonly maxArchiveEntries: number
+  /** Maximum bytes in one decompressed file. */
+  readonly maxFileBytes: number
+  /** Maximum decompressed bytes across all files. */
+  readonly maxExpandedBytes: number
+  /** Maximum UTF-8 bytes in one relative path. */
+  readonly maxPathBytes: number
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-uwork-company-market -->

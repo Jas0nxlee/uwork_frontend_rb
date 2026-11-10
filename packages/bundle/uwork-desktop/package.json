@@ -1,6 +1,6 @@
 {
   "name": "@deepseek-ai/dsh-uwork-desktop",
-  "description": "UWork presentation layer over the standard dsh desktop profile",
+  "description": "UWork product layer over the standard dsh desktop profile",
   "version": "0.2.2-rc.1",
   "publishConfig": {
     "access": "public"

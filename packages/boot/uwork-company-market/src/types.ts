@@ -52,6 +52,16 @@ declare module '@deepseek-ai/dsh-typert-protocol' {
       readonly reason: 'network' | 'http' | 'unauthorized' | 'forbidden' | 'rate-limited' | 'invalid' | 'limit'
       readonly status?: number
     }
+    /** A ZIP or resolver result cannot safely become an installed skill. */
+    'uwork-company-market/invalid-package': {
+      readonly reason: 'path' | 'symlink' | 'duplicate' | 'format' | 'fingerprint' | 'identity' | 'version' | 'limit' | 'missing-skill'
+    }
+    /** Installation did not complete, or its persisted outcome could not be read back. */
+    'uwork-company-market/install-failed': { readonly outcome: 'unchanged' | 'committed' | 'unknown' }
+    /** The saved installation index or a version manifest is invalid. */
+    'uwork-company-market/state-invalid': Record<string, never>
+    /** This composition has no profile-owned or explicitly configured skill store. */
+    'uwork-company-market/storage-unavailable': Record<string, never>
     /** Search text or page is outside the supported range. */
     'uwork-company-market/invalid-query': Record<string, never>
   }
