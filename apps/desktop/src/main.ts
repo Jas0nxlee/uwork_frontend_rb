@@ -7,7 +7,7 @@ import { DesktopUpdateSettings } from './update-settings.ts'
 import { isDesktopUpdateChannel } from './settings-file.ts'
 import type { ProductEventMap, ProductEvent } from '@deepseek-ai/dsh-client-product-analytics/types'
 import { WINDOWS_TITLEBAR_HEIGHT } from './windows-layout.ts'
-import { access, readFile, writeFile } from 'node:fs/promises'
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -71,6 +71,20 @@ import { DesktopUpdateOverlays } from './update-overlay.ts'
 import { DesktopQuitConfirmation } from './quit-confirmation.ts'
 import { DesktopTray } from './tray.ts'
 import { DesktopBackgroundNotice } from './background-notice.ts'
+import { desktopProduct, initializeDesktopHome } from '@deepseek-ai/dsh-desktop-host/product'
+
+const productManifest: unknown = JSON.parse(await readFile(join(app.getAppPath(), 'package.json'), 'utf8'))
+const product = desktopProduct(productManifest)
+initializeDesktopHome(productManifest, process.env)
+if (product !== undefined) {
+  app.setName(product.name)
+  const userData = join(app.getPath('appData'), product.userData)
+  await mkdir(userData, { recursive: true })
+  app.setPath('userData', userData)
+  await mkdir(join(app.getPath('userData'), 'session'), { recursive: true })
+  app.setPath('sessionData', join(app.getPath('userData'), 'session'))
+  if (process.platform === 'win32') app.setAppUserModelId(product.appId)
+}
 
 let focusPrimaryWindow = (): void => {}
 let stopForRecovery = async (): Promise<void> => { await stopOperationReports() }
@@ -1131,7 +1145,7 @@ async function main(): Promise<void> {
   const applicationIconPath = development ? join(app.getAppPath(), 'resources', 'icon-windows.png')
     : join(process.resourcesPath, 'icon.png')
   app.setAboutPanelOptions({
-    applicationName: 'DeepSeek Harness',
+    applicationName: product?.name ?? 'DeepSeek Harness',
     applicationVersion: app.getVersion(),
     // The release has no separate build number; omit Electron's bundle version.
     version: '',
@@ -1456,10 +1470,11 @@ async function main(): Promise<void> {
     window.focus()
   }
 
-  if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1') app.setAsDefaultProtocolClient('dsh')
+  if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1') app.setAsDefaultProtocolClient(product?.protocol ?? 'dsh')
   app.on('open-url', (event, url) => {
     event.preventDefault()
-    if (url === 'dsh://open' || url === 'dsh://open/') focusPrimaryWindow()
+    const scheme = product?.protocol ?? 'dsh'
+    if (url === `${scheme}://open` || url === `${scheme}://open/`) focusPrimaryWindow()
   })
 
   app.on('activate', (_event, hasVisibleWindows) => {

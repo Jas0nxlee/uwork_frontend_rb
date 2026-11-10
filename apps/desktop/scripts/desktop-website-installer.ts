@@ -1,4 +1,5 @@
 /** Validate one production installer and hold its file handle through COS publication. */
+import { desktopArtifactStem } from './desktop-product.ts'
 import { createHash } from 'node:crypto'
 import { open, lstat, type FileHandle } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -41,7 +42,7 @@ export async function prepareWebsiteInstaller(directory: string, manifest: Deskt
     throw new Error('website installer: build identity or production qualification mismatch')
   }
   const windows = route.target === 'win-x64'
-  const filename = `deepseek-harness-${source.version}-${route.target}.${windows ? 'exe' : 'dmg'}`
+  const filename = `${desktopArtifactStem}-${source.version}-${route.target}.${windows ? 'exe' : 'dmg'}`
   const file = manifest.files.find(item => item.name === filename)
   if (!file) throw new Error('website installer: selected installer is absent from build manifest')
   const path = join(directory, file.name)

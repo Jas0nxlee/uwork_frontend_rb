@@ -90,6 +90,15 @@
     "zod": "4.4.3",
     "@deepseek-ai/dsh-util-file-drag": "workspace:*",
     "@deepseek-ai/dsh-client-ui-file-actions": "workspace:*",
-    "tencentcloud-sdk-nodejs-teo": "4.1.330"
+    "tencentcloud-sdk-nodejs-teo": "4.1.330",
+    "@deepseek-ai/dsh-desktop-host": "workspace:*"
+  },
+  "dshDesktopProduct": {
+    "name": "UWork Next Preview",
+    "appId": "io.github.jas0nxlee.uwork.next",
+    "userData": "UWork Next Preview",
+    "defaultHome": "~/.uwork/harness-preview",
+    "protocol": "uwork-next",
+    "artifactStem": "uwork-next"
   }
 }

@@ -59,6 +59,7 @@ const harness = await vi.hoisted(async () => {
   let quitCompleted = deferred()
   let policyBlocked = deferred()
   let embeddedPolicy: unknown
+  let embeddedProduct: unknown
   let closeWindowsOnQuit = false
   let updateState: DesktopUpdateState = { phase: 'idle' }
   let platformDisposeDeferred: ReturnType<typeof deferred> | undefined
@@ -184,6 +185,9 @@ const harness = await vi.hoisted(async () => {
     getVersion: () => '1.0.0',
     getAppPath: (): string => 'desktop-test-app',
     setAppLogsPath: vi.fn(),
+    setName: vi.fn(),
+    setPath: vi.fn(),
+    setAppUserModelId: vi.fn(),
     getPath: vi.fn<(name: string) => string>(),
     setAboutPanelOptions: vi.fn<(options: Electron.AboutPanelOptionsOptions) => void>(),
     requestSingleInstanceLock: () => true,
@@ -256,6 +260,8 @@ const harness = await vi.hoisted(async () => {
     get policyBlocked() { return policyBlocked },
     get embeddedPolicy() { return embeddedPolicy },
     set embeddedPolicy(value: unknown) { embeddedPolicy = value },
+    get embeddedProduct() { return embeddedProduct },
+    set embeddedProduct(value: unknown) { embeddedProduct = value },
     nextNavigation() { navigated = deferred(); return navigated.promise },
     nextHostStart() { hostStarted = deferred(); return hostStarted.promise },
     deferPlatformDispose() { platformDisposeDeferred = deferred(); return platformDisposeDeferred },
@@ -264,6 +270,7 @@ const harness = await vi.hoisted(async () => {
     set pluginsEnabled(value: boolean) { pluginsEnabled = value },
     set closeWindowsOnQuit(value: boolean) { closeWindowsOnQuit = value },
     reset() {
+      embeddedProduct = undefined
       accountListener = undefined
       windows.length = 0
       views.length = 0; hosts.length = 0; handlers.clear(); app.removeAllListeners()
@@ -338,7 +345,8 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   const original = await importOriginal<typeof import('node:fs/promises')>()
   return { ...original, readFile: vi.fn((path: Parameters<typeof original.readFile>[0], encoding?: 'utf8') => {
     if (path === join('desktop-test-app', 'package.json')) {
-      return Promise.resolve(JSON.stringify({ dshDesktopAppId: 'com.deepseek.dsh', dshMandatoryUpdatePolicy: harness.embeddedPolicy }))
+      return Promise.resolve(JSON.stringify({ dshDesktopAppId: 'com.deepseek.dsh',
+        dshDesktopProduct: harness.embeddedProduct, dshMandatoryUpdatePolicy: harness.embeddedPolicy }))
     }
     return encoding === undefined ? original.readFile(path) : original.readFile(path, encoding)
   }) }
@@ -460,6 +468,7 @@ beforeEach(() => {
   const userData = mkdtempSync(join(tmpdir(), 'dsh-main-user-data-'))
   onTestFinished(() => { rmSync(userData, { recursive: true, force: true }) })
   harness.app.getPath.mockImplementation(name => name === 'userData' ? userData : join(userData, `desktop-test-${name}`))
+  vi.stubEnv('DSH_HOME', join(userData, 'harness'))
   vi.mocked(writeCrashReport).mockResolvedValue(join(harness.app.getPath('logs'), 'crash-test.log'))
   harness.dialog.showMessageBox.mockImplementation((options: { title?: string }) => {
     if (options.title !== en.startupFailed && options.title !== zh.startupFailed) return Promise.resolve({ response: 1 })
@@ -736,6 +745,22 @@ describe('desktop main startup', () => {
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining(path), expect.any(Error))
     expect(harness.dialog.showMessageBox).not.toHaveBeenCalledWith(expect.objectContaining({ title: en.startupFailed }))
     expect(readFileSync(path, 'utf8')).toBe(raw)
+  })
+
+  it('initializes the packaged product before opening its workspace', async () => {
+    harness.embeddedProduct = {
+      name: 'UWork Next Preview', appId: 'io.github.jas0nxlee.uwork.next',
+      userData: 'UWork Next Preview', defaultHome: '~/.uwork/harness-preview',
+      protocol: 'uwork-next', artifactStem: 'uwork-next',
+    }
+    const explicitHome = process.env.DSH_HOME
+    await readyForUpdate()
+    expect(harness.app.setName).toHaveBeenCalledWith('UWork Next Preview')
+    expect(harness.app.setPath).toHaveBeenCalledWith('userData', join(harness.app.getPath('appData'), 'UWork Next Preview'))
+    expect(harness.app.setAppUserModelId).toHaveBeenCalledWith('io.github.jas0nxlee.uwork.next')
+    expect(harness.app.setAsDefaultProtocolClient).toHaveBeenCalledWith('uwork-next')
+    expect(process.env.DSH_HOME).toBe(explicitHome)
+    expect(harness.app.setAboutPanelOptions).toHaveBeenCalledWith(expect.objectContaining({ applicationName: 'UWork Next Preview' }))
   })
 
   it('routes shell update documents and assets through the registered main protocol handler', async () => {

@@ -1,0 +1,16 @@
+# Bilingual-pair consistency record for guide.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/upgrade-guide/v0.2.2-rc.1/uwork-desktop-home/guide.md
+/:
+  en: da683095ac961074
+  zh: bb43b811fa2a3813
+/uwork-desktop-installation-identity:
+  en: 3c9ff4b5208201da
+  zh: d7c12f6345652612
+/uwork-desktop-installation-identity/change:
+  en: cd04e705cb67a1f8
+  zh: 052607544020eb9c
+/uwork-desktop-installation-identity/migration:
+  en: 21c0aea9ba4e649d
+  zh: f0de9dd550d4761f

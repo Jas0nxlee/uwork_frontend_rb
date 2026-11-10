@@ -86,6 +86,7 @@ describe('installed-update application inputs and builder configuration', () => 
       const [first, second] = await Promise.all(versions.map(version => createInstalledUpdateBuilderConfig(manifest, version, environment)))
       expect(first!.appId).toBe(second!.appId)
       expect(first!.extraMetadata.name).toBe(second!.extraMetadata.name)
+      expect(first!.extraMetadata.dshDesktopProduct).toBeUndefined()
       expect(first!.files.slice(0, 2)).toEqual(second!.files.slice(0, 2))
       expect(first!.publish).toEqual(second!.publish)
       for (const [index, config] of [first!, second!].entries()) {

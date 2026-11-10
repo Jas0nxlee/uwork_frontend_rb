@@ -1,7 +1,9 @@
 /** The installed CLI uses the shared pnpm distribution with Electron's package-operation environment. */
 
-import { delimiter, join } from 'node:path'
-import { afterEach, expect, it, vi } from 'vitest'
+import { delimiter, dirname, join } from 'node:path'
+import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
 import { runCli } from '@deepseek-ai/dsh/lib/bin.js'
 import { runDesktopCli } from '../../desktop-host/src/cli.ts'
 import { installOfficeEngineResolution } from '../../desktop-host/src/office-engine.ts'
@@ -16,7 +18,11 @@ afterEach(() => {
 
 it.each(['system-bin', undefined])('dispatches with bundled pnpm when PATH is %s', async (path) => {
   vi.stubEnv('PATH', path)
-  const runtime = join('Application 中文 with spaces', 'resources', 'app.asar', 'dsh')
+  const root = await mkdtemp(join(tmpdir(), 'uwork-cli-'))
+  onTestFinished(() => rm(root, { recursive: true, force: true }))
+  const runtime = join(root, 'Application 中文 with spaces', 'resources', 'app.asar', 'dsh')
+  await mkdir(dirname(runtime), { recursive: true })
+  await writeFile(join(dirname(runtime), 'package.json'), '{}')
   const support = join('Application 中文 with spaces', 'resources', 'runtime')
 
   await runDesktopCli(runtime, support)

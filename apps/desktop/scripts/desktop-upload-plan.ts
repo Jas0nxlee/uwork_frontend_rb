@@ -1,4 +1,5 @@
 /** Validate packaged Desktop update artifacts before any network upload begins. */
+import { desktopArtifactStem } from './desktop-product.ts'
 
 import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
@@ -241,7 +242,7 @@ export async function createDesktopUploadPlan(
     throw new Error(`desktop upload: ${metadataFilename}.files must contain exactly one target update file`)
   }
 
-  const base = `deepseek-harness-${buildVersion}-${target.os}-${target.arch}`
+  const base = `${desktopArtifactStem}-${buildVersion}-${target.os}-${target.arch}`
   const updaterExtension = target.platform === 'darwin' ? 'zip' : 'exe'
   const updaterInfo = updateFileInfo(metadata.files[0], `${metadataFilename}.files[0]`, `${base}.${updaterExtension}`)
   const updaterPath = await verifyChecksummedArtifact(artifactsRoot, updaterInfo)

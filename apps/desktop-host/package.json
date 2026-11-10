@@ -8,7 +8,9 @@
   "main": "lib/index.js",
   "files": [
     "lib/index.js",
-    "lib/cli.js"
+    "lib/cli.js",
+    "lib/product.js",
+    "lib/types/product.d.ts"
   ],
   "dependencies": {
     "koffi": "3.1.1",
@@ -40,5 +42,11 @@
     "@deepseek-ai/dsh-util-workspace-path": "workspace:*",
     "@deepseek-ai/dsh-brand": "workspace:*",
     "@deepseek-ai/dsh-tool-executor-native": "workspace:*"
+  },
+  "exports": {
+    "./product": {
+      "types": "./lib/types/product.d.ts",
+      "default": "./lib/product.js"
+    }
   }
 }

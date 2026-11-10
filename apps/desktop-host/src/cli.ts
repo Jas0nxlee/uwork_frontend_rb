@@ -3,6 +3,8 @@
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { runCli } from '@deepseek-ai/dsh/lib/bin.js'
 import { installOfficeEngineResolution, runtimeArchivePath } from './office-engine.ts'
+import { readFile } from 'node:fs/promises'
+import { initializeDesktopHome } from './product.ts'
 
 /**
  * Run the ordinary CLI with Desktop's bundled package manager and reserved-profile plugin access.
@@ -11,6 +13,8 @@ import { installOfficeEngineResolution, runtimeArchivePath } from './office-engi
  * @returns Completion of the selected CLI command; profile plugins own their process lifetime.
  */
 export async function runDesktopCli(runtimeDir: string, supportDir: string): Promise<void> {
+  const manifest: unknown = JSON.parse(await readFile(join(runtimeDir, '..', 'package.json'), 'utf8'))
+  initializeDesktopHome(manifest, process.env)
   installOfficeEngineResolution(runtimeDir)
   await runCli({
     manageDesktopProfile: true,

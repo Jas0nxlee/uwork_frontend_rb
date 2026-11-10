@@ -46,6 +46,9 @@
     },
     {
       "path": "../../packages/client/ui-file-actions"
+    },
+    {
+      "path": "../desktop-host"
     }
   ],
   "exclude": [
