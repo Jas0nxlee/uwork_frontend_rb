@@ -626,6 +626,23 @@ describe('page close and refresh', () => {
     expect(h.layout().tabs[tab]).toBeUndefined()
   })
 
+  it('reports a focused close as pending while its owner decides', async () => {
+    const h = harness()
+    h.controller.openTab('files')
+    const id = h.controller.active()!.id
+    const target = h.controller.focusedTarget(h.tabElement(id))!
+    let answer!: (allow: boolean) => void
+    const decision = new Promise<boolean>((resolve) => { answer = resolve })
+    const release = h.controller.registerCloseGuard('files', { prepare: () => decision, failed: vi.fn() })
+    expect(h.controller.closeTarget(target)).toBe('pending')
+    expect(h.layout().tabs[id]).toBeDefined()
+    const pending = h.controller.requestCloseIn(SESSION, id)
+    answer(false)
+    expect(await pending).toBe(false)
+    expect(h.layout().tabs[id]).toBeDefined()
+    release()
+  })
+
   it('releases page capabilities on unmount and abort without removing a newer registration', () => {
     const h = harness()
     h.controller.openTab('files')

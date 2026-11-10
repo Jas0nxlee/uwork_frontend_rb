@@ -212,6 +212,25 @@ export interface SidebarRightFlash {
 /** Synchronous close/replacement hook; resource owners retain any background cleanup. */
 export type SidebarRightCloseHandler = (sessionId: SessionId, tab: TabRecord) => void
 
+/** Editor-owned approval and error presentation before a tab is removed. */
+export interface SidebarRightCloseGuard {
+  /** Wait for save/discard/cancel. Aborted attempts must withdraw their interaction.
+   * @param sessionId - owning Session.
+   * @param tab - tab whose content would be discarded.
+   * @param signal - withdrawal when the registering plugin leaves.
+   * @returns true only after content can be removed.
+   */
+  prepare(sessionId: SessionId, tab: TabRecord, signal: AbortSignal): Promise<boolean>
+  /** Present a failed preparation without throwing; the tab is retained. @param error - preparation or cleanup failure. */
+  failed(error: unknown): void
+}
+
+interface PendingRemoval {
+  readonly guard: SidebarRightCloseGuard
+  readonly abort: AbortController
+  readonly promise: Promise<boolean>
+}
+
 /** The outward right-Sidebar face (`ctx.sidebarRight`). */
 export interface ISidebarRight {
   /**
@@ -306,6 +325,8 @@ export class SidebarRightController implements ISidebarRight {
   private readonly adopted: ReadonlyMap<SessionId, Adoption>
   private readonly rooms: ReadonlyMap<SessionId, RoomRule>
   private readonly closeHandlers = new Map<string, SidebarRightCloseHandler>()
+  private readonly closeGuards = new Map<string, SidebarRightCloseGuard>()
+  private readonly pendingRemovals = new Map<SessionId, Map<TabId, PendingRemoval>>()
   private readonly flashes: Map<SessionId, SnapshotStore<SidebarRightFlash | undefined>>
 
   /**
@@ -318,6 +339,41 @@ export class SidebarRightController implements ISidebarRight {
     if (this.closeHandlers.has(kind)) throw new Error(`sidebarRight: close handler already registered for ${kind}`)
     this.closeHandlers.set(kind, handler)
     return () => { if (this.closeHandlers.get(kind) === handler) this.closeHandlers.delete(kind) }
+  }
+
+  /**
+   * Register an editor-owned close decision, independently of synchronous cleanup.
+   * @param kind - tab kind owned by the plugin.
+   * @param guard - preparation and visible error reporting; failed must not throw.
+   * @returns unregister callback withdrawing this guard's pending decisions.
+   */
+  registerCloseGuard(kind: string, guard: SidebarRightCloseGuard): () => void {
+    if (this.closeGuards.has(kind)) throw new Error(`sidebarRight: close guard already registered for ${kind}`)
+    this.closeGuards.set(kind, guard)
+    return () => {
+      if (this.closeGuards.get(kind) !== guard) return
+      this.closeGuards.delete(kind)
+      for (const pending of this.pendingRemovals.values()) {
+        for (const request of pending.values()) if (request.guard === guard) request.abort.abort()
+      }
+    }
+  }
+
+  /**
+   * Request removal and await any registered save/discard decision.
+   * @param sessionId - owning Session.
+   * @param tabId - tab to remove.
+   * @returns true after removal, false for refusal, withdrawal or a stale target.
+   * @throws synchronous cleanup failures when no guard is registered.
+   */
+  requestCloseIn(sessionId: SessionId, tabId: TabId): Promise<boolean> {
+    const actions = this.actionsFor(sessionId)
+    const surface = this.adopted.get(sessionId)?.store.getSnapshot().bySession[sessionId]
+    const tab = surface?.layout.tabs[tabId]
+    if (actions === undefined || surface === undefined || tab === undefined || !canCloseTab(surface, tabId)) {
+      return Promise.resolve(false)
+    }
+    return this.removeAfterCleanup(sessionId, tab, () => { actions.closeTab(sessionId, tabId) }) ?? Promise.resolve(true)
   }
 
   /**
@@ -431,12 +487,49 @@ export class SidebarRightController implements ISidebarRight {
     if (actions === undefined || surface === undefined) return
     const tab = surface.layout.tabs[tabId]
     if (tab === undefined || !canCloseTab(surface, tabId)) return
-    this.removeAfterCleanup(sessionId, tab, () => { actions.closeTab(sessionId, tabId) })
+    void this.removeAfterCleanup(sessionId, tab, () => { actions.closeTab(sessionId, tabId) })
   }
 
-  private removeAfterCleanup(sessionId: SessionId, tab: TabRecord, commit: () => void): void {
-    this.closeHandlers.get(tab.kind)?.(sessionId, tab)
-    commit()
+  private removeAfterCleanup(sessionId: SessionId, tab: TabRecord, commit: () => void): Promise<boolean> | undefined {
+    const guard = this.closeGuards.get(tab.kind)
+    if (guard === undefined) {
+      this.closeHandlers.get(tab.kind)?.(sessionId, tab)
+      commit()
+      return
+    }
+    let pending = this.pendingRemovals.get(sessionId)
+    if (pending === undefined) { pending = new Map(); this.pendingRemovals.set(sessionId, pending) }
+    const existing = pending.get(tab.id)
+    if (existing !== undefined) return existing.promise
+    const requests = pending
+    const adoption = this.adopted.get(sessionId)
+    const abort = new AbortController()
+    const signal = AbortSignal.any([abort.signal, this.tabDomain.occurrence(sessionId, tab).signal])
+    let withdraw!: () => void
+    const cancelled = new Promise<boolean>((resolve) => { withdraw = () => { resolve(false) } })
+    signal.addEventListener('abort', withdraw, { once: true })
+    const prepared = Promise.resolve().then(() => signal.aborted ? false : guard.prepare(sessionId, tab, signal))
+    const promise = Promise.race([prepared, cancelled]).then((allowed) => {
+      const current = this.adopted.get(sessionId)
+      const surface = current?.store.getSnapshot().bySession[sessionId]
+      if (!allowed || signal.aborted || current !== adoption || surface?.layout.tabs[tab.id]?.contentId !== tab.contentId
+        || surface.layout.tabs[tab.id]?.kind !== tab.kind
+        || this.closeGuards.get(tab.kind) !== guard) return false
+      this.host.closeWithFocus(sessionId, findTabPane(surface.layout, tab.id).id, () => {
+        this.closeHandlers.get(tab.kind)?.(sessionId, tab)
+        commit()
+      })
+      return true
+    }).catch((error: unknown) => {
+      if (!signal.aborted) guard.failed(error)
+      return false
+    }).finally(() => {
+      signal.removeEventListener('abort', withdraw)
+      requests.delete(tab.id)
+      if (requests.size === 0) this.pendingRemovals.delete(sessionId)
+    })
+    pending.set(tab.id, { guard, abort, promise })
+    return promise
   }
 
   /** Claim a resource and place it in one session; an address outside the scheme or one no type claims throws. */
@@ -525,7 +618,7 @@ export class SidebarRightController implements ISidebarRight {
         : placement.revealIfOpened === false ? undefined : findContentTab(layout, claim.contentId, claim.kind)
     // Only new content takes the replaced tab's place; a reveal keeps it open.
     if (replaced === undefined || revealed !== undefined) commit()
-    else this.removeAfterCleanup(sessionId, replaced, commit)
+    else void this.removeAfterCleanup(sessionId, replaced, commit)
     // A reveal focuses the tab where it is.
     if (layout !== undefined && revealed !== undefined) this.flashShowing(sessionId, layout, revealed)
   }
@@ -693,19 +786,22 @@ export class SidebarRightController implements ISidebarRight {
    * Remove a captured page through its resource cleanup handler, or collapse the sole docked guide.
    * Cleanup errors propagate and preserve the page.
    * @param target - page captured while resolving the command.
-   * @returns closed after removal or collapse, unavailable without a page, or stale after identity changes.
+   * @returns closed after removal or collapse, pending during preparation,
+   * unavailable without a page, or stale after identity changes.
    */
-  closeTarget(target: SidebarRightTarget): 'closed' | 'unavailable' | 'stale' {
+  closeTarget(target: SidebarRightTarget): 'closed' | 'pending' | 'unavailable' | 'stale' {
     if (!this.isTargetCurrent(target)) return 'stale'
     const surface = this.mountedSurface()
     if (surface === undefined || target.tabId === undefined) return 'unavailable'
     const tabId = target.tabId
+    const tab = surface.layout.tabs[tabId]
+    const guarded = tab !== undefined && canCloseTab(surface, tabId) && this.closeGuards.has(tab.kind)
     const { sessionId, actions } = this.require()
     this.host.closeWithFocus(sessionId, target.paneId, () => {
       if (canCloseTab(surface, tabId)) this.close(tabId)
       else actions.setExpanded(sessionId, false)
     })
-    return 'closed'
+    return guarded ? 'pending' : 'closed'
   }
 
   /**
