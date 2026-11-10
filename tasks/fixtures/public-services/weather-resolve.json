@@ -1,0 +1,14 @@
+{
+  "code": 0,
+  "msg": "Fetched successfully",
+  "data": {
+    "skillId": 68,
+    "namespace": "global",
+    "slug": "weather",
+    "version": "1.0.0",
+    "versionId": 106,
+    "fingerprint": "sha256:0f94e922d372c96950684af5fa48cccc91f7f374335f2be9acb53eabd7cf3dd0",
+    "matched": null,
+    "downloadUrl": "/api/v1/skills/global/weather/versions/1.0.0/download"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "orgs": [
+    {
+      "id": "a1d155cb-7e9f-46ef-babb-ac296faac7a0",
+      "name": "北京",
+      "slug": "beijing"
+    },
+    {
+      "id": "c1715513-9ff7-4d4f-a129-226bc1cf65f0",
+      "name": "南京",
+      "slug": "nanjing"
+    },
+    {
+      "id": "d37a82ec-5fa0-491f-8ba5-36bf0907504e",
+      "name": "厦门",
+      "slug": "xiamen"
+    },
+    {
+      "id": "80f0a35d-d5f7-4e7e-bc3a-d02d2a1a2360",
+      "name": "天津",
+      "slug": "tianjin"
+    }
+  ],
+  "llm_base_url": "https://llm.ucas.com.cn:15000"
+}

@@ -1,0 +1,41 @@
+{
+  "items": [
+    {
+      "slug": "weather",
+      "displayName": "weather",
+      "summary": "Retrieve and summarize current weather and forecasts for locations, rain, temperature, and travel planning using an available web tool or wttr.in over HTTPS.",
+      "tags": {},
+      "stats": {
+        "downloads": 5,
+        "stars": 0
+      },
+      "createdAt": 0,
+      "updatedAt": 1793175116853,
+      "latestVersion": {
+        "version": "1.0.0",
+        "createdAt": 1793175116853,
+        "changelog": "",
+        "license": null
+      }
+    },
+    {
+      "slug": "video-frames",
+      "displayName": "video-frames",
+      "summary": "Extract a single frame from a local video at the first frame, a timestamp, or a zero-based frame index using FFmpeg.",
+      "tags": {},
+      "stats": {
+        "downloads": 3,
+        "stars": 0
+      },
+      "createdAt": 0,
+      "updatedAt": 1793175116823,
+      "latestVersion": {
+        "version": "1.0.0",
+        "createdAt": 1793175116823,
+        "changelog": "",
+        "license": null
+      }
+    }
+  ],
+  "nextCursor": "1"
+}
