@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-11-10-uwork-presentation-ownership.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-11-10-uwork-presentation-ownership.md
+/agent-note-uwork-presentation-over-native-ui-owners:
+  en: 90692d096d228fd0
+  zh: 88418789ce9e458d
+/agent-note-uwork-presentation-over-native-ui-owners/problem:
+  en: f16658a5106307f2
+  zh: 090904eb99e6ecbc
+/agent-note-uwork-presentation-over-native-ui-owners/decision:
+  en: c11b3f862b2e0995
+  zh: 538869f3bbd43e45
+/agent-note-uwork-presentation-over-native-ui-owners/alternatives-considered:
+  en: 6ab687a6c00efb1d
+  zh: 01ada8382b61d422
+/agent-note-uwork-presentation-over-native-ui-owners/consequences:
+  en: 958667b30386cf84
+  zh: 617972ae42746c60

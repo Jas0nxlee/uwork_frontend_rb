@@ -347,6 +347,7 @@ export function apply(ctx: Context, config: Config = Config({})): void {
     children: {
       'conversation.session': { kind: 'single', scope: 'session' },
       'conversation.composer': { kind: 'chain', scope: 'session' },
+      'conversation.composer.frame': { kind: 'hoc', scope: 'root' },
       'conversation.composer.bar': { kind: 'single', scope: 'session-maybe' },
       'conversation.input.dock': { kind: 'list', scope: 'session' },
       'conversation.hero.frame': { kind: 'hoc', scope: 'root' },

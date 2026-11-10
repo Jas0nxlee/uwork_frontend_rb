@@ -18,6 +18,7 @@ import { PanelIcon } from './PanelIcon.tsx'
 import { en, ja, es, fr, de, ru, pt, zh, type SidebarKey } from './locales.ts'
 
 export type {
+  SidebarFrameOwnerProps,
   SidebarBrandMarkOwnerProps, SidebarBrandNameOwnerProps, SidebarFooterActionOwnerProps,
   SidebarPanelActionEntry, SidebarPanelActionsOwnerProps, SidebarPanelIconOwnerProps, SidebarPanelMetadata,
   SidebarRootComponentProps, SidebarRootInjected, SidebarSectionOwnerProps, SidebarSettingsOwnerProps,
@@ -94,6 +95,7 @@ export function apply(ctx: ClientContext): void {
       name: 'sidebar',
       locale: NS,
       children: {
+        'sidebar.frame': { kind: 'hoc', scope: 'root' },
         'sidebar.brand.mark': { kind: 'single', scope: 'root' },
         'sidebar.brand.name': { kind: 'single', scope: 'root' },
         'sidebar.toggle.badge': { kind: 'single', scope: 'root' },

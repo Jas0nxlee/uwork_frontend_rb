@@ -27,6 +27,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
     }
   }
   interface SlotMap {
+    /** Product presentation around the native shell; the shell retains all navigation state and child slots. */
+    'sidebar.frame': { kind: 'hoc'; scope: 'root'; owner: SidebarFrameOwnerProps }
     /** Non-interactive notification inside the collapsed sidebar expand button. */
     'sidebar.toggle.badge': { kind: 'single'; scope: 'root'; owner: Record<never, never> }
     /**
@@ -74,6 +76,14 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      */
     'sidebar.footer.action': { kind: 'list'; scope: 'root'; owner: SidebarFooterActionOwnerProps }
   }
+}
+
+/** Presentation-only state supplied to sidebar frame layers. */
+export interface SidebarFrameOwnerProps {
+  /** Requested collapsed state; the shell owns its transition and rail geometry. */
+  readonly collapsed: boolean
+  /** Whether the sidebar is the touch-sized navigation drawer. */
+  readonly drawer: boolean
 }
 
 /** Geometry supplied to the sidebar brand-mark occupant. */
@@ -231,6 +241,7 @@ export type SidebarRootInjected = {
 export type SidebarRootComponentProps =
   PropsRuntime<'sidebar'>
   & PropsRenderSlots<
+    | 'sidebar.frame'
     | 'sidebar.brand.mark'
     | 'sidebar.brand.name'
     | 'sidebar.toggle.badge'

@@ -1,0 +1,13 @@
+/* Source: UWork SidePaneTabTrigger's 156px equal basis, 60px floor, 28px strip band and 8px corners.
+   The native DockLayout still owns measurement, overflow, controls, drag and retained tab hosts. */
+.frame {
+  display: contents;
+  --dsh-dockkit-pane-background: var(--dsw-alias-bg-layer-1);
+  --dsh-dockkit-strip-background: var(--dsw-alias-bg-layer-1);
+  --dsh-dockkit-tab-flex: 1 1 156px;
+  --dsh-dockkit-tab-min-width: 60px;
+  --dsh-dockkit-tab-max-width: 156px;
+  --dsh-dockkit-tab-padding: 0 8px 0 6px;
+  --dsh-dockkit-tab-radius: var(--dsw-radius-sm);
+  --dsh-dockkit-tab-active-background: var(--dsw-alias-interactive-bg-active);
+}

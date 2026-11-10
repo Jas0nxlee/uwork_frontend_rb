@@ -49,6 +49,9 @@
     },
     {
       "path": "../desktop-host"
+    },
+    {
+      "path": "../../packages/credentials/native-authorization"
     }
   ],
   "exclude": [

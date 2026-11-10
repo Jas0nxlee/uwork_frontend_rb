@@ -3,6 +3,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, statSync, w
 import { execFile } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { promisify } from 'node:util'
+import { createRequire } from 'node:module'
 import { rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -83,7 +84,12 @@ it('boots the configured UWork layer and preserves it after external-plugin reco
     console.log(process.env.DSH_HOME);
   `], { env: environment })
   expect(bootstrap.stdout.trim()).toBe(home)
-  const hostEnvironment = { ...environment, DSH_HOME: home }
+  const liveNetwork = process.env.DSH_WECOM_LIVE === '1'
+    ? { ...Object.fromEntries(Object.entries(process.env).filter(([name]) =>
+      /^(?:https?_proxy|all_proxy|no_proxy|node_extra_ca_certs)$/iu.test(name))),
+    ...(process.env.DSH_WECOM_PROXY === undefined ? {} : { HTTPS_PROXY: process.env.DSH_WECOM_PROXY }), NODE_USE_ENV_PROXY: '1' }
+    : {}
+  const hostEnvironment = { ...environment, ...liveNetwork, DSH_HOME: home }
   const pnpmDir = join(root, 'runtime/primary-runtime/dependencies/pnpm')
   cpSync(realpathSync(join(repository, 'apps/desktop/node_modules/pnpm')), pnpmDir, { recursive: true })
   const runCli = (launchEnvironment: NodeJS.ProcessEnv) =>
@@ -98,9 +104,35 @@ it('boots the configured UWork layer and preserves it after external-plugin reco
     expect(legacySnapshot()).toEqual(originalLegacy)
   }
   await checkCli()
+  let liveChecked = false
   const boot = async () => {
     resources.host = new DesktopHostProcess(process.execPath, runtime, paths.profile, undefined, hostEnvironment)
     const ready = await resources.host.start()
+    const identity = await resources.host.nativeAuthorizationState()
+    expect(identity).toMatchObject({ status: 'signed-out' })
+    expect(identity?.choices.map(choice => choice.label)).toEqual(['北京', '南京', '厦门', '天津'])
+    expect(identity).not.toHaveProperty('authorizationUrl')
+    expect(identity).not.toHaveProperty('token')
+    if (process.env.DSH_WECOM_LIVE === '1' && !liveChecked) {
+      liveChecked = true
+      const provider = resources.host.nativeAuthorizationProvider()
+      const attempt = await provider.start(identity!.choices[0]!.id, new AbortController().signal)
+      try {
+        const descriptor = join(root, 'native-live.json')
+        writeFileSync(descriptor, JSON.stringify(attempt), { mode: 0o600 })
+        const electron: unknown = createRequire(import.meta.url)('electron')
+        if (typeof electron !== 'string') throw new Error('Electron unavailable')
+        const result = await promisify(execFile)(electron, [
+          join(repository, 'apps/desktop/tests/fixtures/native-authorization-live.mjs'),
+          join(repository, 'apps/desktop/lib/types/authorization-view.js'), descriptor,
+          join(root, 'electron-live'), join(repository, '.artifacts/wecom-live'),
+        ], { env: { ...process.env, ...liveNetwork, ELECTRON_RUN_AS_NODE: undefined }, timeout: 45_000 })
+        expect(result.stdout).toContain('WECOM_LIVE_RESULT')
+      } finally {
+        await provider.cancel(attempt.id)
+        expect(await resources.host.nativeAuthorizationState()).toMatchObject({ status: 'signed-out' })
+      }
+    }
     expect(JSON.stringify(ready.injections)).toContain('@deepseek-ai/dsh-client-ui-uwork')
     expect(JSON.stringify(ready.injections)).not.toContain('@deepseek-ai/dsh-client-ui-brand-official')
     const cookie = await authenticateWebHost(ready.url)

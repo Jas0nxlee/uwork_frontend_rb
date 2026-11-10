@@ -9,9 +9,11 @@ import { runProfile } from '@deepseek-ai/dsh/profile-boot'
 import type {} from '@deepseek-ai/dsh-client-connection'
 import type {} from '@deepseek-ai/dsh-host-webserver'
 import type {} from '@deepseek-ai/dsh-deepseek-account'
+import type {} from '@deepseek-ai/dsh-native-authorization'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import * as desktopOffice from './office.ts'
 import { localDragResource } from './file-drag.ts'
+import { nativeAuthorizationBridge } from './native-authorization.ts'
 
 import { installDesktopUpdateTaskControl } from './update-tasks.ts'
 import { installDesktopQuitInspection } from './quit-inspection.ts'
@@ -57,7 +59,9 @@ async function main(): Promise<void> {
     if (!process.connected || process.send === undefined) { resolve(); return }
     process.send(message, (error) => { if (error === null) resolve(); else reject(error) })
   })
+  const authorization = nativeAuthorizationBridge(application.then(running => running.ctx), send)
   const stop = (): Promise<void> => stopping ??= (async () => {
+    await authorization.dispose()
     for (const abort of dragReads.values()) abort.abort()
     await Promise.allSettled(dragTasks)
     // Startup failure is reported by main; shutdown only owns a tree that booted.
@@ -71,6 +75,7 @@ async function main(): Promise<void> {
   })()
   process.on('message', (message: unknown) => {
     if (typeof message !== 'object' || message === null || !('type' in message)) return
+    if (authorization.handle(message)) return
     if (message.type === 'shutdown') { void stop(); return }
     if (message.type === 'file-drag-cancel') {
       if ('requestId' in message && typeof message.requestId === 'number') dragReads.get(message.requestId)?.abort()
@@ -128,6 +133,11 @@ async function main(): Promise<void> {
   })
   process.once('disconnect', () => { void stop() })
   const { ctx } = await application
+  ctx.on('native-authorization/changed', (state) => {
+    void send({ type: 'native-authorization-state', state }).catch(() => {
+      console.warn('Native authorization state notification unavailable')
+    })
+  })
   installOperationDiagnostics(ctx, record => send({ type: 'plugin-operation', record }), 32, runId)
   control.updateTasks = installDesktopUpdateTaskControl(ctx)
   control.quitInspection = installDesktopQuitInspection(ctx)

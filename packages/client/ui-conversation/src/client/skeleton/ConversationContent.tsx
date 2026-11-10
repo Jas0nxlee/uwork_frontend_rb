@@ -182,7 +182,7 @@ export function ConversationContent(props: ConversationContentProps) {
   // end off-screen when the user is not pinned to the floor.
   const composerSeat = (
     <div ref={seatResizeRef} className={css.composerSeat} data-composer-seat="" data-conversation-region="composer">
-      {composer}
+      {renderSlot('conversation.composer.frame', { interactionKind: pendingInteraction?.kind }, { children: composer })}
     </div>
   )
 

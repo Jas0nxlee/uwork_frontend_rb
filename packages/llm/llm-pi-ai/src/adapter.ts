@@ -117,6 +117,8 @@ export interface PiAiAdapterOptions {
    * @returns headers to pass to pi-ai after applying Harness attribution.
    */
   prepareHeaders?: (request: PiAiRequestHeaderContext, headers: Headers) => Headers
+  /** Authorize the captured route before resolving credentials; optionally bind its lifetime. */
+  prepareSignal?: (request: PiAiRequestHeaderContext) => AbortSignal | undefined
   /** Resolve the optional durable attachment service at request time. */
   resolveAttachments?: () => AttachmentStore | undefined
   /** Bridge one attachment reference into the current model-tool execution world. */
@@ -236,6 +238,15 @@ function requestHeaderDiagnostic(error: unknown): string {
     : 'the contributing plugin threw a non-Error value; throw an Error with a safe diagnostic'
 }
 
+/** Capture model-hidden metadata once for synchronous transport contributors. */
+function requestMetadata(options: GenerateOptions<string>, baseURL: string): PiAiRequestHeaderContext {
+  return Object.freeze({
+    provider: options.provider, model: options.model, baseURL,
+    ...options.sessionId === undefined ? {} : { sessionId: options.sessionId },
+    ...options.purpose === undefined ? {} : { purpose: options.purpose },
+  })
+}
+
 /** Prepare request-owned headers without allowing contributors to replace attribution. */
 function requestHeaders(
   configured: Readonly<Record<string, string>> | undefined,
@@ -247,13 +258,7 @@ function requestHeaders(
     const initial = new Headers()
     // Profile aliases overwrite case-insensitively; the Headers constructor appends them.
     for (const [name, value] of Object.entries(configured ?? {})) initial.set(name, value)
-    const request: PiAiRequestHeaderContext = Object.freeze({
-      provider: options.provider,
-      model: options.model,
-      baseURL,
-      ...options.sessionId === undefined ? {} : { sessionId: options.sessionId },
-      ...options.purpose === undefined ? {} : { purpose: options.purpose },
-    })
+    const request = requestMetadata(options, baseURL)
     const headers = prepare === undefined ? initial : prepare(request, initial)
     for (const [name, value] of Object.entries(attributionHeaders())) headers.set(name, value)
     return Object.fromEntries(headers)
@@ -423,12 +428,14 @@ export class PiAiAdapter extends LlmAdapter {
       model,
       options.reasoningEffort ?? profile.reasoning,
     )
+    const routeSignal = this.config.prepareSignal?.(requestMetadata(options, model.baseUrl))
+    if (routeSignal?.aborted) throw new LlmError('pi-ai route authorization was revoked', 'ABORTED')
     const apiKey = await this.config.resolveApiKey(options.provider, profile)
 
     const consumer = new AbortController()
-    const upstream = options.signal === undefined
-      ? consumer.signal
-      : AbortSignal.any([options.signal, consumer.signal])
+    const upstream = AbortSignal.any([consumer.signal,
+      ...options.signal === undefined ? [] : [options.signal],
+      ...routeSignal === undefined ? [] : [routeSignal]])
     const streamIdleTimeoutMs = profile.streamIdleTimeoutMs
     using watchdog = idleWatchdog(upstream, streamIdleTimeoutMs, 'LLM_STREAM_IDLE_TIMEOUT')
 
@@ -465,7 +472,7 @@ export class PiAiAdapter extends LlmAdapter {
         signal: watchdog.signal,
         headers: requestHeaders(profile.headers, options, model.baseUrl, this.config.prepareHeaders),
       })
-      const iterator = toStreamChunks(events, model.contextWindow, options.signal, model.id)[Symbol.asyncIterator]()
+      const iterator = toStreamChunks(events, model.contextWindow, upstream, model.id)[Symbol.asyncIterator]()
       let exhausted = false
       try {
         while (true) {
@@ -489,8 +496,8 @@ export class PiAiAdapter extends LlmAdapter {
       if (timeoutOf(watchdog.signal, 'LLM_STREAM_IDLE_TIMEOUT') !== undefined) {
         throw new LlmError(`pi-ai stream idle timeout after ${streamIdleTimeoutMs}ms`, 'TIMEOUT', { cause: error })
       }
-      if (options.signal?.aborted) {
-        throw new LlmError('pi-ai request aborted by caller', 'ABORTED', { cause: error })
+      if (options.signal?.aborted || routeSignal?.aborted) {
+        throw new LlmError('pi-ai request was cancelled', 'ABORTED', { cause: error })
       }
       throw error
     } finally {

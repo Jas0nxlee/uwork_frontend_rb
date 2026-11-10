@@ -11,6 +11,10 @@ English | [中文](README.zh.md)
 
 Display UWork artwork in the sidebar and UCAS decoration on the blank home. Marks follow the application ink in light and dark themes; leaving the home removes its decoration while retaining the composer.
 
+The source UWork neutral light/dark palettes apply through the native theme service to the application, sidebar, composer, and navigation states. Existing theme preferences, status colors, focus indicators, font settings, and native agent presets retain their owners.
+
+Expanded desktop navigation uses a compact presentation through `sidebar.frame`. The native sidebar still owns actions, collapse, focus, and workspace/session state; the mobile drawer and collapsed rail keep their original geometry.
+
 ## Table of Contents
 
 - [Use this package](#use-this-package)
@@ -32,6 +36,8 @@ Compose the [UWork bundle](../../bundle/uwork-desktop/README.md) to withdraw the
 <summary>Implementation internals</summary>
 
 Standard slots own each contribution and release it with the locale dictionary on unload. Asset masks inherit semantic theme ink. Source UWork artwork retains its Apache-2.0 license and source notice.
+
+One lifecycle-owned `theme.overrideTokens` layer maps the source Zai palettes to semantic roles. It follows light/dark/system changes without writing a preference; unloading restores the underlying palette.
 
 </details>
 
@@ -55,7 +61,7 @@ None.
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- Only branding and home decoration are provided; navigation and the remaining page layouts are pending.
+- This package owns brand, home decoration, neutral theme roles, and compact desktop navigation. Conversation, interaction, and workbench geometry belong to their dedicated UWork presentation packages.
 - Native installer icons, window menus, and enterprise sign-in are outside this package.
 
 <a id="dev-note"></a>

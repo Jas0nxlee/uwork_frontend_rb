@@ -58,16 +58,16 @@
   flex-direction: column;
   /* figma Input 75:8208: 12px between the text area and the button row; the
      card's top pad before .InputText tightened from the drawn 10 to 8. */
-  gap: 12px;
+  gap: var(--dsh-composer-card-row-gap, 12px);
   width: 100%;
   max-width: var(--dsh-composer-card-max-width);
-  padding-top: 8px;
+  padding-top: var(--dsh-composer-card-top-inset, 8px);
   /* Input stroke: the light neutral (l2, one step above the menus' l1),
      drawn as the elevation hairline so it costs no layout; the shadow is the
      soft elevation tier. Fill: the input surface token (elevated in dark). */
   border: 0;
   --dsw-elevation-stroke-color: var(--dsw-alias-border-l2);
-  border-radius: var(--dsw-radius-panel);
+  border-radius: var(--dsh-composer-card-radius, var(--dsw-radius-panel));
   background: var(--dsw-specific-input-major);
   box-shadow: var(--dsw-elevation-soft);
   /* The draft text follows the Settings font-size preference (the textarea,
@@ -394,7 +394,8 @@
 
 /* Primary send (figma IconButton 34:10465): 34px circle, #3964FE light /
    #679EFE dark — the info-fill pair (500→400), NOT button-primary (ink);
-   white glyph; empty text = 0.4 opacity. */
+   white glyph; empty text = 0.4 opacity. Product layers may override the
+   local submit fill/hover/ink variables without changing button states. */
 .primary {
   display: grid;
   place-items: center;
@@ -404,10 +405,10 @@
   border: none;
   border-radius: 999px;
   corner-shape: round;
-  background: var(--dsw-alias-button-info-fill);
+  background: var(--dsh-composer-submit-fill, var(--dsw-alias-button-info-fill));
   /* Static white, not the foreground token: the arrow stays white on the blue
      fill in both themes (design 34:10465). */
-  color: #fff;
+  color: var(--dsh-composer-submit-ink, #fff);
   cursor: pointer;
   transition: background-color 100ms ease;
   /* Opts out of the row's 2px downward shift (.row top pad): the send circle
@@ -423,7 +424,7 @@
 
 @media (hover: hover) {
   .primary:hover:not(:disabled) {
-    background: var(--dsw-alias-button-info-hover);
+    background: var(--dsh-composer-submit-hover, var(--dsw-alias-button-info-hover));
   }
 }
 

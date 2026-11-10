@@ -4702,6 +4702,97 @@ export interface ArchiveLimits {
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-uwork-company-market -->
 
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-uwork-enterprise -->
+<a id="deepseek-aidsh-uwork-enterprise"></a>
+
+## `@deepseek-ai/dsh-uwork-enterprise`
+
+- `inject`: `credentials` · `authorization` · `nativeAuthorization`
+- `source`: [`packages/credentials/uwork-enterprise/src/index.ts:21`](../packages/credentials/uwork-enterprise/src/index.ts)
+
+```ts config-catalog
+/** Deployment allowlist and bounded request/lifecycle settings; all are validated before registration. */
+export interface Config {
+  /** Pure HTTPS origin of the enterprise issuer. */
+  apiBaseUrl: string
+  /** Explicit public organization and callback allowlist. */
+  organizations: Organization[]
+  /** Initially selected organization; must exist in the allowlist. */
+  defaultOrgId: string
+  /** Per-request deadline in milliseconds; defaults to 15000. */
+  requestTimeoutMs?: number
+  /** Maximum local sign-in lifetime in milliseconds; defaults to 300000. */
+  attemptTimeoutMs?: number
+  /** Authorization-flow handoff polling interval in milliseconds; defaults to 1500. */
+  pollIntervalMs?: number
+  /** Cross-process grant observation interval in milliseconds; defaults to 1000. */
+  observationIntervalMs?: number
+  /** Complete issuer JSON response byte limit; defaults to 65536. */
+  maxResponseBytes?: number
+}
+
+/** Public configuration recovered from the issuer's supported release. No secrets. */
+export interface Organization {
+  /** Exact issuer organization ID. */
+  orgId: string
+  /** Public WeCom corporation ID for this organization. */
+  corpId: string
+  /** Public numeric WeCom application ID. */
+  agentId: string
+  /** Optional public display name; omitted uses the organization ID. */
+  label?: string | undefined
+  /** Exact HTTPS callback URL, without credentials, query or fragment. */
+  callbackUrl: string
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-uwork-enterprise -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-uwork-gateway-service -->
+<a id="deepseek-aidsh-uwork-gateway-service"></a>
+
+## `@deepseek-ai/dsh-uwork-gateway-service`
+
+- `inject`: `uworkIdentity`
+- `refs`: `GatewayConfig` (`@deepseek-ai/dsh-uwork-gateway/types`)
+- `source`: [`packages/boot/uwork-gateway-service/src/index.ts:11`](../packages/boot/uwork-gateway-service/src/index.ts)
+
+```ts config-catalog
+/** Request and successful-read cache budgets. */
+export interface Config extends GatewayConfig {
+  /** Successful aggregate cache lifetime in milliseconds; zero always revalidates. */
+  readonly cacheTtlMs: number
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-uwork-gateway-service -->
+
+<!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-uwork-model-provisioning -->
+<a id="deepseek-aidsh-uwork-model-provisioning"></a>
+
+## `@deepseek-ai/dsh-uwork-model-provisioning`
+
+- `inject`: `credentials` · `settings` · `agentDefaultModel`
+- `source`: [`packages/llm/uwork-model-provisioning/src/index.ts:19`](../packages/llm/uwork-model-provisioning/src/index.ts)
+
+```ts config-catalog
+interface Config {
+  /** Native pi-ai profile entry whose provider dictionary stores owned routes. */
+  settingsNamespace: string
+  /** Optional HTTPS control-plane origin; omission disables account-to-model synchronization. */
+  gatewayApiBaseUrl?: string
+  /** Explicit HTTPS inference origins allowed to receive enterprise API keys. */
+  allowedModelEndpointOrigins: string[]
+  /** Deadline in milliseconds for each gateway request. */
+  timeoutMs: number
+  /** Maximum accepted bytes per gateway JSON response. */
+  maxResponseBytes: number
+  /** Maximum accepted items in a gateway catalog or key listing. */
+  maxItems: number
+  /** Release-owned initial model order; empty requires explicit user selection. */
+  preferredModels: string[]
+}
+```
+<!-- END GENERATED config-catalog:@deepseek-ai/dsh-uwork-model-provisioning -->
+
 <!-- BEGIN GENERATED config-catalog:@deepseek-ai/dsh-web -->
 <a id="deepseek-aidsh-web"></a>
 
@@ -5026,6 +5117,11 @@ export interface Config {
 | `@deepseek-ai/dsh-client-ui-user-questions` | — | [`packages/client/ui-user-questions/src/index.ts`](../packages/client/ui-user-questions/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-uwork` | — | [`packages/client/ui-uwork/src/index.ts`](../packages/client/ui-uwork/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-uwork-company-market` | — | [`packages/client/ui-uwork-company-market/src/index.ts`](../packages/client/ui-uwork-company-market/src/index.ts) |
+| `@deepseek-ai/dsh-client-ui-uwork-conversation` | — | [`packages/client/ui-uwork-conversation/src/index.ts`](../packages/client/ui-uwork-conversation/src/index.ts) |
+| `@deepseek-ai/dsh-client-ui-uwork-enterprise` | — | [`packages/client/ui-uwork-enterprise/src/index.ts`](../packages/client/ui-uwork-enterprise/src/index.ts) |
+| `@deepseek-ai/dsh-client-ui-uwork-interactions` | — | [`packages/client/ui-uwork-interactions/src/index.ts`](../packages/client/ui-uwork-interactions/src/index.ts) |
+| `@deepseek-ai/dsh-client-ui-uwork-usage` | — | [`packages/client/ui-uwork-usage/src/index.ts`](../packages/client/ui-uwork-usage/src/index.ts) |
+| `@deepseek-ai/dsh-client-ui-uwork-workbench` | — | [`packages/client/ui-uwork-workbench/src/index.ts`](../packages/client/ui-uwork-workbench/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-workflow-run` | — | [`packages/client/ui-workflow-run/src/index.ts`](../packages/client/ui-workflow-run/src/index.ts) |
 | `@deepseek-ai/dsh-client-ui-workspace` | — | [`packages/client/ui-workspace/src/index.ts`](../packages/client/ui-workspace/src/index.ts) |
 | `@deepseek-ai/dsh-command-compact` | `commands` · `compaction` | [`packages/compaction/command-compact/src/index.ts`](../packages/compaction/command-compact/src/index.ts) |
@@ -5058,6 +5154,7 @@ export interface Config {
 | `@deepseek-ai/dsh-lsp` | — | [`packages/lsp/lsp/src/index.ts`](../packages/lsp/lsp/src/index.ts) |
 | `@deepseek-ai/dsh-mcp-resources` | `tools` | [`packages/mcp/mcp-resources/src/index.ts`](../packages/mcp/mcp-resources/src/index.ts) |
 | `@deepseek-ai/dsh-message-quotes` | — | [`packages/session/message-quotes/src/index.ts`](../packages/session/message-quotes/src/index.ts) |
+| `@deepseek-ai/dsh-native-authorization` | — | [`packages/credentials/native-authorization/src/index.ts`](../packages/credentials/native-authorization/src/index.ts) |
 | `@deepseek-ai/dsh-otel` | — | [`packages/telemetry/otel/src/index.ts`](../packages/telemetry/otel/src/index.ts) |
 | `@deepseek-ai/dsh-plugin-recommendations` | `pluginManager` · `agents` · `skills` · `actionCards` | [`packages/experimental/plugin-recommendations/src/index.ts`](../packages/experimental/plugin-recommendations/src/index.ts) |
 | `@deepseek-ai/dsh-sandbox-ssh` | `ssh` | [`packages/ssh/sandbox-ssh/src/index.ts`](../packages/ssh/sandbox-ssh/src/index.ts) |
@@ -5190,5 +5287,6 @@ export interface Config {
 | `@deepseek-ai/dsh-util-time` | — | [`packages/util/time/src/index.ts`](../packages/util/time/src/index.ts) |
 | `@deepseek-ai/dsh-util-values` | — | [`packages/util/values/src/index.ts`](../packages/util/values/src/index.ts) |
 | `@deepseek-ai/dsh-util-workspace-path` | — | [`packages/util/workspace-path/src/index.ts`](../packages/util/workspace-path/src/index.ts) |
+| `@deepseek-ai/dsh-uwork-gateway` | — | [`packages/boot/uwork-gateway/src/index.ts`](../packages/boot/uwork-gateway/src/index.ts) |
 | `@deepseek-ai/dsh-win32-process` | — | [`packages/subprocess/win32-process/src/index.ts`](../packages/subprocess/win32-process/src/index.ts) |
 <!-- END GENERATED config-catalog:library -->

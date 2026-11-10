@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { resolveDesktopLocale } from '../src/locale.ts'
 import { needsWelcome, WELCOME_IPC } from '../src/welcome-api.ts'
+import type { NativeAuthorizationState } from '@deepseek-ai/dsh-native-authorization/types'
 
 const electron = vi.hoisted(() => ({
   create: vi.fn<(options: unknown) => ReturnType<typeof createWindow>>(),
@@ -185,6 +186,16 @@ describe('desktop welcome window', () => {
     expect(needsWelcome({ loggedIn: false, hasApiKey: false })).toBe(true)
     expect(needsWelcome({ loggedIn: false, hasApiKey: true })).toBe(false)
     expect(needsWelcome({ loggedIn: true, hasApiKey: true })).toBe(false)
+  })
+
+  it.each<{ status: NativeAuthorizationState['status']; expected: boolean }>([
+    { status: 'signed-in', expected: false },
+    { status: 'signed-out', expected: true },
+    { status: 'pending', expected: true },
+  ])('applies the native $status startup projection without claiming an API key', ({ status, expected }) => {
+    const projection = { loggedIn: status === 'signed-in', hasApiKey: false }
+    expect(needsWelcome(projection)).toBe(expected)
+    expect(projection.hasApiKey).toBe(false)
   })
 })
 

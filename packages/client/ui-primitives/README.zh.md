@@ -213,6 +213,12 @@ kind: "package-library"
 
 `MarkdownDelegate.getTriggerProps` 接收明确的文件、链接或原图目标并返回手势 props。文件路径与行号通过回调传递。文件引用可提供 `contextMenuProps`；`ImageLightbox.contextMenuProps` 转发原图手势。图片菜单持有焦点时负责 Escape 与 Tab，先返回预览再关闭预览。
 
+
+<a id="presentation-variables"></a>
+### 展示变量
+
+`UserMessageBubble` 支持继承 `--dsh-user-message-radius` 与 `--dsh-user-message-inset`；默认仍为主题 XL 圆角和 `10px 16px`。产品层可以改变这些展示值，无需替换消息内容或动作。
+
 <a id="model-experience"></a>
 ## 模型体验
 

@@ -124,6 +124,12 @@ terminal model 使用浏览器安全入口 `@deepseek-ai/dsh-spill-policy/notice
 
 -----
 
+
+<a id="presentation-variables"></a>
+### 展示变量
+
+工具摘要标题和片段支持继承 `--dsh-tool-summary-font-size`；不提供时，各原生字号规则保持不变。该变量仅改变文字展示；展开、结果与错误正文和工具执行仍由现有组件管理。
+
 <a id="model-experience"></a>
 ## 模型体验
 

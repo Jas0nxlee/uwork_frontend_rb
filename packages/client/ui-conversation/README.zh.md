@@ -70,6 +70,8 @@ Queue 预览启用空白折叠和文档边缘 trim，保留 emoji，并使用 CS
 
 root 作用域的 hoc Slot `conversation.hero.frame` 在所有阶段都包裹滚动区，因此首页结束时各层不会让输入框重新挂载。它的所有者 props 提供 `hero`，仅在独立 Conversation 的空白首页时为 true。各层需让滚动区仍是 body 的直接 flex 子项，例如使用 `display: contents`。首页阶段，绘制背景的 Conversation 根元素隔离层叠上下文：层中负 `z-index` 的装饰画在该背景之上、所有 Conversation 内容之下，包括输入区的接管面板。其他阶段根元素不参与层叠隔离，未经 portal 的 Conversation 浮层仍能盖住悬浮在中栏上方的 AppFrame 元素。各层自行处理输入。没有占用者时，body 保持原样。
 
+root 作用域的 `conversation.composer.frame` HOC 包裹现有 chain 输出，包括常驻 fallback 与 takeover overlay。唯一 owner 值是 `interactionKind`；请求数据、回答通道、键盘行为及草稿仍由原生 chain entry 持有。展示层保持 seat 布局中立（例如 `display: contents`）。没有层时原样透传 children。 原生输入卡另接受 `--dsh-composer-card-radius`（默认 `--dsw-radius-panel`）、`--dsh-composer-card-top-inset`（8px）及 `--dsh-composer-card-row-gap`（12px），仅影响展示。 提交控件接受 `--dsh-composer-submit-fill`、`--dsh-composer-submit-hover` 及 `--dsh-composer-submit-ink`，默认分别为原生 info fill、info hover 与白色文字；禁用和等待行为保持原生。
+
 空白首页通过独立的 root 作用域 Slot `conversation.hero.brand.mark` 和 `conversation.hero.brand.title` 提供品牌图标与标题。标题默认使用本地化首页文案；替换标题保留预览标记和常驻输入框。
 
 宽度小于 768px 时，Web 的 View 标签与页头的 20px 左内边距对齐。桌面客户端和较宽的 Web 窗口保留标签额外的 8px 左内边距。

@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-11-10-uwork-managed-model-authority.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-11-10-uwork-managed-model-authority.md
+/agent-note-uwork-managed-model-authority-and-transaction-recovery:
+  en: 9e46c22d4572c607
+  zh: a9facb92edeb2044
+/agent-note-uwork-managed-model-authority-and-transaction-recovery/problem:
+  en: 6d0aad5814a8e8cf
+  zh: 7d233225f003da10
+/agent-note-uwork-managed-model-authority-and-transaction-recovery/decision:
+  en: 1bbe5f494d257db1
+  zh: 76d066d7ff591a0c
+/agent-note-uwork-managed-model-authority-and-transaction-recovery/alternatives-considered:
+  en: 74c33b608e86fa81
+  zh: 26b51be7dc65deb5
+/agent-note-uwork-managed-model-authority-and-transaction-recovery/consequences:
+  en: db04d617ba9b5ad7
+  zh: f946db5dfba7715a

@@ -1,0 +1,21 @@
+/* Product geometry comes from UWork's message.tsx, ConversationComposer.tsx,
+   ChatPromptEditor.tsx and ToolSummaryRow.tsx; native owners retain their defaults. */
+.conversation {
+  display: contents;
+  --dsh-user-message-radius: var(--dsw-radius-sm);
+  --dsh-user-message-inset: 12px 16px;
+  --dsh-attachment-preview-edge: 48px;
+  --dsh-attachment-card-radius: var(--dsw-radius-sm);
+  --dsh-attachment-content-inset: 4px;
+  --dsh-tool-summary-font-size: var(--dsh-content-font-size, 14px);
+}
+
+.composer {
+  display: contents;
+  --dsh-composer-card-radius: var(--dsw-radius-lg);
+  --dsh-composer-card-top-inset: 12px;
+  --dsh-composer-card-row-gap: 12px;
+  --dsh-composer-submit-fill: var(--dsw-alias-button-primary-fill);
+  --dsh-composer-submit-hover: var(--dsw-alias-button-primary-hover);
+  --dsh-composer-submit-ink: var(--dsw-alias-label-primary-inverted);
+}

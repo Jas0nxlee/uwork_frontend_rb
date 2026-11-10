@@ -16,6 +16,16 @@ export interface ProductPackagePolicy {
  * Optional integrations may be reached by an optional bundle without becoming default capabilities.
  */
 export const PRODUCT_PACKAGE_POLICY: Readonly<Record<string, ProductPackagePolicy>> = {
+  'packages/client/ui-uwork-conversation': { category: 'optional', reason: 'Conversation and input presentation selected by the UWork desktop bundle.' },
+  'packages/client/ui-uwork-workbench': { category: 'optional', reason: 'Native workbench presentation selected by the UWork desktop bundle.' },
+  'packages/client/ui-uwork-interactions': { category: 'optional', reason: 'Native approval and question presentation selected by the UWork desktop bundle.' },
+  'packages/client/ui-uwork-enterprise': { category: 'optional', reason: 'Enterprise account presentation selected by the UWork desktop bundle.' },
+  'packages/client/ui-uwork-usage': { category: 'optional', reason: 'Enterprise gateway usage presentation selected by the UWork desktop bundle.' },
+  'packages/credentials/native-authorization': { category: 'optional', reason: 'Native sign-in provider seam selected by desktop product composition.' },
+  'packages/credentials/uwork-enterprise': { category: 'optional', reason: 'Enterprise identity and private Host credentials selected by the UWork desktop bundle.' },
+  'packages/boot/uwork-gateway': { category: 'optional', reason: 'Enterprise gateway protocol client selected by the UWork desktop services.' },
+  'packages/boot/uwork-gateway-service': { category: 'optional', reason: 'Enterprise gateway orchestration selected by the UWork desktop bundle.' },
+  'packages/llm/uwork-model-provisioning': { category: 'optional', reason: 'Managed enterprise model routes selected by the UWork desktop bundle.' },
   'packages/bundle/uwork-desktop': { category: 'optional', reason: 'Product presentation selected by the UWork desktop distribution.' },
   'packages/boot/uwork-company-market': { category: 'optional', reason: 'Public skill catalog selected by the UWork desktop bundle.' },
   'packages/client/ui-uwork-company-market': { category: 'optional', reason: 'Company skill catalog presentation selected by the UWork desktop bundle.' },

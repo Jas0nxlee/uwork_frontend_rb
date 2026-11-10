@@ -83,8 +83,9 @@ function mountShell({ collapsed = false, width = 300, drawer = false, shortcuts 
       renderSlot={((
         key: string,
         owner: SidebarFooterActionOwnerProps | SidebarSectionOwnerProps | SidebarSettingsOwnerProps,
-        opts?: { hookContext?: SidebarSectionHookContext },
+        opts?: { hookContext?: SidebarSectionHookContext; children?: ReactNode },
       ) => {
+        if (key === 'sidebar.frame') return opts?.children
         if (key === 'sidebar.brand.mark') return brandMark
         if (key === 'sidebar.brand.name') return brandName
         if (key === 'sidebar.toggle.badge') return null
@@ -228,7 +229,8 @@ describe('SidebarRoot shell', () => {
       useRemoteAccess={useRemoteAccess}
       startSession={startSession} toggleSidebar={toggleSidebar} trackEntryClick={vi.fn()} t={t}
       renderFactorySlot={() => null}
-      renderSlot={((key: string) => {
+      renderSlot={((key: string, _owner: unknown, options?: { children?: ReactNode }) => {
+        if (key === 'sidebar.frame') return options?.children
         if (key === 'sidebar.brand.mark') return <span data-testid="brand-mark">M</span>
         if (key === 'sidebar.brand.name') return <span data-testid="brand-name">Brand</span>
         return null
@@ -260,8 +262,8 @@ describe('SidebarRoot shell', () => {
       {...allowAllAccess}
       startSession={vi.fn()} toggleSidebar={vi.fn()} trackEntryClick={vi.fn()} t={t}
       renderFactorySlot={() => null}
-      renderSlot={((_key: string, _owner: unknown, options?: { fallback?: ReactNode }) =>
-        options?.fallback ?? null) as SidebarRootComponentProps['renderSlot']}
+      renderSlot={((_key: string, _owner: unknown, options?: { fallback?: ReactNode; children?: ReactNode }) =>
+        options?.children ?? options?.fallback ?? null) as SidebarRootComponentProps['renderSlot']}
     />)
 
     expect(screen.getByText('DSH Local Build')).toBeTruthy()
@@ -285,8 +287,8 @@ describe('SidebarRoot shell', () => {
       {...allowAllAccess}
       startSession={vi.fn()} toggleSidebar={vi.fn()} trackEntryClick={vi.fn()} t={t}
       renderFactorySlot={() => null}
-      renderSlot={((_key: string, _owner: unknown, options?: { fallback?: ReactNode }) =>
-        options?.fallback ?? null) as SidebarRootComponentProps['renderSlot']}
+      renderSlot={((_key: string, _owner: unknown, options?: { fallback?: ReactNode; children?: ReactNode }) =>
+        options?.children ?? options?.fallback ?? null) as SidebarRootComponentProps['renderSlot']}
     />)
 
     expect(screen.getByText('DSH Local Build')).toBeTruthy()
@@ -314,8 +316,8 @@ describe('SidebarRoot shell', () => {
       {...allowAllAccess}
       startSession={startSession} toggleSidebar={vi.fn()} trackEntryClick={trackEntryClick} t={t}
       renderFactorySlot={() => null}
-      renderSlot={((_key: string, _owner: unknown, options?: { fallback?: ReactNode }) =>
-        options?.fallback ?? null) as SidebarRootComponentProps['renderSlot']}
+      renderSlot={((_key: string, _owner: unknown, options?: { fallback?: ReactNode; children?: ReactNode }) =>
+        options?.children ?? options?.fallback ?? null) as SidebarRootComponentProps['renderSlot']}
     />)
     vi.useFakeTimers()
 
@@ -366,8 +368,8 @@ describe('SidebarRoot shell', () => {
       {...allowAllAccess}
       startSession={vi.fn()} toggleSidebar={vi.fn()} trackEntryClick={vi.fn()} t={t}
       renderFactorySlot={() => null}
-      renderSlot={((_key: string, _owner: unknown, options?: { fallback?: ReactNode }) =>
-        options?.fallback ?? null) as SidebarRootComponentProps['renderSlot']}
+      renderSlot={((_key: string, _owner: unknown, options?: { fallback?: ReactNode; children?: ReactNode }) =>
+        options?.children ?? options?.fallback ?? null) as SidebarRootComponentProps['renderSlot']}
     />)
 
     expect(screen.getByText('DSH Local Build')).toBeTruthy()
@@ -431,7 +433,7 @@ describe('SidebarRoot shell', () => {
       {...allowAllAccess}
       startSession={vi.fn()} toggleSidebar={vi.fn()} trackEntryClick={vi.fn()} t={t}
       renderFactorySlot={() => null}
-      renderSlot={((key: string) => key === 'sidebar.toggle.badge'
+      renderSlot={((key: string, _owner: unknown, options?: { children?: ReactNode }) => key === 'sidebar.frame' ? options?.children : key === 'sidebar.toggle.badge'
         ? <Tooltip label="Update — V1.2.3"><span data-testid="badge" /></Tooltip>
         : null) as SidebarRootComponentProps['renderSlot']}
     />)

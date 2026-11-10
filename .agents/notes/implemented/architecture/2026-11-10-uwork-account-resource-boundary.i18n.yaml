@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-11-10-uwork-account-resource-boundary.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-11-10-uwork-account-resource-boundary.md
+/agent-note-uwork-account-resources-and-explicit-key-creation:
+  en: 3d21446e7a8517a6
+  zh: 34b25668060a0405
+/agent-note-uwork-account-resources-and-explicit-key-creation/problem:
+  en: 1c63b55e52a6a7d0
+  zh: fb97354bc80a54d8
+/agent-note-uwork-account-resources-and-explicit-key-creation/decision:
+  en: 1aa7d1dc92b675ed
+  zh: ea202b2647c06a97
+/agent-note-uwork-account-resources-and-explicit-key-creation/alternatives-considered:
+  en: 57d98a789e06da0d
+  zh: dd8f6ac3feace903
+/agent-note-uwork-account-resources-and-explicit-key-creation/consequences:
+  en: 7d48704c96c42a9b
+  zh: 0945fc837e1e5588

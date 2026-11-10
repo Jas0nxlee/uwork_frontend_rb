@@ -194,6 +194,12 @@ Chat view 在标记了 `data-text-interaction-source` 的业务节点上检测�
 
 Markdown 文件、链接、图片、引用 chip 和工具文件控件将明确的右键目标转发给 [ui-context-menu](../ui-context-menu/README.zh.md)。文件目标保留工作目录和行号；普通链接点击仍遵循配置的打开偏好。
 
+
+<a id="presentation-variables"></a>
+### 展示变量
+
+用户文件卡片继承附件展示变量 `--dsh-attachment-preview-edge`、`--dsh-attachment-card-radius` 和 `--dsh-attachment-content-inset`，回退值保持原有的 64px、主题 LG 和 8px。内容、顺序、动作及图片加载归属不变。
+
 <a id="model-experience"></a>
 ## 模型体验
 

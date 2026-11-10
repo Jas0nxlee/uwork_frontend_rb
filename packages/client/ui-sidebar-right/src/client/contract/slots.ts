@@ -39,6 +39,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
   }
 
   interface SlotMap {
+    /** Presentation-only layers around the existing Session docking surface. */
+    'sidebar.right.frame': { kind: 'hoc'; scope: 'session'; owner: SidebarRightFrameOwnerProps }
     /** Session content selected by the root-scoped right Sidebar controller. */
     'rightbar.session': {
       kind: 'single'
@@ -104,6 +106,16 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      */
     'sidebar.right.tab.menu.item': { kind: 'list'; scope: 'session'; owner: SidebarRightTabMenuOwnerProps }
   }
+}
+
+/** Committed visibility supplied to a product's docking-surface presentation layer. */
+export interface SidebarRightFrameOwnerProps {
+  /** Whether this Session is the foreground right sidebar. */
+  readonly active: boolean
+  /** Whether the docked sidebar is expanded; floating tabs keep their existing visibility. */
+  readonly expanded: boolean
+  /** Whether the owner presents the docking surface across the viewport. */
+  readonly fullscreen: boolean
 }
 
 /** Where a tab was last navigated to: what the `open` that created or revealed it carried. */

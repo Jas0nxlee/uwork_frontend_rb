@@ -48,6 +48,8 @@ kind: "package-reference"
 <a id="embedding-it"></a>
 ## 如何嵌入
 
+展示宿主可限定 `--dsh-dockkit-pane-background`、`--dsh-dockkit-strip-background`、`--dsh-dockkit-tab-active-background`、`--dsh-dockkit-tab-flex`、`--dsh-dockkit-tab-min-width`、`--dsh-dockkit-tab-max-width`、`--dsh-dockkit-tab-padding` 和 `--dsh-dockkit-tab-radius` 的作用范围。未设置时保留原生颜色、`0 1 auto` 标签 flex、80px 下限、170px 上限、`0 10px` 内边距及小圆角 token。这些值影响浏览器测量；原生控制器和溢出读取器仍具最终效力。28px 标签栏内容带及全部交互处理器保持固定。
+
 一切宿主相关的东西都通过 props 进入：
 
 | 约定 | 承载内容 |

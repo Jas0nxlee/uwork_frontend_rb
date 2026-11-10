@@ -213,6 +213,12 @@ These pages place the atoms in the client stack and the design system.
 
 `MarkdownDelegate.getTriggerProps` receives explicit file, URL, or original-image targets and returns gesture props. File paths and line numbers are carried by callbacks. File mentions can supply `contextMenuProps`; `ImageLightbox.contextMenuProps` delegates the original image gesture. An image menu owns Escape and Tab while it holds focus, returning to the preview before closing it.
 
+
+<a id="presentation-variables"></a>
+### Presentation variables
+
+`UserMessageBubble` supports inherited `--dsh-user-message-radius` and `--dsh-user-message-inset`; defaults remain the theme XL radius and `10px 16px`. Product layers can change these presentation values without replacing message content or actions.
+
 <a id="model-experience"></a>
 ## Model Experience
 

@@ -32,6 +32,62 @@ function isMaintained(file: string): boolean {
   return !excludedPrefixes.some(prefix => file.startsWith(prefix))
 }
 
+/** The one fixed-baseline audit artifact records object identities rather than maintained source links. */
+const upstreamAuditPath = 'tasks/fixtures/upstream-maintenance.json'
+
+function exactKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
+  return Object.keys(value).sort().join(',') === [...keys].sort().join(',')
+}
+
+function auditRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+/** Admit only the bounded, successful read-command transcript used for the fixed T40 baseline. */
+function isUpstreamAudit(file: string, source: string): boolean {
+  if (file !== upstreamAuditPath || source.length > 8192) return false
+  let value: unknown
+  try {
+    value = JSON.parse(source)
+    // Canonical readable JSON rejects duplicate-key prose hidden by JSON.parse's last-key-wins behavior.
+    if (JSON.stringify(value, null, 2) !== source.replace(/\r\n/g, '\n').trimEnd()) return false
+  } catch { return false }
+  if (!auditRecord(value) || !exactKeys(value, ['kind', 'version', 'observedAt', 'upstream', 'head', 'mergeBase',
+    'snapshotTree', 'snapshotCommit', 'scopes', 'mergeTreeExitCode', 'mergeTreeStdout', 'mergeTreeStderr',
+    'changedFiles', 'note', 'commands'])) return false
+  if (value.kind !== 'uwork-upstream-compatibility-audit' || (value.version !== 1 && value.version !== 2)
+    || typeof value.observedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+(?:Z|\+00:00)$/u.test(value.observedAt)
+    || !Number.isFinite(Date.parse(value.observedAt))) return false
+  for (const key of ['upstream', 'head', 'mergeBase', 'snapshotTree', 'snapshotCommit']) {
+    if (typeof value[key] !== 'string' || !/^[a-f0-9]{40}$/u.test(value[key])) return false
+  }
+  if (value.mergeBase !== value.upstream || value.mergeTreeExitCode !== 0 || value.mergeTreeStdout !== value.snapshotTree
+    || value.mergeTreeStderr !== '' || !Number.isSafeInteger(value.changedFiles)
+    || typeof value.changedFiles !== 'number' || value.changedFiles < 1 || value.changedFiles > 100000) return false
+  const scopes = value.version === 1
+    ? ['apps/desktop', 'apps/desktop-host', 'packages/client/ui-sidebar', 'packages/llm/llm-pi-ai']
+    : ['apps/desktop', 'apps/desktop-host', 'packages/client/ui-attachment', 'packages/client/ui-chat',
+      'packages/client/ui-conversation', 'packages/client/ui-dockkit', 'packages/client/ui-primitives',
+      'packages/client/ui-sidebar', 'packages/client/ui-sidebar-right', 'packages/client/ui-tool',
+      'packages/core/agent-default-model', 'packages/llm/llm-pi-ai']
+  const note = value.version === 1
+    ? 'Temporary index and unreferenced snapshot commit only; no ref, actual index, worktree or branch changed.'
+    : 'Committed reachable source snapshot only; no ref, actual index, worktree or branch changed.'
+  if (value.note !== note || JSON.stringify(value.scopes) !== JSON.stringify(scopes)
+    || (value.version === 2 && value.snapshotCommit !== value.head)) return false
+  const expected = [
+    { argv: ['git', 'ls-remote', 'origin', 'refs/heads/master'], exitCode: 0,
+      stdout: `${String(value.upstream)}\trefs/heads/master`, stderr: '' },
+    { argv: ['git', 'merge-tree', '--write-tree', value.upstream, value.snapshotCommit], exitCode: 0,
+      stdout: value.snapshotTree, stderr: '' },
+  ]
+  if (!Array.isArray(value.commands) || value.commands.length !== expected.length) return false
+  return value.commands.every((command: unknown, index: number) => auditRecord(command)
+    && exactKeys(command, ['argv', 'exitCode', 'stdout', 'stderr'])
+    && JSON.stringify(command.argv) === JSON.stringify(expected[index]?.argv)
+    && command.exitCode === 0 && command.stderr === '' && command.stdout === expected[index]?.stdout)
+}
+
 /**
  * Inspect a maintained source file against known commit identifiers.
  * @param file - Repository-relative path used in diagnostics and exclusions.
@@ -45,7 +101,7 @@ export function findRepositoryReferences(
   source: string,
   commits: ReadonlySet<string>,
 ): RepositoryReference[] {
-  if (!isMaintained(file)) return []
+  if (!isMaintained(file) || isUpstreamAudit(file, source)) return []
   const references: RepositoryReference[] = []
   for (const [index, line] of source.split('\n').entries()) {
     if (organizationUrl.test(canonicalReferenceText(line).replace(kitRepositoryUrl, ''))) {

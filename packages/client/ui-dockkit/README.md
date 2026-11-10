@@ -48,6 +48,8 @@ Tab context menus show the close action name without a shortcut hint: they act o
 <a id="embedding-it"></a>
 ## Embedding it
 
+A presentation host may scope `--dsh-dockkit-pane-background`, `--dsh-dockkit-strip-background`, `--dsh-dockkit-tab-active-background`, `--dsh-dockkit-tab-flex`, `--dsh-dockkit-tab-min-width`, `--dsh-dockkit-tab-max-width`, `--dsh-dockkit-tab-padding` and `--dsh-dockkit-tab-radius`. Unset variables preserve the native colors, `0 1 auto` tab flex, 80px floor, 170px maximum, `0 10px` padding and small corner token. These values affect browser measurement; the native controller and overflow reader remain authoritative. The 28px strip content band and all interaction handlers remain fixed.
+
 Everything host-specific arrives through props:
 
 | Contract | Carries |

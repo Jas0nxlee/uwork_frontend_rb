@@ -54,6 +54,8 @@ const selection = ctx.agentDefaultModel.currentSelection()
 await ctx.agentDefaultModel.saveSelection({ provider, model, reasoningEffort: 'high' })
 ```
 
+Pass an optional second `expected` selection to `saveSelection(next, expected)` for a conditional write. The editor compares the complete current selection under its profile file lock; a mismatch preserves a concurrent personal choice.
+
 Without a configuration editor, `saveSelection()` is a no-op. The service does not validate catalog membership; the consumer opening a model request owns availability diagnostics.
 
 -----

@@ -2,3 +2,8 @@ UWork brand artwork adapted from https://github.com/Jas0nxlee/UWork
 Source revision: 48d84801c064907aad0b7c7994f1c2f59231db9c
 Original files: packages/ui/src/components/ui/UWorkLogo.tsx; packages/ui/src/assets/UCAS.svg
 Original license: Apache-2.0 (UWork.Apache-2.0.txt).
+
+Neutral theme palette adapted from https://github.com/Jas0nxlee/UWork_frontend
+Source revision: f6dda23d7e6f39aa66804933b60f893d38ab6914
+Original file: packages/ui/src/styles.css (.theme-zai-light / .theme-zai-dark)
+Original license: Apache-2.0 (UWork.Apache-2.0.txt).

@@ -73,11 +73,11 @@ import { discoverModels } from './discovery.ts'
 import type { StoredModelDiscoveryProfile } from './discovery.ts'
 import { registerPiAiFlows } from './login.ts'
 import { providerDefaultsOf } from './provider-data.ts'
-import type { PiAiRequestHeaderContext } from './types.ts'
+import type { PiAiDiscoveryContext, PiAiRequestHeaderContext } from './types.ts'
 
 export { PiAiAdapter } from './adapter.ts'
 export type { PiAiAdapterOptions } from './adapter.ts'
-export type { PiAiRequestHeaderContext } from './types.ts'
+export type { PiAiDiscoveryContext, PiAiRequestHeaderContext } from './types.ts'
 export { Config } from './config.ts'
 export type {
   Options,
@@ -98,6 +98,27 @@ export const inject = ['llm']
 
 declare module '@deepseek-ai/cordis' {
   interface Events {
+    /**
+     * Authorize a discovery draft before stored credentials are read.
+     * Model-hidden metadata excludes the one-shot API key. Synchronous
+     * listeners call next for unrelated drafts; throws refuse discovery.
+     * @mode waterfall
+     * @param request - Immutable provider, endpoint and protocol facts.
+     * @param next - Continue through remaining authorization listeners.
+     * @returns Optional discovery lifetime composed with caller cancellation.
+     */
+    'llm-pi-ai/discovery-signal'(request: PiAiDiscoveryContext, next: () => AbortSignal | undefined): AbortSignal | undefined
+    /**
+     * Authorize an exact captured inference route before credential resolution.
+     * Synchronous listeners call next for unrelated routes and may combine the
+     * returned signal with their own revocation signal. Throws refuse dispatch;
+     * aborting the result cancels attachments and in-flight inference.
+     * @mode waterfall
+     * @param request - Immutable provider, model and endpoint captured for this call.
+     * @param next - Continue authorization through the remaining listeners.
+     * @returns Optional lifetime signal combined with caller cancellation.
+     */
+    'llm-pi-ai/request-signal'(request: PiAiRequestHeaderContext, next: () => AbortSignal | undefined): AbortSignal | undefined
     /**
      * Prepare headers for one pi-ai inference call, excluding model discovery.
      * Listeners run synchronously and must call next(); they may edit only the
@@ -240,6 +261,7 @@ export function apply(ctx: Context, config: Config): void {
     resolveApiKey,
     auth,
     prepareHeaders: (request, headers) => ctx.waterfall('llm-pi-ai/request-headers', request, headers, () => headers),
+    prepareSignal: request => ctx.waterfall('llm-pi-ai/request-signal', request, () => undefined),
     resolveAttachments: () => ctx.get('attachments'),
     resolveImageAccess: (attachments, ref) => resolveImageAttachmentAccess(
       attachments,
@@ -299,10 +321,18 @@ export function apply(ctx: Context, config: Config): void {
   // except the stored credential and deployment-owned headers: the curated UI
   // accepts neither, so an already-configured route supplies both inside the
   // Host rather than widening the discovery request.
-  ctx.llm.registerModelDiscovery(settingsNs, (request, signal) => discoverModels(
-    { ...request, ...signal === undefined ? {} : { signal } },
-    () => storedDiscoveryProfile(request.provider),
-  ))
+  ctx.llm.registerModelDiscovery(settingsNs, (request, signal) => {
+    const metadata: PiAiDiscoveryContext = Object.freeze({
+      ...request.provider === undefined ? {} : { provider: request.provider },
+      ...request.baseURL === undefined ? {} : { baseURL: request.baseURL },
+      ...request.api === undefined ? {} : { api: request.api },
+    })
+    const lifetime = ctx.waterfall('llm-pi-ai/discovery-signal', metadata, () => undefined)
+    lifetime?.throwIfAborted()
+    const active = lifetime === undefined ? signal : signal === undefined ? lifetime : AbortSignal.any([lifetime, signal])
+    return discoverModels({ ...request, ...active === undefined ? {} : { signal: active } },
+      () => storedDiscoveryProfile(request.provider))
+  })
   // Route effects bind to this apply fiber via the stable `ctx` reference,
   // even when a swap runs inside the scoped settings callback below. A bare
   // mount (zero routes) is the dormant posture: nothing registers until a

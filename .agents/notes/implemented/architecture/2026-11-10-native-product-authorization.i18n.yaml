@@ -1,0 +1,19 @@
+# Bilingual-pair consistency record for 2026-11-10-native-product-authorization.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-11-10-native-product-authorization.md
+/agent-note-product-selected-native-authorization:
+  en: c19c0635f2d11469
+  zh: 1d69a2e9e6931f92
+/agent-note-product-selected-native-authorization/problem:
+  en: a4a387852fc6ad23
+  zh: 548ed5034464d752
+/agent-note-product-selected-native-authorization/decision:
+  en: c4afc2a44d24eb44
+  zh: 72bb61c3b151e718
+/agent-note-product-selected-native-authorization/alternatives-considered:
+  en: 8c95aecb29bc7d11
+  zh: 53ad3a4abe396679
+/agent-note-product-selected-native-authorization/consequences:
+  en: bf4be358c232921f
+  zh: 0debd2c3f71629a6

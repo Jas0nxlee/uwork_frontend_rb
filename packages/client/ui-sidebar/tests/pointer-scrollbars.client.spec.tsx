@@ -51,8 +51,8 @@ function mountColumn(): { column: HTMLElement; quiet: () => boolean } {
       {...allowAllAccess}
       startSession={vi.fn()} toggleSidebar={vi.fn()} trackEntryClick={vi.fn()} t={t}
       renderFactorySlot={() => null}
-      renderSlot={((_key: string, owner: SidebarSectionOwnerProps) =>
-        <div data-testid="region" data-wide={owner.wide} />) as SidebarRootComponentProps['renderSlot']}
+      renderSlot={((key: string, owner: SidebarSectionOwnerProps, options?: { children?: React.ReactNode }) =>
+        key === 'sidebar.frame' ? options?.children : <div data-testid="region" data-wide={owner.wide} />) as SidebarRootComponentProps['renderSlot']}
     />,
   )
   const column = view.container.firstElementChild

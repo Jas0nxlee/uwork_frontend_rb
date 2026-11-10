@@ -40,6 +40,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-plugin-manager` | yes | Current-profile plugin and bundle management shared by dsh CLI, Web and agent tools |
 | `@deepseek-ai/dsh-plugin-market` | yes | Configured plugin market indexes for the Web Discover page and the plugin_market agent tool |
 | `@deepseek-ai/dsh-uwork-company-market` | yes | Anonymous PUBLIC SkillHub catalog, verified content installation and native skill discovery |
+| `@deepseek-ai/dsh-uwork-gateway-service` | yes | Generation-scoped enterprise gateway account and usage Remote service |
 
 ## browser-use
 
@@ -126,6 +127,11 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-client-ui-user-questions` | no | Web ask_user_question composer takeover and plan-review presentation UI |
 | `@deepseek-ai/dsh-client-ui-uwork` | no | UWork sidebar branding and blank-home presentation |
 | `@deepseek-ai/dsh-client-ui-uwork-company-market` | no | Browse and search public company skills in the UWork Plugins page |
+| `@deepseek-ai/dsh-client-ui-uwork-conversation` | no | UWork conversation presentation over native message, tool, attachment and composer controls |
+| `@deepseek-ai/dsh-client-ui-uwork-enterprise` | no | Safe UWork enterprise account status and sign-out in native settings |
+| `@deepseek-ai/dsh-client-ui-uwork-interactions` | no | UWork presentation around native approval and question composers |
+| `@deepseek-ai/dsh-client-ui-uwork-usage` | no | Enterprise usage and quota with identity-scoped safe aggregate reads |
+| `@deepseek-ai/dsh-client-ui-uwork-workbench` | no | UWork workbench presentation over native retained tabs and docking |
 | `@deepseek-ai/dsh-client-ui-workflow-run` | no | Durable workflow-run Conversation Node and nested member disclosure for dsh web |
 | `@deepseek-ai/dsh-client-ui-workspace` | no | Workspace picker plugin: one WorkspacePicker registered into the sidebar and empty-state workspace slots |
 
@@ -176,6 +182,8 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-authorization` | no | Authorization seam (ctx.authorization): plugin-owned flows that obtain a credential through a conversation with the human |
 | `@deepseek-ai/dsh-credentials-local` | yes | File-backed credentials provider ($DSH_HOME/.env under the live process environment) for the DeepSeek Harness |
 | `@deepseek-ai/dsh-deepseek-account-platform` | yes | Authorize DeepSeek accounts through browser PKCE |
+| `@deepseek-ai/dsh-native-authorization` | no | Product-selected private native authorization provider registry |
+| `@deepseek-ai/dsh-uwork-enterprise` | yes | UWork enterprise identity with isolated native sign-in and generation-scoped Host credentials |
 
 ## deliverables
 
@@ -324,6 +332,7 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@deepseek-ai/dsh-llm-retry` | yes | Provider-routed LLM request retry policy for the DeepSeek Harness |
 | `@deepseek-ai/dsh-plugin-package-inventory-deepseek` | yes | Active Loader-backed plugin package inventory for official DeepSeek LLM API requests |
 | `@deepseek-ai/dsh-token-meter` | yes | Replay-aware token measurement service (ctx.tokenMeter) for the DeepSeek Harness |
+| `@deepseek-ai/dsh-uwork-model-provisioning` | yes | Host-only transactional enterprise model routes over native pi-ai |
 
 ## lsp
 

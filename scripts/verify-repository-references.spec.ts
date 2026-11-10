@@ -285,3 +285,90 @@ describe('maintained repository reference policy', () => {
       .toEqual([{ file: '.agents/notes/implemented/process/current.md', line: 1, kind: 'organization-url' }])
   })
 })
+
+describe('fixed upstream audit evidence', () => {
+  const path = 'tasks/fixtures/upstream-maintenance.json'
+  const fixture = readFileSync(new URL('../tasks/fixtures/upstream-maintenance.json', import.meta.url), 'utf8')
+  const evidence = JSON.parse(fixture) as {
+    upstream: string
+    head: string
+    snapshotCommit: string
+    snapshotTree: string
+    commands: object[]
+  }
+  const wrongCommit = evidence.head === 'f'.repeat(40) ? 'e'.repeat(40) : 'f'.repeat(40)
+  const commits = new Set([evidence.upstream, evidence.head, evidence.snapshotCommit, wrongCommit])
+  it('admits the exact successful command transcript only at its reviewed path', () => {
+    expect(findRepositoryReferences(path, fixture, commits)).toEqual([])
+    expect(findRepositoryReferences('tasks/fixtures/other.json', fixture, commits).length).toBeGreaterThan(0)
+  })
+  it.each([
+    { version: 2 }, { kind: 'unreviewed' }, { changedFiles: '2' }, { extra: 'unreviewed prose' }, { note: 'additional narrative' }, { upstream: 'x'.repeat(40) },
+    { mergeTreeExitCode: 1 }, { mergeTreeStderr: 'CONFLICT' }, { mergeBase: 'b'.repeat(40) },
+    { mergeTreeStdout: 'b'.repeat(40) }, { observedAt: 'tomorrow' }, { changedFiles: 0 },
+    { scopes: ['apps/desktop'] }, { commands: [] }, { observedAt: '2026-99-99T00:00:00.000Z' },
+  ])('does not exempt malformed or widened audit records: %j', (change) => {
+    expect(findRepositoryReferences(path, JSON.stringify({ ...JSON.parse(fixture), ...change }), commits).length).toBeGreaterThan(0)
+  })
+  const reachable = {
+    ...evidence, version: 2, snapshotCommit: evidence.head,
+    note: 'Committed reachable source snapshot only; no ref, actual index, worktree or branch changed.',
+    scopes: ['apps/desktop', 'apps/desktop-host', 'packages/client/ui-attachment', 'packages/client/ui-chat',
+      'packages/client/ui-conversation', 'packages/client/ui-dockkit', 'packages/client/ui-primitives',
+      'packages/client/ui-sidebar', 'packages/client/ui-sidebar-right', 'packages/client/ui-tool',
+      'packages/core/agent-default-model', 'packages/llm/llm-pi-ai'],
+    commands: [evidence.commands[0], {
+      argv: ['git', 'merge-tree', '--write-tree', evidence.upstream, evidence.head], exitCode: 0,
+      stdout: evidence.snapshotTree, stderr: '',
+    }],
+  }
+  it('keeps the original temporary-snapshot version 1 contract', () => {
+    const legacy = { ...JSON.parse(fixture) as Record<string, unknown>, version: 1, snapshotCommit: wrongCommit,
+      note: 'Temporary index and unreferenced snapshot commit only; no ref, actual index, worktree or branch changed.',
+      scopes: ['apps/desktop', 'apps/desktop-host', 'packages/client/ui-sidebar', 'packages/llm/llm-pi-ai'],
+      commands: [evidence.commands[0], {
+        argv: ['git', 'merge-tree', '--write-tree', evidence.upstream, wrongCommit], exitCode: 0,
+        stdout: evidence.snapshotTree, stderr: '',
+      }],
+    }
+    expect(findRepositoryReferences(path, JSON.stringify(legacy, null, 2), commits)).toEqual([])
+  })
+  it('admits the canonical reachable source transcript only at the exact reviewed path', () => {
+    const source = JSON.stringify(reachable, null, 2)
+    expect(findRepositoryReferences(path, source, commits)).toEqual([])
+    expect(findRepositoryReferences('tasks/fixtures/other.json', source, commits).length).toBeGreaterThan(0)
+  })
+  it.each([
+    { head: wrongCommit }, { snapshotCommit: wrongCommit },
+    { scopes: ['apps/desktop'] }, { scopes: [...reachable.scopes, 'packages/client/other'] },
+    { note: 'Temporary index and unreferenced snapshot commit only; no ref, actual index, worktree or branch changed.' },
+    { extra: 'unreviewed prose' }, { commands: [] }, { version: 3 },
+  ])('rejects widened or inconsistent reachable audits: %j', (change) => {
+    expect(findRepositoryReferences(path, JSON.stringify({ ...reachable, ...change }, null, 2), commits).length).toBeGreaterThan(0)
+  })
+  it('rejects reachable audit trailing prose and noncanonical JSON', () => {
+    expect(findRepositoryReferences(path, JSON.stringify(reachable), commits).length).toBeGreaterThan(0)
+    expect(findRepositoryReferences(path, `${JSON.stringify(reachable, null, 2)}\nextra prose`, commits).length).toBeGreaterThan(0)
+  })
+  it('does not exempt primitive, array, incomplete or oversized JSON', () => {
+    const missing = JSON.parse(fixture) as Record<string, unknown>
+    Reflect.deleteProperty(missing, 'commands')
+    for (const source of [JSON.stringify(evidence.upstream), JSON.stringify([JSON.parse(fixture)]),
+      JSON.stringify(missing), ' '.repeat(8193) + fixture]) {
+      expect(findRepositoryReferences(path, source, commits).length).toBeGreaterThan(0)
+    }
+  })
+  it('rejects duplicate-key prose even when its parsed last value matches the reviewed schema', () => {
+    const duplicate = fixture.replace('  "note":', `  "note": ${JSON.stringify(organizationUrl)},\n  "note":`)
+    expect(findRepositoryReferences(path, duplicate, commits).some(reference => reference.kind === 'organization-url')).toBe(true)
+    expect(findRepositoryReferences(path, fixture.replaceAll('\n', '\r\n'), commits)).toEqual([])
+  })
+  it('does not exempt arbitrary commands, extra command fields, or trailing prose', () => {
+    const record = JSON.parse(fixture) as { commands: object[] }
+    for (const commands of [[{ ...record.commands[0], argv: ['git', 'push'] }, record.commands[1]],
+      [{ ...record.commands[0], prose: 'extra' }, record.commands[1]]]) {
+      expect(findRepositoryReferences(path, JSON.stringify({ ...JSON.parse(fixture), commands }), commits).length).toBeGreaterThan(0)
+    }
+    expect(findRepositoryReferences(path, `${fixture}\nextra prose`, commits).length).toBeGreaterThan(0)
+  })
+})

@@ -76,6 +76,7 @@ vi.mock('electron', () => ({
     static getAllWindows() { return [] }
     once(name: string, callback: () => void) { if (name === 'ready-to-show') this.ready = callback; return this }
     on() { return this }
+    removeListener() { return this }
     isDestroyed() { return false }
     isMinimized() { return false }
     restore = vi.fn()
@@ -94,6 +95,7 @@ vi.mock('electron', () => ({
   protocol: { registerSchemesAsPrivileged: vi.fn(), handle: vi.fn() },
   ipcMain: {
     handle: (name: string, callback: (...args: unknown[]) => unknown) => { state.handlers.set(name, callback) },
+    removeHandler: (name: string) => { state.handlers.delete(name) },
     on: (name: string, callback: (...args: unknown[]) => void) => { state.listeners.set(name, callback) },
   },
   dialog: { showErrorBox: vi.fn(), showMessageBox: vi.fn() },
@@ -115,6 +117,8 @@ vi.mock('../src/project-manager.ts', () => ({ DesktopProjectManager: class {
 } }))
 vi.mock('../src/host-process.ts', () => ({
   DesktopHostProcess: class {
+    nativeAuthorizationState = vi.fn(async () => null)
+    onNativeAuthorizationState = vi.fn(() => () => {})
     start = state.startHost
     stop = state.stopHost
     fetch() {

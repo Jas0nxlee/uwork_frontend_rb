@@ -1,0 +1,13 @@
+- tablist:
+  - tab "enterprise-research-report-长文件名验证文档标签溢出与关闭操作仍然可达.txt Close" [selected]:
+    - text: enterprise-research-report-长文件名验证文档标签溢出与关闭操作仍然可达.txt
+    - button "Close"
+  - button "New tab"
+  - button "Split"
+  - button "Fullscreen"
+  - button "Collapse right sidebar"
+- text: {{cwd}}/src/enterprise-research-report-长文件名验证文档标签溢出与关闭操作仍然可达.txt
+- button "Line wrap" [pressed]
+- button "Read the file again"
+- button "Show file tree"
+- text: source line 1 source line 2 source line 3 source line 4 source line 5 source line 6 source line 7 source line 8 source line 9 source line 10 source line 11 source line 12 source line 13 source line 14 source line 15 source line 16 source line 17 source line 18 source line 19 source line 20 source line 21 source line 22 source line 23 source line 24 source line 25 source line 26 source line 27 source line 28 source line 29 source line 30 source line 31 source line 32 source line 33 source line 34 source line 35 source line 36 source line 37 source line 38 source line 39 source line 40

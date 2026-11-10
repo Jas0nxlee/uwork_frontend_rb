@@ -147,8 +147,9 @@ describe('ui-sidebar-right apply', () => {
     ])
     // The panel declares the extension seats; the guide declares its chain child.
     expect(Object.keys(seat('rightbar.session').children as object)).toEqual([
-      'sidebar.right.pane.tab', 'sidebar.right.pane.tab.title',
+      'sidebar.right.frame', 'sidebar.right.pane.tab', 'sidebar.right.pane.tab.title',
     ])
+    expect(seat('rightbar.session').children).toMatchObject({ 'sidebar.right.frame': { kind: 'hoc', scope: 'session' } })
     expect(seat('sidebar.right.pane.tab').children).toMatchObject({ 'sidebar.right.tab.guide': { kind: 'chain', scope: 'session' } })
     // Both seats read one store: the button only needs to know whether the panel is expanded.
     expect(seat('rightbar.session').store).toBeDefined()

@@ -4,6 +4,7 @@ import type { AccountView, SignInAttemptId } from '@deepseek-ai/dsh-deepseek-acc
 import { contextBridge, ipcRenderer } from 'electron'
 import { resolveDesktopLocale } from './locale.ts'
 import { WELCOME_IPC, type WelcomeApi, type WelcomeNotice, type WelcomeSaveResult } from './welcome-api.ts'
+import { exposeNativeAuthorization } from './preload-native-authorization.ts'
 
 const prefix = '--dsh-welcome-locale='
 const locale = process.argv.find(argument => argument.startsWith(prefix))?.slice(prefix.length)
@@ -27,3 +28,4 @@ const api: WelcomeApi = {
   skip: () => ipcRenderer.invoke(WELCOME_IPC.skip) as Promise<void>,
 }
 contextBridge.exposeInMainWorld('dshWelcome', api)
+exposeNativeAuthorization()

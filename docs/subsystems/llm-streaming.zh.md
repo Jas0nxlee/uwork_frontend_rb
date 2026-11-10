@@ -868,6 +868,10 @@ interface LlmCallConfigAdapterDefaults {
 
 ## Pi-ai 请求头
 
+同步 `llm-pi-ai/discovery-signal` waterfall 在解析已存凭据前授权模型发现草稿。其不可变元数据不含临时密钥；拒绝会阻止端点探测。
+
+同步 `llm-pi-ai/request-signal` waterfall 在解析凭据前处理已捕获的推理路由。可选生命周期 signal 与调用方取消组合；参见[适配器约定](../../packages/llm/llm-pi-ai/README.zh.md#request-headers)。
+
 `PiAiRequestHeaderContext` 包含已准备调用的 provider、model、解析后的模型 `baseURL`，以及可选 Session id 和辅助用途。它不可变且不含消息或认证字段，与本次请求独有的 `Headers` 一起传入同步的 `llm-pi-ai/request-headers` waterfall。[适配器的请求头文档](../../packages/llm/llm-pi-ai/README.zh.md#request-headers)定义贡献的所有权、应用标识的优先级与失败行为。此扩展点仅适用于 pi-ai 推理请求。
 
 ## 服务与提供方约定
@@ -1193,6 +1197,54 @@ Types: [FileAttachmentRef](attachment.zh.md) · [ImageAttachmentRef](attachment.
 
 Source: [`packages/llm/llm/src/index.ts`](../../packages/llm/llm/src/index.ts)
 
+<a id="ctxuworkmodelprovisioning--uworkmodelprovisioning"></a>
+
+### `ctx.uworkModelProvisioning` — `UworkModelProvisioning`
+
+Main-process capability. No Remote projection exposes input keys or credential records.
+
+```ts cordis-catalog
+/** Provision fresh identity-scoped material supplied only by a Host identity callback.
+ * @param input - Host-only identity, capability and secret material.
+ */
+async provision(input: ProvisionInput): Promise<void>
+
+/** Close admission synchronously; durable recovery removes only this plugin's owned route. */
+revoke(): void
+
+/** Retry startup reconciliation after the credential/settings backend is repaired. */
+async recover(): Promise<void>
+
+/** Host orchestration; createKey=true is reserved for an explicit user key-creation action.
+ * @param createKey - Whether the user explicitly requested key creation.
+ * @param signal - Optional caller cancellation.
+ * @param expectedBinding - Account identity captured by an explicit key confirmation.
+ * @returns Safe synchronization result with no credential values.
+ */
+async syncCurrent(createKey: boolean = false, signal?: AbortSignal, expectedBinding?: ModelIdentityBinding): Promise<SyncResult>
+
+/** Read current safe provisioning state and observe cross-process identity revocation.
+ * @param signal - Caller cancellation.
+ * @returns Detached safe current status.
+ */
+@Remote async getState(signal: AbortSignal): Promise<ModelProvisioningState>
+
+/** Refresh authorization and native routes without creating an API key.
+ * @param signal - Caller cancellation.
+ * @returns Safe refreshed status or classified failure.
+ */
+@Remote async refresh(signal: AbortSignal): Promise<ModelProvisioningState>
+
+/** Explicit user action; a durable unknown key outcome prevents another create POST.
+ * @param expectedBinding - Safe account identity captured by the confirmation dialog.
+ * @param signal - Caller cancellation.
+ * @returns Safe creation/reconciliation status or classified failure.
+ */
+@Remote async createManagedKey(expectedBinding: ModelIdentityBinding, signal: AbortSignal): Promise<ModelProvisioningState>
+```
+
+Source: [`packages/llm/uwork-model-provisioning/src/index.ts`](../../packages/llm/uwork-model-provisioning/src/index.ts)
+
 <a id="llm-events"></a>
 
 ### `llm/*` events
@@ -1263,6 +1315,27 @@ Source: [`packages/llm/llm/src/index.ts`](../../packages/llm/llm/src/index.ts)
 
 ### `llm-pi-ai/*` events
 
+<a id="llm-pi-aidiscovery-signal--waterfall"></a>
+
+#### `llm-pi-ai/discovery-signal` — waterfall
+
+Authorize a discovery draft before stored credentials are read. Model-hidden metadata excludes the one-shot API key. Synchronous listeners call next for unrelated drafts; throws refuse discovery.
+
+```ts cordis-catalog
+/**
+ * Authorize a discovery draft before stored credentials are read.
+ * Model-hidden metadata excludes the one-shot API key. Synchronous
+ * listeners call next for unrelated drafts; throws refuse discovery.
+ * @mode waterfall
+ * @param request - Immutable provider, endpoint and protocol facts.
+ * @param next - Continue through remaining authorization listeners.
+ * @returns Optional discovery lifetime composed with caller cancellation.
+ */
+'llm-pi-ai/discovery-signal'(request: PiAiDiscoveryContext, next: () => AbortSignal | undefined): AbortSignal | undefined
+```
+
+Source: [`packages/llm/llm-pi-ai/src/index.ts`](../../packages/llm/llm-pi-ai/src/index.ts)
+
 <a id="llm-pi-airequest-headers--waterfall"></a>
 
 #### `llm-pi-ai/request-headers` — waterfall
@@ -1284,6 +1357,28 @@ Prepare headers for one pi-ai inference call, excluding model discovery. Listene
  * @returns headers passed to pi-ai after Harness attribution is applied.
  */
 'llm-pi-ai/request-headers'(request: PiAiRequestHeaderContext, headers: Headers, next: () => Headers): Headers
+```
+
+Source: [`packages/llm/llm-pi-ai/src/index.ts`](../../packages/llm/llm-pi-ai/src/index.ts)
+
+<a id="llm-pi-airequest-signal--waterfall"></a>
+
+#### `llm-pi-ai/request-signal` — waterfall
+
+Authorize an exact captured inference route before credential resolution. Synchronous listeners call next for unrelated routes and may combine the returned signal with their own revocation signal. Throws refuse dispatch; aborting the result cancels attachments and in-flight inference.
+
+```ts cordis-catalog
+/**
+ * Authorize an exact captured inference route before credential resolution.
+ * Synchronous listeners call next for unrelated routes and may combine the
+ * returned signal with their own revocation signal. Throws refuse dispatch;
+ * aborting the result cancels attachments and in-flight inference.
+ * @mode waterfall
+ * @param request - Immutable provider, model and endpoint captured for this call.
+ * @param next - Continue authorization through the remaining listeners.
+ * @returns Optional lifetime signal combined with caller cancellation.
+ */
+'llm-pi-ai/request-signal'(request: PiAiRequestHeaderContext, next: () => AbortSignal | undefined): AbortSignal | undefined
 ```
 
 Source: [`packages/llm/llm-pi-ai/src/index.ts`](../../packages/llm/llm-pi-ai/src/index.ts)

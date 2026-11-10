@@ -54,6 +54,8 @@ const selection = ctx.agentDefaultModel.currentSelection()
 await ctx.agentDefaultModel.saveSelection({ provider, model, reasoningEffort: 'high' })
 ```
 
+可向 `saveSelection(next, expected)` 传入可选的第二个 `expected` 选择，执行条件写入。编辑器在 profile 文件锁内比较完整当前选择；不匹配时保留并发保存的个人选择。
+
 没有配置编辑器时，`saveSelection()` 不执行写入。此服务不验证目录成员资格；发起模型请求的消费者负责可用性诊断。
 
 -----

@@ -154,6 +154,8 @@ const harness = await vi.hoisted(async () => {
     }
   }
   class FakeHost {
+    readonly nativeAuthorizationState = vi.fn(async () => null)
+    readonly onNativeAuthorizationState = vi.fn(() => () => {})
     readonly updateTasks = vi.fn(async (_action: 'inspect' | 'lock' | 'unlock') => false)
     readonly inspectQuit = vi.fn(async () => ({ activeTasks: false, scheduledTasks: false }))
     url = 'http://127.0.0.1:3080/?token=test'

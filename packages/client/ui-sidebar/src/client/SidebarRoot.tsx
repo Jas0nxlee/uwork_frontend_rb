@@ -304,7 +304,7 @@ export function SidebarRoot({
     </Tooltip>
   )
 
-  return (
+  return renderSlot('sidebar.frame', { collapsed, drawer }, { children: (
     <div
       ref={column}
       onFocusCapture={(event) => { sidebarFocus.current = event.target }}
@@ -468,5 +468,5 @@ export function SidebarRoot({
         </div>
       </div>
     </div>
-  )
+  ) })
 }

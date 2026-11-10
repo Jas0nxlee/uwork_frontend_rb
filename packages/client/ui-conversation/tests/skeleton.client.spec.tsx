@@ -209,6 +209,7 @@ function mount(
     if (key === 'conversation.input.model' || key === 'conversation.input.plan') {
       seatOwners.push({ key, owner })
     }
+    if (key === 'conversation.composer.frame') return opts?.children
     if (key === 'conversation.hero.workspace') { pickerOwner = owner; return null }
     if (key === 'conversation.hero.brand.title') return opts?.fallback ?? null
     if (key === 'conversation.hero.frame') {

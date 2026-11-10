@@ -67,3 +67,45 @@ it('serializes overlapping saves and continues after a rejected write', async ()
   expect(calls).toEqual(['rejected', 'saved'])
   expect(ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'test', model: 'final' })
 })
+
+it('conditionally saves only while the expected complete selection still owns the default', async () => {
+  const { configurationFixture } = await import('../../../settings/settings/tests/configuration-fixture.ts')
+  const { ReasoningEffortId } = await import('@deepseek-ai/dsh-llm')
+  const { ctx } = await configurationFixture({ hmr: false })
+  const initial = ctx.agentDefaultModel.currentSelection()
+  await ctx.agentDefaultModel.saveSelection({ provider: 'enterprise', model: 'allowed' }, initial)
+  expect(ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'enterprise', model: 'allowed' })
+  for (const stale of [initial, { provider: 'enterprise', model: 'other' },
+    { provider: 'enterprise', model: 'allowed', reasoningEffort: ReasoningEffortId('high') }]) {
+    await ctx.agentDefaultModel.saveSelection({ provider: 'late', model: 'late' }, stale)
+    expect(ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'enterprise', model: 'allowed' })
+  }
+})
+
+it('preserves a concurrent personal default from another profile runtime under the file lock', async () => {
+  const { configurationFixture } = await import('../../../settings/settings/tests/configuration-fixture.ts')
+  const { ctx, start } = await configurationFixture({ hmr: false })
+  const other = await start()
+  const expected = ctx.agentDefaultModel.currentSelection()
+  const entered = Promise.withResolvers<undefined>(); const release = Promise.withResolvers<undefined>()
+  const edit = ctx.configEditor.edit.bind(ctx.configEditor)
+  vi.spyOn(ctx.configEditor, 'edit').mockImplementationOnce(async (entry, change) => {
+    entered.resolve(undefined); await release.promise; await edit(entry, change)
+  })
+  const pending = ctx.agentDefaultModel.saveSelection({ provider: 'enterprise', model: 'allowed' }, expected)
+  onTestFinished(async () => { release.resolve(undefined); await pending })
+  expected.model = 'mutated-after-submission'
+  await entered.promise
+  await other.agentDefaultModel.saveSelection({ provider: 'personal', model: 'chosen' })
+  release.resolve(undefined); await pending
+  expect(ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'personal', model: 'chosen' })
+  expect(other.agentDefaultModel.currentSelection()).toEqual({ provider: 'personal', model: 'chosen' })
+})
+it('compares inherited defaults when the editable profile layer omits them', async () => {
+  const { configurationFixture } = await import('../../../settings/settings/tests/configuration-fixture.ts')
+  const { ctx } = await configurationFixture({ hmr: false })
+  vi.spyOn(ctx.configEditor, 'edit').mockImplementationOnce(async (_entry, change) => {
+    expect(change({}, { provider: 'test', model: 'original' })).toEqual({ provider: 'enterprise', model: 'allowed' })
+  })
+  await ctx.agentDefaultModel.saveSelection({ provider: 'enterprise', model: 'allowed' }, { provider: 'test', model: 'original' })
+})

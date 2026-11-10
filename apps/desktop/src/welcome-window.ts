@@ -54,11 +54,14 @@ let disposeActiveHandlers: (() => void) | undefined
  * Replaces IPC ownership immediately; the caller closes the previous native window.
  * @param locale - shell-owned localized copy.
  * @param operations - credential write and this-launch-only skip actions.
+ * @param created - Main-only owner registration before renderer execution; omitted when no extra native surface is installed.
  * @returns the visible window; a failed load destroys it before rejecting.
  */
-export async function openWelcomeWindow(locale: DesktopLocale, operations: WelcomeOperations): Promise<BrowserWindow> {
+export async function openWelcomeWindow(locale: DesktopLocale, operations: WelcomeOperations,
+  created?: (window: BrowserWindow) => void): Promise<BrowserWindow> {
   const options = welcomeWindowOptions(process.platform, locale)
   const window = new BrowserWindow(options)
+  created?.(window)
   disposeActiveHandlers?.()
   let active = true
   const disposeHandlers = (): void => {

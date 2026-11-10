@@ -77,9 +77,11 @@ export class AgentDefaultModelConfig extends Service {
    * editor keeps its composition entry. Saves commit in submission order; a failed
    * save rejects its caller without blocking later saves.
    * @param next - resolved selection accepted by an entry point.
+   * @param expected - selection that must still own the default when the serialized write runs;
+   * a mismatch preserves the current value.
    * @returns fulfillment after the optional profile write settles.
    */
-  async saveSelection(next: ModelSelection): Promise<void> {
+  async saveSelection(next: ModelSelection, expected?: ModelSelection): Promise<void> {
     const entry = this.ownerContext.fiber.entry
     if (entry === undefined) return
     const editor = this.ctx.get('configEditor')
@@ -88,7 +90,16 @@ export class AgentDefaultModelConfig extends Service {
       provider: next.provider, model: next.model,
       ...next.reasoningEffort === undefined ? {} : { reasoningEffort: String(next.reasoningEffort) },
     }
-    const saved = this.saves.then(() => editor.edit(entry, () => config))
+    const guard = expected === undefined ? undefined : { ...expected }
+    const saved = this.saves.then(() => editor.edit(entry, (current, inherited) => {
+      if (guard !== undefined) {
+        const provider = current.provider ?? inherited.provider
+        const model = current.model ?? inherited.model
+        const reasoningEffort = current.reasoningEffort ?? inherited.reasoningEffort
+        if (provider !== guard.provider || model !== guard.model || reasoningEffort !== guard.reasoningEffort) return current
+      }
+      return config
+    }))
     this.saves = saved.catch(() => {})
     await saved
   }

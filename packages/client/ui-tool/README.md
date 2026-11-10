@@ -124,6 +124,12 @@ These pages cover the conversation host, the view slots, and the card models.
 
 -----
 
+
+<a id="presentation-variables"></a>
+### Presentation variables
+
+Tool summary titles and fragments support inherited `--dsh-tool-summary-font-size`; without it each native font rule remains unchanged. It changes text presentation only; disclosure, result/error bodies and tool execution remain owned by the existing components.
+
 <a id="model-experience"></a>
 ## Model Experience
 

@@ -33,6 +33,17 @@ server.listen(0, '127.0.0.1', () => {
   process.send({ type: 'ready', url: 'http://127.0.0.1:' + server.address().port + '/?token=fixture' })
 })
 process.on('message', message => {
+  if (message.type === 'native-authorization') {
+    if (message.action === 'start' && message.choiceId === 'pending') return
+    const value = message.action === 'state' ? null : message.choiceId === 'invalid'
+      ? { status: 'signed-in', token: 'must-reject' }
+      : message.action === 'start' ? { id: 'owned', authorizationUrl: 'https://login.example/start', callbackUrl: 'https://issuer.example/callback', allowedNavigationOrigins: ['https://login.example'], expiresAt: 1000 }
+      : { status: 'signed-out', choices: [] }
+    process.send({ type: 'native-authorization', requestId: message.requestId, value })
+    process.send({ type: 'native-authorization-state', state: { status: 'signed-out', choices: [] } })
+    return
+  }
+  if (message.type === 'native-authorization-cancel-request') return
   if (message.type === 'file-drag-cancel') {
     process.send({ type: 'file-drag-resource', requestId: message.requestId, resource: null })
     return
@@ -91,6 +102,26 @@ afterEach(async () => {
 })
 
 describe('desktop host process', () => {
+  it('keeps native descriptors on private correlated IPC and validates safe responses', async () => {
+    const runtime = projectWithHost()
+    const host = hostProcess(runtime)
+    await host.start()
+    const changed = vi.fn()
+    const dispose = host.onNativeAuthorizationState(changed)
+    expect(await host.nativeAuthorizationState()).toBeNull()
+    const provider = host.nativeAuthorizationProvider()
+    const attempt = await provider.start('organization', new AbortController().signal)
+    expect(attempt.authorizationUrl).toBe('https://login.example/start')
+    expect(await provider.cancel(attempt.id)).toEqual({ status: 'signed-out', choices: [] })
+    await expect(provider.start('invalid', new AbortController().signal)).rejects.toThrow('Invalid native authorization response')
+    const abort = new AbortController()
+    const pending = provider.start('pending', abort.signal)
+    abort.abort(new Error('Withdrawn'))
+    await expect(pending).rejects.toThrow('Withdrawn')
+    expect(changed).toHaveBeenCalledWith({ status: 'signed-out', choices: [] })
+    dispose()
+  })
+
   it('retains the announced run identity when startup fails before readiness', async () => {
     const runtime = projectWithHost(`
 process.send({ type: 'starting', runId: 'c254ab28-97c9-4382-95e6-2db9c66f98c8' })

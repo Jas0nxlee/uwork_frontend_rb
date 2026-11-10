@@ -56,6 +56,11 @@
     "packages/client/*/tests/**/*.host.ts"
   ],
   "references": [
+    { "path": "./packages/client/ui-uwork-workbench" },
+    { "path": "./packages/client/ui-uwork-conversation" },
+    { "path": "./packages/client/ui-uwork-interactions" },
+    { "path": "./packages/client/ui-uwork-usage" },
+    { "path": "./packages/client/ui-uwork-enterprise" },
     { "path": "./packages/experimental/client-ui-action-cards" },
     { "path": "./packages/experimental/client-ui-creation-recommendations" },
     { "path": "./packages/experimental/client-ui-plugin-recommendations" },

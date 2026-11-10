@@ -2,6 +2,7 @@
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 /** Global panel rows and DOM focus through the production slot renderer. */
 import type { Context } from '@deepseek-ai/cordis'
+import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, waitFor, within } from '@testing-library/react'
 import { SlotTestRuntime } from '@deepseek-ai/dsh-client-test-runtime'
@@ -84,6 +85,29 @@ async function bench(collapsed = false, track?: TrackProductEvent) {
   const view = runtime.renderRoot()
   return { runtime, locale, layout, sidebar, view }
 }
+
+function PresentationFrame({ collapsed, drawer, children }: PropsRuntime<'sidebar.frame'> & { children: ReactNode }) {
+  return <section aria-label={collapsed ? 'Rail presentation' : drawer ? 'Drawer presentation' : 'Desktop presentation'}>{children}</section>
+}
+
+it('keeps one native owner and live navigation actions when a presentation layer withdraws', async () => {
+  const { runtime, layout, view } = await bench()
+  const presentation = await runtime.mount({
+    inject: ['slots'],
+    apply(ctx: Context) {
+      ctx.slots.inject('sidebar.frame', () => ctx.slots.register({ name: 'sidebar.frame', id: 'presentation' }, PresentationFrame))
+    },
+  })
+  const framed = await view.findByRole('region', { name: 'Desktop presentation' })
+  fireEvent.click(within(framed).getByRole('button', { name: 'Collapse sidebar' }))
+  expect(layout.toggleSidebar).toHaveBeenCalledTimes(1)
+  expect(runtime.ctx.slots.entries('sidebar')).toHaveLength(1)
+  await presentation.dispose()
+  await waitFor(() => { expect(view.queryByRole('region', { name: 'Desktop presentation' })).toBeNull() })
+  fireEvent.click(view.getByRole('button', { name: 'Collapse sidebar' }))
+  expect(layout.toggleSidebar).toHaveBeenCalledTimes(2)
+  expect(runtime.ctx.slots.entries('sidebar')).toHaveLength(1)
+})
 
 /** A More menu occupant that exposes each owner callback as a plain button. */
 function ProbeActions({ entries, onOpen, onPinnedChange, onDismiss }: PropsRuntime<'sidebar.panellist.actions'>) {

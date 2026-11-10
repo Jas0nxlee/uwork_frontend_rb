@@ -169,7 +169,7 @@
 
 .tabHost:not(.float),
 .emptyTabHost {
-  background: var(--dsw-alias-bg-base);
+  background: var(--dsh-dockkit-pane-background, var(--dsw-alias-bg-base));
 }
 
 .tabCell[data-dockkit-host='dock'][data-dockkit-column='0'] > .tabHost {
@@ -242,6 +242,7 @@
   gap: 4px;
   align-items: center;
   height: 28px;
+  background: var(--dsh-dockkit-strip-background, transparent);
   /* The start inset is a published variable so a host that pins the surface
      against window chrome (the right sidebar fullscreen under macOS traffic
      lights) can widen it per pane; the fallback is the design's own 10px. */
@@ -364,17 +365,17 @@
 .tab {
   position: relative;
   display: flex;
-  flex: 0 1 auto;
+  flex: var(--dsh-dockkit-tab-flex, 0 1 auto);
   align-items: center;
-  min-width: 80px;
-  max-width: 170px;
+  min-width: var(--dsh-dockkit-tab-min-width, 80px);
+  max-width: var(--dsh-dockkit-tab-max-width, 170px);
   height: 28px;
-  padding: 0 10px;
+  padding: var(--dsh-dockkit-tab-padding, 0 10px);
   color: var(--dsw-alias-label-secondary);
   font-size: var(--dsh-content-font-size-secondary, 13px);
   line-height: 1;
   white-space: nowrap;
-  border-radius: var(--dsw-radius-sm);
+  border-radius: var(--dsh-dockkit-tab-radius, var(--dsw-radius-sm));
   cursor: pointer;
   touch-action: none;
   user-select: none;
@@ -495,7 +496,7 @@
 /* The active chip is the filled tab, in the tag fill; the rest are bare text. */
 .tabActive {
   color: var(--dsw-alias-label-primary);
-  background: var(--dsw-alias-markdown-tag);
+  background: var(--dsh-dockkit-tab-active-background, var(--dsw-alias-markdown-tag));
 }
 
 /* A pane's lone unclosable chip is a label, not a choice: no tab, no

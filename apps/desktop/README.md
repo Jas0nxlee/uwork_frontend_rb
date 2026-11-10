@@ -61,6 +61,12 @@ Desktop microphone access is restricted to audio requests from the primary `dsh-
 
 Press F12 (Fn+F12 on media-key keyboards), Command+Option+I on macOS, or Ctrl+Shift+I on Windows to toggle DevTools for the focused application page, including in packaged builds. The application menu shows a localized “Developer tools” command in a separate group before Hide and Quit (before Exit on Windows). Windows exposes it in the titlebar application popup; its hidden native application menu registers the shortcuts. macOS and Linux keep a hidden F12 shortcut alias in their application menus. Update overlays and packaged embedded browser guests disable DevTools.
 
+### Product-selected native authorization
+
+A product can register a [native authorization provider](../../packages/credentials/native-authorization/README.md) to replace the initial account Welcome with organization selection and a native sign-in surface. The application and Welcome preloads expose `dshNativeAuthorization.state`, `start`, `poll` and `cancel`; these operations return only safe status. Main accepts the owning window's exact main frame, obtains private navigation through Host IPC and intercepts callback URLs without returning them to the renderer. Every attempt uses a separate nonpersistent partition with sandboxing, context isolation and no Node integration, preload or DevTools. New windows, webviews, downloads, permissions and navigation outside the provider's HTTPS origins are denied. Closing, replacing, cancelling or quitting destroys the document and awaits connection, storage, cache and authentication cleanup.
+
+After building Desktop Host artifacts, run `node_modules/.bin/vitest run --config vitest.e2e.config.ts apps/desktop/tests/native-authorization.e2e.ts` with an available display server on Linux. The real Electron fixture serves a synthetic HTTPS issuer in memory and checks isolation, cancellation cleanup, private callback delivery, forced owner destruction and storage removal after an expired poll followed by a status read. It uses no employee account and does not establish Windows x64, Mac ARM or signing acceptance. The [authorization decision](../../.agents/notes/implemented/architecture/2026-11-10-native-product-authorization.md) records the ownership and platform limits.
+
 <a id="terminal-command"></a>
 
 ## Terminal command

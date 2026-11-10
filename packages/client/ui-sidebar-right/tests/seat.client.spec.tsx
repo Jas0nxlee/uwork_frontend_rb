@@ -1172,3 +1172,29 @@ describe('the reveal glow', () => {
     expect(marked().length).toBeGreaterThan(0)
   })
 })
+
+it('offers committed panel presentation to frame layers while preserving the native docking subtree', async () => {
+  const h = await mountSeat(1440, true, 0, false, true)
+  const seen: Array<{ active: boolean; expanded: boolean; fullscreen: boolean }> = []
+  function Frame({ active, expanded, fullscreen, children }: {
+    active: boolean
+    expanded: boolean
+    fullscreen: boolean
+    children: import('react').ReactNode
+  }) {
+    seen.push({ active, expanded, fullscreen })
+    return <div data-test-rightbar-frame="">{children}</div>
+  }
+  await act(async () => { h.runtime.slots.register({ name: 'sidebar.right.frame', id: 'test-frame' }, Frame) })
+  h.open()
+  const body = element(h.view.container, '[data-tab-body]')
+  expect(seen.at(-1)).toEqual({ active: true, expanded: true, fullscreen: false })
+  fireEvent.click(element(h.view.container, '[data-sidebar-right-mode]'))
+  expect(seen.at(-1)).toEqual({ active: true, expanded: true, fullscreen: true })
+  expect(element(h.view.container, '[data-tab-body]')).toBe(body)
+  fireEvent.click(element(h.view.container, '[data-sidebar-right-toggle]'))
+  expect(seen.at(-1)).toEqual({ active: true, expanded: false, fullscreen: true })
+  expect(element(h.view.container, '[data-tab-body]')).toBe(body)
+  act(() => { h.runtime.panelInfo.set({ activePanelId: 'other-panel' as MainPanelId }) })
+  expect(seen.at(-1)).toMatchObject({ active: false })
+})

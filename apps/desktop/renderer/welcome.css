@@ -142,7 +142,8 @@ body {
   width: 240px;
 }
 
-.actions button {
+.actions button,
+.native-authorization-actions button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -164,13 +165,15 @@ body {
     color var(--ds-transition-duration-slow) var(--ds-ease-in-out);
 }
 
-.actions button:disabled {
+.actions button:disabled,
+.native-authorization-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.4;
 }
 
-.actions button:focus-visible {
-  outline: 2px solid var(--dsw-alias-label-primary);
+.actions button:focus-visible,
+.native-authorization-actions button:focus-visible {
+  outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
   outline-offset: 3px;
 }
 
@@ -341,3 +344,22 @@ body {
 .actions .welcome-loading { color: inherit; }
 
 .auth-waiting .copy-link:disabled { cursor: default; }
+
+.native-authorization {
+  height: calc(100vh - 42px);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.native-authorization h1 { font-size: 24px; margin: 0 0 8px; }
+.native-authorization label { font-size: 14px; }
+.native-authorization select {
+  width: 100%; min-height: 40px; padding: 8px 12px;
+  color: var(--dsw-alias-label-primary); background: var(--dsw-alias-button-elevated-fill);
+  border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px;
+}
+.native-authorization p { margin: 0; font-size: 14px; }
+.native-authorization-browser { flex: 1; min-height: 240px; }
+.native-authorization-actions { display: flex; justify-content: center; }
+.native-authorization-actions button { width: 100%; min-height: 44px; }

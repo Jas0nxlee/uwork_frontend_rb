@@ -1,0 +1,11 @@
+/* A transparent presentation layer leaves the native column's layout and
+   animation ownership intact. Only expanded desktop rows adopt source density. */
+.frame {
+  display: contents;
+}
+
+.frame[data-uwork-navigation='compact'] > * {
+  --dsh-sidebar-inline-padding: 6px;
+  --dsh-sidebar-row-padding: 10px;
+  --dsh-sidebar-label-gap: 8px;
+}

@@ -1,0 +1,46 @@
+{
+  "kind": "uwork-upstream-compatibility-audit",
+  "version": 1,
+  "observedAt": "2026-11-10T13:48:59.302682+00:00",
+  "upstream": "fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159",
+  "head": "ca1e717b048694e33686b6e6cb2c02532255edfc",
+  "mergeBase": "fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159",
+  "snapshotTree": "c7babdad79b7c1d2528038c0f66136eecd7fb013",
+  "snapshotCommit": "94cb6f7a7f3210c72e875e3d8ac682f2740175fd",
+  "scopes": [
+    "apps/desktop",
+    "apps/desktop-host",
+    "packages/client/ui-sidebar",
+    "packages/llm/llm-pi-ai"
+  ],
+  "mergeTreeExitCode": 0,
+  "mergeTreeStdout": "c7babdad79b7c1d2528038c0f66136eecd7fb013",
+  "mergeTreeStderr": "",
+  "changedFiles": 279,
+  "note": "Temporary index and unreferenced snapshot commit only; no ref, actual index, worktree or branch changed.",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "ls-remote",
+        "origin",
+        "refs/heads/master"
+      ],
+      "exitCode": 0,
+      "stdout": "fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159\trefs/heads/master",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "merge-tree",
+        "--write-tree",
+        "fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159",
+        "94cb6f7a7f3210c72e875e3d8ac682f2740175fd"
+      ],
+      "exitCode": 0,
+      "stdout": "c7babdad79b7c1d2528038c0f66136eecd7fb013",
+      "stderr": ""
+    }
+  ]
+}

@@ -1,6 +1,12 @@
 # Apply after dsh-base and dsh-web-app.
 - id: ui-brand-official
   disabled: true
+- id: ui-settings-account
+  disabled: true
+- id: agent-default-model
+  config:
+    provider: ''
+    model: ''
 - insert:
     - id: ui-uwork
       name: '@deepseek-ai/dsh-client-ui-uwork'
@@ -10,3 +16,52 @@
         baseUrl: https://aihub.ucas.com.cn/skillhub
     - id: ui-uwork-company-market
       name: '@deepseek-ai/dsh-client-ui-uwork-company-market'
+    - id: native-authorization
+      name: '@deepseek-ai/dsh-native-authorization'
+    - id: uwork-enterprise
+      name: '@deepseek-ai/dsh-uwork-enterprise'
+      config:
+        apiBaseUrl: https://pivot.ucas.com.cn:23090
+        defaultOrgId: a1d155cb-7e9f-46ef-babb-ac296faac7a0
+        organizations:
+          - orgId: a1d155cb-7e9f-46ef-babb-ac296faac7a0
+            corpId: "wx6552695afd9ed248"
+            agentId: "1000083"
+            label: "北京"
+            callbackUrl: "https://pivot.ucas.com.cn:23090/callback"
+          - orgId: c1715513-9ff7-4d4f-a129-226bc1cf65f0
+            corpId: "ww1ef227672ebe1618"
+            agentId: "1000027"
+            label: "南京"
+            callbackUrl: "https://pivot-nj.ucas.com.cn:23091/callback"
+          - orgId: d37a82ec-5fa0-491f-8ba5-36bf0907504e
+            corpId: "wwc87af0599a145d14"
+            agentId: "1000010"
+            label: "厦门"
+            callbackUrl: "https://pivot.ansilic.com:23092/callback"
+          - orgId: 80f0a35d-d5f7-4e7e-bc3a-d02d2a1a2360
+            corpId: "wwb6eecb2e8c0f9d8a"
+            agentId: "1000003"
+            label: "天津"
+            callbackUrl: "https://pivot-tj.ucas.com.cn/callback"
+    - id: uwork-gateway-service
+      name: '@deepseek-ai/dsh-uwork-gateway-service'
+      config:
+        apiBaseUrl: https://pivot.ucas.com.cn:23090
+        allowedModelEndpointOrigins: [https://llm.ucas.com.cn:15000]
+    - id: uwork-model-provisioning
+      name: '@deepseek-ai/dsh-uwork-model-provisioning'
+      config:
+        gatewayApiBaseUrl: https://pivot.ucas.com.cn:23090
+        allowedModelEndpointOrigins: [https://llm.ucas.com.cn:15000]
+        preferredModels: []
+    - id: ui-uwork-enterprise
+      name: '@deepseek-ai/dsh-client-ui-uwork-enterprise'
+    - id: ui-uwork-usage
+      name: '@deepseek-ai/dsh-client-ui-uwork-usage'
+    - id: ui-uwork-interactions
+      name: '@deepseek-ai/dsh-client-ui-uwork-interactions'
+    - id: ui-uwork-conversation
+      name: '@deepseek-ai/dsh-client-ui-uwork-conversation'
+    - id: ui-uwork-workbench
+      name: '@deepseek-ai/dsh-client-ui-uwork-workbench'

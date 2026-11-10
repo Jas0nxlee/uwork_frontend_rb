@@ -1,0 +1,12 @@
+/* Source PermissionDialog/ElicitationDialog use rounded-2xl popover surfaces
+   with a small shadow. Scope those roles to native interaction cards; retain
+   their warning colors, focus, sizing, scroll caps and all answer controls. */
+.seat { display: contents; }
+
+.frame {
+  display: contents;
+  --dsw-radius-xl: 16px;
+  --dsw-specific-input-major: var(--dsw-alias-bg-layer-1);
+  --dsw-shadow-lv2: 0 1px 2px rgb(0 0 0 / 0.05);
+  --dsw-elevation-panel: 0 0 0 1px var(--dsw-alias-border-l2), 0 1px 2px rgb(0 0 0 / 0.05);
+}

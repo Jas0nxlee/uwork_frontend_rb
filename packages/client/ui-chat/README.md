@@ -194,6 +194,12 @@ The Chat view detects selection and context-menu gestures on business nodes mark
 
 Markdown files, links, images, reference chips, and tool-file controls forward explicit right-click targets to [ui-context-menu](../ui-context-menu/README.md). File targets retain their working directory and line; ordinary link clicks retain the configured opening preference.
 
+
+<a id="presentation-variables"></a>
+### Presentation variables
+
+User file cards inherit the attachment presentation variables `--dsh-attachment-preview-edge`, `--dsh-attachment-card-radius` and `--dsh-attachment-content-inset`, with original 64px, theme LG and 8px fallbacks. Content, ordering, actions and image-loading ownership do not change.
+
 <a id="model-experience"></a>
 ## Model Experience
 

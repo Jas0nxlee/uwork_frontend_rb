@@ -1,0 +1,52 @@
+---
+description: "Host-only managed enterprise model routes and crash reconciliation."
+kind: "package-reference"
+---
+
+# @deepseek-ai/dsh-uwork-model-provisioning
+
+English | [中文](README.zh.md)
+
+## Summary
+
+This Host service provisions explicit authorized model routes through native `llm-pi-ai`. Settings store a generation-specific credential reference; the credentials provider stores its secret and an owner-scoped recovery journal. Personal providers and personal defaults are preserved.
+
+## Table of Contents
+
+- [Use this package](#use-this-package)
+- [Understand the implementation](#understand-the-implementation)
+- [Model Experience](#model-experience)
+- [Known Limitations and Deferred Work](#known-limitations-and-deferred-work)
+
+<a id="use-this-package"></a>
+## Use this package
+
+Mount after `credentials`, `settings`, `agentDefaultModel`, and native `llm-pi-ai`. `settingsNamespace` defaults to `llm-pi-ai`. A Host identity callback calls `uworkModelProvisioning.provision(input)` with its org/user/generation, lifetime signal, fresh route/reference, public HTTPS inference endpoint, API key, authorized model ids, verified capability declarations, and preferred model order. Never expose this input through a Renderer method. With `gatewayApiBaseUrl` and explicit `allowedModelEndpointOrigins` configured, authenticated identity changes refresh authorization automatically. Safe Remote methods `getState`, `refresh`, and `createManagedKey` return status only. Only the explicit `createManagedKey(expectedBinding, signal)` action can create a key for the exact org/user/generation captured by its confirmation; a durable per-account intent blocks repeated POSTs after unknown outcomes until a fresh key listing reconciles its alias.
+
+<a id="understand-the-implementation"></a>
+## Understand the implementation
+
+The transaction writes a staged journal, stores the secret, applies a settings revision check, and marks the journal committed before admitting requests. Failed commits remove only the matching owned route and secret. Failed compensation leaves the journal available for `recover()`. Startup reconciliation never treats persisted credentials as current authorization. Journal updates compare the expected owned credential reference under the credential provider's record lock.
+
+Managed native discovery is refused before credential access; authorized capability refresh goes through the gateway. The `uwork-` route prefix is reserved for this owner. The native request-signal hook denies inactive managed routes before credential resolution. Revoking an identity signal aborts in-flight inference. Explicit authorized ids (or the verified directory when the server explicitly authorizes unrestricted access) intersect verified capability declarations; the explicit model list prevents model discovery from widening authorization. Defaults follow the preferred authorized intersection only when the existing default is empty or belongs to the same enterprise account’s previous managed route. No Session selection is rewritten.
+
+<a id="model-experience"></a>
+## Model Experience
+
+Indirectly, through native pi-ai requests and the model selection consumed by the Agent.
+
+#### KV Cache effect
+
+Authorization changes do not rewrite Session history or its request prefix. The native adapter and subsequent model selection own the actual request.
+
+## Known Limitations and Deferred Work
+<a id="known-limitations-and-deferred-work"></a>
+
+- The caller must supply verified capability facts; model names do not establish image or reasoning support.
+- Real authenticated gateway capability and inference validation remain necessary.
+- This package does not declare currency or infer spend from tokens.
+- A changed route that no longer matches the journal is retained for inspection while its owned secret is removed.
+
+### Dev Note
+
+Owner-local transaction tests cover compensation, revision conflict, restart, personal defaults, authorization intersection and cancellation. The Loader composition test uses real profile persistence, credentials-local, settings, agent-default-model and pi-ai.

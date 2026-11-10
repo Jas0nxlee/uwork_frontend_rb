@@ -61,6 +61,12 @@ Desktop Host 的 Platform API 请求与更新策略请求用相同的 Platform �
 
 按 F12（多媒体功能键键盘上为 Fn+F12）、macOS 的 Command+Option+I 或 Windows 的 Ctrl+Shift+I，可切换当前获得焦点的应用页面的 DevTools，打包版本同样支持。应用菜单在隐藏和退出命令之前的独立分组中显示本地化的“开发者工具”命令。Windows 在标题栏的应用弹出菜单中显示开关，通过隐藏的原生应用菜单注册快捷键；macOS 和 Linux 的应用菜单保留隐藏的 F12 快捷键别名。更新遮罩和打包版本的内嵌浏览器禁用 DevTools。
 
+### 产品选择的原生授权
+
+产品可注册[原生授权提供者](../../packages/credentials/native-authorization/README.zh.md)，将首次账号 Welcome 替换为组织选择及原生登录载体。应用和 Welcome 预载公开 `dshNativeAuthorization.state`、`start`、`poll` 和 `cancel`，只返回安全状态。Main 仅接受所属窗口的精确主框架，通过 Host IPC 获取私有导航，并拦截回调 URL，不向渲染进程返回。每次尝试使用独立非持久分区，启用沙箱与上下文隔离，禁用 Node 集成、预载及开发工具。新窗口、webview、下载、权限及提供者 HTTPS 源之外的导航均被拒绝。关闭、替换、取消或退出会销毁文档，并等待连接、存储、缓存和认证清理。
+
+构建 Desktop Host 产物后，可运行 `node_modules/.bin/vitest run --config vitest.e2e.config.ts apps/desktop/tests/native-authorization.e2e.ts`；Linux 需要可用显示服务器。真实 Electron 夹具在内存中提供合成 HTTPS 签发页，检查隔离、取消清理、私有回调传递、所属窗口强制销毁，以及轮询过期后读取状态时的存储删除。测试不使用员工账号，也不证明 Windows x64、Mac ARM 或签名验收通过。[授权决策](../../.agents/notes/implemented/architecture/2026-11-10-native-product-authorization.zh.md)记录拥有者与平台限制。
+
 <a id="terminal-command"></a>
 
 ## 终端命令

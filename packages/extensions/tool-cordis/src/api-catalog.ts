@@ -125,9 +125,9 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         returns: 'a detached provider, model, and optional reasoning selection.',
       },
       {
-        signature: 'async saveSelection(next: ModelSelection): Promise<void>',
+        signature: 'async saveSelection(next: ModelSelection, expected?: ModelSelection): Promise<void>',
         description: 'Save the complete default model selection. A deployment without a configuration editor keeps its composition entry. Saves commit in submission order; a failed save rejects its caller without blocking later saves.',
-        parameters: [{ name: 'next', description: 'resolved selection accepted by an entry point.' }],
+        parameters: [{ name: 'next', description: 'resolved selection accepted by an entry point.' }, { name: 'expected', description: 'selection that must still own the default when the serialized write runs; a mismatch preserves the current value.' }],
         returns: 'fulfillment after the optional profile write settles.',
       },
     ],
@@ -2119,6 +2119,25 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         description: 'Delete one item after checking its version; absence succeeds without an event.',
         parameters: [{ name: 'request', description: 'Session, message, and observed item version.' }],
         returns: 'the stable absent postcondition or an explicit failure.',
+      },
+    ],
+  },
+  {
+    key: 'nativeAuthorization',
+    summary: 'Registry read only by the private Desktop Host bridge, never exposed through Remote.',
+    description: 'Registry read only by the private Desktop Host bridge, never exposed through Remote.',
+    methods: [
+      {
+        signature: 'register(provider: NativeAuthorizationProvider): () => void',
+        description: 'Select one provider for this registration lifetime.',
+        parameters: [{ name: 'provider', description: 'product-selected authentication owner.' }],
+        returns: 'lifetime disposer; a second provider is rejected.',
+      },
+      {
+        signature: 'getProvider(): NativeAuthorizationProvider | undefined',
+        description: 'Read the provider selected by product composition.',
+        parameters: [],
+        returns: 'selected private provider, or undefined for the standard account Welcome.',
       },
     ],
   },
@@ -4334,6 +4353,153 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'uworkGateway',
+    summary: 'Read-only enterprise gateway Remote service.',
+    description: 'Read-only enterprise gateway Remote service.',
+    methods: [
+      {
+        signature: '@Remote async getOverview(signal: AbortSignal): Promise<OverviewState>',
+        description: 'Read safe endpoint, masked key records, subscriptions and authorized model filters.',
+        parameters: [{ name: 'signal', description: 'Caller cancellation.' }],
+        returns: 'Current identity\'s overview or a safe unavailable state.',
+      },
+      {
+        signature: '@Remote async refreshModels(signal: AbortSignal): Promise<OverviewState>',
+        description: 'Refresh model permissions together with their owning account overview.',
+        parameters: [{ name: 'signal', description: 'Caller cancellation.' }],
+        returns: 'Fresh safe overview; failure retains only this identity\'s last success.',
+      },
+      {
+        signature: '@Remote async readUsage(input: UsageRequest, signal: AbortSignal): Promise<UsageState>',
+        description: 'Read the requested usage selection and cancel an older selection\'s pending read.',
+        parameters: [{ name: 'input', description: 'Period, metric and explicit server refresh request.' }, { name: 'signal', description: 'Caller cancellation.' }],
+        returns: 'Aggregates, authentication absence, or a classified failure with an optional last success.',
+      },
+      {
+        signature: '@Remote({ mode: \'stream\' }) async *watchIdentity(signal: AbortSignal): AsyncIterable<GatewayBinding | null>',
+        description: 'Observe identity changes so open Client resources withdraw previous account data.',
+        parameters: [{ name: 'signal', description: 'Subscriber cancellation.' }],
+        returns: 'Current safe identity binding, then coalesced changes; null means unauthenticated.',
+      },
+    ],
+  },
+  {
+    key: 'uworkIdentity',
+    summary: 'Owns only enterprise identity.',
+    description: 'Owns only enterprise identity. Personal provider settings and company/personal skills are outside this service.',
+    methods: [
+      {
+        signature: '@Remote listOrganizations(): { defaultOrgId: string; organizations: Array<{ orgId: string; label: string }> }',
+        description: 'Safe configured organization choices; no callbacks, issuer secrets or tokens.',
+        parameters: [],
+        returns: 'public organizations and the configured default.',
+      },
+      {
+        signature: '@Remote async getState(): Promise<IdentityState>',
+        description: 'Observes revocation and verifies stored grants before publishing an authenticated state.',
+        parameters: [],
+        returns: 'token-free state, or restoring while another verification is in progress.',
+        throws: ['IdentityError when storage or issuer verification fails.'],
+      },
+      {
+        signature: '@Remote({ mode: \'stream\' }) async *watchState(signal: AbortSignal): AsyncIterable<IdentityState>',
+        description: 'Publishes safe state initially and after identity changes; intermediate updates may coalesce.',
+        parameters: [{ name: 'signal', description: 'subscriber cancellation, combined with plugin lifetime.' }],
+        returns: 'issuer-verified current state followed by safe changes; ends on cancellation.',
+      },
+      {
+        signature: '@Remote async signOut(): Promise<void>',
+        description: 'Durable tombstone prevents older login/refresh writers from resurrecting a logged-out session.',
+        parameters: [],
+      },
+      {
+        signature: 'async startSignIn(orgId: string, signal?: AbortSignal): Promise<NativeSignInAttempt>',
+        description: 'Host/Main only. Durably revokes the previous generation before contacting the issuer.',
+        parameters: [{ name: 'orgId', description: 'exact allowlisted organization ID.' }, { name: 'signal', description: 'optional caller cancellation; without it plugin lifetime still applies.' }],
+        returns: 'private native navigation without handoff secret or token.',
+        throws: ['IdentityError for an unknown organization, stale attempt or issuer failure.'],
+      },
+      {
+        signature: 'async completeSignIn(attemptId: string, callbackUrl: string, signal?: AbortSignal): Promise<IdentityState>',
+        description: 'Main-only callback ingestion. Exactly one code submission is admitted per attempt.',
+        parameters: [{ name: 'attemptId', description: 'current native attempt ID.' }, { name: 'callbackUrl', description: 'Main-intercepted URL; never forward through application Renderer.' }, { name: 'signal', description: 'optional caller cancellation, combined with the attempt lifetime.' }],
+        returns: 'verified public state after the credential grant commits.',
+        throws: ['IdentityError for an invalid callback, expiry, duplicate submission or issuer failure.'],
+      },
+      {
+        signature: 'async pollSignIn(attemptId: string, signal?: AbortSignal): Promise<IdentityState>',
+        description: 'Main-only polling. 202 is pending; transient and protocol failures remain failures.',
+        parameters: [{ name: 'attemptId', description: 'current native attempt ID.' }, { name: 'signal', description: 'optional caller cancellation, combined with attempt lifetime.' }],
+        returns: 'public state; pending attempts remain signed out.',
+      },
+      {
+        signature: 'async cancelSignIn(attemptId: string): Promise<void>',
+        description: 'Cancels only this attempt\'s generation and awaits owned work; newer identity is left intact.',
+        parameters: [{ name: 'attemptId', description: 'attempt being withdrawn; an already retired ID is a no-op.' }],
+      },
+      {
+        signature: 'restoreSession(signal?: AbortSignal): Promise<IdentityState>',
+        description: 'Restores after issuer refresh, preserving stored user and organization. Network errors never authenticate.',
+        parameters: [{ name: 'signal', description: 'optional caller cancellation; concurrent callers join the first verification.' }],
+        returns: 'verified safe state, or signed-out for an empty or issuer-revoked grant.',
+        throws: ['IdentityError for invalid grants, stale generations or issuer failure.'],
+      },
+      {
+        signature: 'async withSession<T>(run: (session: IdentitySession) => Promise<T>, signal?: AbortSignal): Promise<T>',
+        description: 'Host-only capability, cancelled by identity changes and validated again before returning.',
+        parameters: [{ name: 'run', description: 'Host operation; must honor its session signal and keep the token private.' }, { name: 'signal', description: 'optional caller cancellation, combined with identity and plugin lifetimes.' }],
+        returns: 'the operation result only while its authenticated generation remains current.',
+        throws: ['IdentityError when signed out, expired, revoked or unable to verify a saved grant.'],
+      },
+    ],
+  },
+  {
+    key: 'uworkModelProvisioning',
+    summary: 'Main-process capability.',
+    description: 'Main-process capability. No Remote projection exposes input keys or credential records.',
+    methods: [
+      {
+        signature: 'async provision(input: ProvisionInput): Promise<void>',
+        description: 'Provision fresh identity-scoped material supplied only by a Host identity callback.',
+        parameters: [{ name: 'input', description: 'Host-only identity, capability and secret material.' }],
+      },
+      {
+        signature: 'revoke(): void',
+        description: 'Close admission synchronously; durable recovery removes only this plugin\'s owned route.',
+        parameters: [],
+      },
+      {
+        signature: 'async recover(): Promise<void>',
+        description: 'Retry startup reconciliation after the credential/settings backend is repaired.',
+        parameters: [],
+      },
+      {
+        signature: 'async syncCurrent(createKey: boolean = false, signal?: AbortSignal, expectedBinding?: ModelIdentityBinding): Promise<SyncResult>',
+        description: 'Host orchestration; createKey=true is reserved for an explicit user key-creation action.',
+        parameters: [{ name: 'createKey', description: 'Whether the user explicitly requested key creation.' }, { name: 'signal', description: 'Optional caller cancellation.' }, { name: 'expectedBinding', description: 'Account identity captured by an explicit key confirmation.' }],
+        returns: 'Safe synchronization result with no credential values.',
+      },
+      {
+        signature: '@Remote async getState(signal: AbortSignal): Promise<ModelProvisioningState>',
+        description: 'Read current safe provisioning state and observe cross-process identity revocation.',
+        parameters: [{ name: 'signal', description: 'Caller cancellation.' }],
+        returns: 'Detached safe current status.',
+      },
+      {
+        signature: '@Remote async refresh(signal: AbortSignal): Promise<ModelProvisioningState>',
+        description: 'Refresh authorization and native routes without creating an API key.',
+        parameters: [{ name: 'signal', description: 'Caller cancellation.' }],
+        returns: 'Safe refreshed status or classified failure.',
+      },
+      {
+        signature: '@Remote async createManagedKey(expectedBinding: ModelIdentityBinding, signal: AbortSignal): Promise<ModelProvisioningState>',
+        description: 'Explicit user action; a durable unknown key outcome prevents another create POST.',
+        parameters: [{ name: 'expectedBinding', description: 'Safe account identity captured by the confirmation dialog.' }, { name: 'signal', description: 'Caller cancellation.' }],
+        returns: 'Safe creation/reconciliation status or classified failure.',
+      },
+    ],
+  },
+  {
     key: 'web',
     summary: 'The web access service.',
     description: 'The web access service. Registered as `ctx.web` (one instance per context) and exposed to Clients as the `web` Remote namespace (`listProviders`).\n\nSelection semantics (resolved at execution time, never order-dependent):\n\n- A configured id that is registered and `available()` → that provider.\n- A configured id not registered → `WEB_PROVIDER_CONFIGURED_MISSING`.\n- A configured id registered but unavailable → `WEB_PROVIDER_CONFIGURED_UNAVAILABLE`.\n- No id configured, exactly one registered usable provider → that provider.\n- No id configured, multiple usable providers → `WEB_PROVIDER_AMBIGUOUS`.\n- No id configured, no usable provider → `WEB_PROVIDER_UNAVAILABLE`.',
@@ -5117,12 +5283,28 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [{ name: 'reloads', description: 'Replaced plugins and their module locations.' }],
   },
   {
+    name: 'llm-pi-ai/discovery-signal',
+    mode: 'waterfall',
+    signature: '\'llm-pi-ai/discovery-signal\'(request: PiAiDiscoveryContext, next: () => AbortSignal | undefined): AbortSignal | undefined',
+    summary: 'Authorize a discovery draft before stored credentials are read.',
+    description: 'Authorize a discovery draft before stored credentials are read. Model-hidden metadata excludes the one-shot API key. Synchronous listeners call next for unrelated drafts; throws refuse discovery.',
+    parameters: [{ name: 'request', description: 'Immutable provider, endpoint and protocol facts.' }, { name: 'next', description: 'Continue through remaining authorization listeners.' }],
+  },
+  {
     name: 'llm-pi-ai/request-headers',
     mode: 'waterfall',
     signature: '\'llm-pi-ai/request-headers\'(request: PiAiRequestHeaderContext, headers: Headers, next: () => Headers): Headers',
     summary: 'Prepare headers for one pi-ai inference call, excluding model discovery.',
     description: 'Prepare headers for one pi-ai inference call, excluding model discovery. Listeners run synchronously and must call next(); they may edit only the request-owned headers and must not retain them. Throws fail the call with REQUEST_HEADERS before inference I/O. Harness attribution wins afterward. Non-TypeError messages are user-visible and must exclude secrets. TypeError details and non-Error values are replaced with safe guidance.',
     parameters: [{ name: 'request', description: 'immutable routing metadata from the exact prepared call.' }, { name: 'headers', description: 'fresh profile headers, shared only within this dispatch.' }, { name: 'next', description: 'continue header preparation through the remaining listeners.' }],
+  },
+  {
+    name: 'llm-pi-ai/request-signal',
+    mode: 'waterfall',
+    signature: '\'llm-pi-ai/request-signal\'(request: PiAiRequestHeaderContext, next: () => AbortSignal | undefined): AbortSignal | undefined',
+    summary: 'Authorize an exact captured inference route before credential resolution.',
+    description: 'Authorize an exact captured inference route before credential resolution. Synchronous listeners call next for unrelated routes and may combine the returned signal with their own revocation signal. Throws refuse dispatch; aborting the result cancels attachments and in-flight inference.',
+    parameters: [{ name: 'request', description: 'Immutable provider, model and endpoint captured for this call.' }, { name: 'next', description: 'Continue authorization through the remaining listeners.' }],
   },
   {
     name: 'llm/adapters-updated',
@@ -5155,6 +5337,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     summary: 'One managed server\'s status transitioned.',
     description: 'One managed server\'s status transitioned. Emitted for every published change while the manager is live and either the entry is configured or registered, or a runtime record remains. Removed entries may emit cleanup failures; `watch` and `list()` report removals. Lifecycle operations do not wait for listeners. Synchronous throws and returned promise rejections are logged without skipping other listeners.',
     parameters: [{ name: 'name', description: 'the configured `servers` key or registered name.' }, { name: 'status', description: 'the status now current for that server.' }],
+  },
+  {
+    name: 'native-authorization/changed',
+    mode: 'emit',
+    signature: '\'native-authorization/changed\'(state: NativeAuthorizationState): void',
+    summary: 'A product identity provider has committed a renderer-safe authorization state.',
+    description: 'A product identity provider has committed a renderer-safe authorization state.',
+    parameters: [{ name: 'state', description: 'token-free organization choices, attempt progress and session status.' }],
   },
   {
     name: 'permission-presets/catalog-changed',
@@ -5387,6 +5577,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     summary: 'Ask composed answerers for structured user input.',
     description: 'Ask composed answerers for structured user input. Return an answer to claim the request or call `next()` to delegate. Scope-filtered dispatch (`@deepseek-ai/dsh-scope`): agent-scoped listeners receive only that agent.',
     parameters: [{ name: 'request', description: 'pending user-question request.' }],
+  },
+  {
+    name: 'uwork-identity/changed',
+    mode: 'emit',
+    signature: '\'uwork-identity/changed\'(state: IdentityState): void',
+    summary: 'Emitted when safe identity changes or is withdrawn.',
+    description: 'Emitted when safe identity changes or is withdrawn. Never contains credentials.',
+    parameters: [{ name: 'state', description: 'safe identity projection after the transition.' }],
   },
   {
     name: 'web/providers-changed',
@@ -5811,6 +6009,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'BashEnvVariableInfo',
     declaration: 'export interface BashEnvVariableInfo extends BashEnvVariable {\n    contributor: string;\n    key: DshEnvironmentKey;\n}',
+  },
+  {
+    name: 'Binding',
+    declaration: 'export interface Binding {\n    orgId: string;\n    userId: string;\n    generation: string;\n}',
   },
   {
     name: 'BindingOrigin',
@@ -6669,6 +6871,46 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface FsWriteOutcome {\n    operation: \'create\' | \'update\';\n    version: FsVersion;\n    before: string | null;\n    after: string;\n}',
   },
   {
+    name: 'GatewayBinding',
+    declaration: 'export interface GatewayBinding {\n    readonly orgId: OrganizationId;\n    readonly userId: string;\n    readonly generation: IdentityGeneration;\n}',
+  },
+  {
+    name: 'GatewayFailureKind',
+    declaration: 'export type GatewayFailureKind = \'unauthorized\' | \'forbidden\' | \'rate-limited\' | \'http\' | \'network\' | \'timeout\' | \'cancelled\' | \'invalid\';',
+  },
+  {
+    name: 'GatewayKey',
+    declaration: 'export interface GatewayKey {\n    readonly id: GatewayKeyId;\n    readonly alias: string | null;\n    readonly maskedKey: string;\n    readonly status: string;\n}',
+  },
+  {
+    name: 'GatewayKeyId',
+    declaration: 'export type GatewayKeyId = Branded<\'GatewayKeyId\'>;',
+  },
+  {
+    name: 'GatewayObservation',
+    declaration: 'export interface GatewayObservation<T> {\n    readonly data: T;\n    readonly updatedAt: number;\n    readonly binding: GatewayBinding;\n}',
+  },
+  {
+    name: 'GatewayOverview',
+    declaration: 'export interface GatewayOverview {\n    readonly publicEndpoint: string;\n    readonly keys: readonly GatewayKey[];\n    readonly subscriptions: readonly GatewaySubscription[];\n    readonly planModels: GatewayPlanModels;\n}',
+  },
+  {
+    name: 'GatewayPlanModels',
+    declaration: 'export interface GatewayPlanModels {\n    readonly models: readonly string[];\n    readonly unrestricted: boolean;\n    readonly hasSubscription: boolean;\n}',
+  },
+  {
+    name: 'GatewayResource',
+    declaration: 'export type GatewayResource<T> = {\n    readonly status: \'signed-out\';\n} | ({\n    readonly status: \'ready\';\n} & GatewayObservation<T>) | {\n    readonly status: \'error\';\n    readonly reason: GatewayFailureKind | \'identity\';\n    readonly lastSuccess?: GatewayObservation<T>;\n};',
+  },
+  {
+    name: 'GatewaySubscription',
+    declaration: 'export interface GatewaySubscription {\n    readonly planId: string;\n    readonly planTitle: string;\n    readonly amountTotal: number;\n    readonly amountUsed: number;\n    readonly amountUnit: \'unspecified\';\n    readonly nextResetTime: number | null;\n    readonly status: string;\n}',
+  },
+  {
+    name: 'GatewayUsage',
+    declaration: 'export interface GatewayUsage {\n    readonly period: UsagePeriod;\n    readonly metric: UsageMetric;\n    readonly from: string;\n    readonly until: string;\n    readonly costUnit: \'unspecified\';\n    readonly summary: {\n        readonly requestCount: number;\n        readonly successCount: number;\n        readonly successRate: number;\n        readonly cost: number;\n        readonly averageCost: number;\n        readonly promptTokens: number;\n        readonly completionTokens: number;\n        readonly totalTokens: number;\n        readonly cacheReadTokens: number;\n        readonly cacheCreationTokens: number;\n    };\n    readonly trend: readonly {\n        readonly date: string;\n        readonly requestCount: number;\n        readonly cost: number;\n        readonly tokens: number;\n    }[];\n    readonly models: readonly {\n        readonly model: string;\n        readonly requestCount: number;\n        readonly cost: number;\n        readonly share: number;\n    }[];\n}',
+  },
+  {
     name: 'GenerateOptions',
     declaration: 'export interface GenerateOptions<Purpose extends string = LlmRequestPurpose> {\n    provider: string;\n    model: string;\n    reasoningEffort?: ReasoningEffortId;\n    messages: RequestMessage[];\n    system?: string;\n    tools?: ToolSchema[];\n    toolHistory?: ToolHistory;\n    temperature?: number;\n    maxTokens?: number;\n    stop?: string[];\n    signal?: AbortSignal;\n    sessionId?: Branded<\'SessionId\'>;\n    purpose?: Purpose;\n}',
   },
@@ -6755,6 +6997,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'HostConnectionRpc',
     declaration: 'export interface HostConnectionRpc {\n    handle(channel: string, handler: ConnectionRpcHandler): () => Promise<void>;\n    intercept(channel: \'/api\', matches: ConnectionRpcEndpointMatcher, handler: ConnectionRpcHandler): () => Promise<void>;\n}',
+  },
+  {
+    name: 'IdentityGeneration',
+    declaration: 'export type IdentityGeneration = Branded<\'UWorkIdentityGeneration\'>;',
+  },
+  {
+    name: 'IdentitySession',
+    declaration: 'export interface IdentitySession {\n    orgId: OrganizationId;\n    userId: string;\n    generation: IdentityGeneration;\n    token: string;\n    signal: AbortSignal;\n}',
   },
   {
     name: 'ImageAttachmentLimits',
@@ -7385,6 +7635,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ModDefinition {\n    readonly name: string;\n    readonly version?: string;\n    readonly root?: string;\n    readonly options?: PluginOptions;\n    readonly register: ModRegister;\n}',
   },
   {
+    name: 'Model',
+    declaration: 'export interface Model {\n    current(): Readonly<ModelSelection> | undefined;\n    select(selection: Readonly<ModelSelection>): void;\n}',
+  },
+  {
     name: 'ModelCatalog',
     declaration: 'export interface ModelCatalog {\n    readonly default: ModelSelection;\n    readonly routableProviders: readonly string[];\n    readonly groups: readonly ModelProviderGroup[];\n    readonly failures: readonly ModelCatalogFailure[];\n}',
   },
@@ -7395,6 +7649,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ModelCatalogModel',
     declaration: 'export interface ModelCatalogModel {\n    readonly id: string;\n    readonly name: string;\n    readonly description?: string;\n    readonly reasoning?: ModelReasoning;\n    readonly badge?: LlmModelBadge;\n}',
+  },
+  {
+    name: 'ModelIdentityBinding',
+    declaration: 'export interface ModelIdentityBinding {\n    readonly orgId: string;\n    readonly userId: string;\n    readonly generation: string;\n}',
   },
   {
     name: 'ModelMessageSource',
@@ -7411,6 +7669,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ModelProviderGroup',
     declaration: 'export interface ModelProviderGroup {\n    readonly id: string;\n    readonly name: string;\n    readonly models: readonly ModelCatalogModel[];\n}',
+  },
+  {
+    name: 'ModelProvisioningState',
+    declaration: 'export type ModelProvisioningState = SyncResult | {\n    status: \'idle\' | \'signed-out\' | \'syncing\';\n} | {\n    status: \'error\';\n    reason: \'identity\' | \'gateway\' | \'storage\' | \'unavailable\';\n};',
   },
   {
     name: 'ModelReasoning',
@@ -7445,8 +7707,32 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type ModTier = \'prepend\' | \'user\' | \'append\' | \'builtin\' | \'core\';',
   },
   {
+    name: 'NativeAuthorizationAttempt',
+    declaration: 'export interface NativeAuthorizationAttempt {\n    readonly id: NativeAuthorizationAttemptId;\n    readonly authorizationUrl: string;\n    readonly callbackUrl: string;\n    readonly allowedNavigationOrigins: readonly string[];\n    readonly expiresAt: number;\n}',
+  },
+  {
+    name: 'NativeAuthorizationAttemptId',
+    declaration: 'export type NativeAuthorizationAttemptId = Branded<\'NativeAuthorizationAttemptId\'>;',
+  },
+  {
+    name: 'NativeAuthorizationChoice',
+    declaration: 'export interface NativeAuthorizationChoice {\n    readonly id: string;\n    readonly label: string;\n}',
+  },
+  {
+    name: 'NativeAuthorizationProvider',
+    declaration: 'export interface NativeAuthorizationProvider {\n    getState(this: void): Promise<NativeAuthorizationState>;\n    start(this: void, choiceId: string, signal: AbortSignal): Promise<NativeAuthorizationAttempt>;\n    complete(this: void, id: NativeAuthorizationAttemptId, url: string, signal: AbortSignal): Promise<NativeAuthorizationState>;\n    poll(this: void, id: NativeAuthorizationAttemptId, signal: AbortSignal): Promise<NativeAuthorizationState>;\n    cancel(this: void, id: NativeAuthorizationAttemptId): Promise<NativeAuthorizationState>;\n}',
+  },
+  {
+    name: 'NativeAuthorizationState',
+    declaration: 'export interface NativeAuthorizationState {\n    readonly status: \'signed-out\' | \'pending\' | \'signed-in\';\n    readonly choices: readonly NativeAuthorizationChoice[];\n    readonly selectedChoiceId?: string;\n    readonly attempt?: {\n        readonly id: NativeAuthorizationAttemptId;\n        readonly expiresAt: number;\n    };\n    readonly error?: \'expired\' | \'failed\';\n}',
+  },
+  {
     name: 'NativeFileApplication',
     declaration: 'export interface NativeFileApplication {\n    readonly id: string;\n    readonly name: string;\n    readonly default: boolean;\n    readonly icon: string | null;\n}',
+  },
+  {
+    name: 'NativeSignInAttempt',
+    declaration: 'export interface NativeSignInAttempt {\n    id: SignInAttemptId;\n    authorizationUrl: string;\n    callbackUrl: string;\n    allowedNavigationOrigins: string[];\n    expiresAt: number;\n}',
   },
   {
     name: 'NpmFileSource',
@@ -7497,12 +7783,20 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export type OptionalSessionSeq = SessionSeq | null;',
   },
   {
+    name: 'OrganizationId',
+    declaration: 'export type OrganizationId = Branded<\'UWorkOrganizationId\'>;',
+  },
+  {
     name: 'OTelEventRecord',
     declaration: 'export interface OTelEventRecord {\n    eventName: string;\n    body: string;\n    timestamp: number;\n    severityNumber?: SeverityNumber;\n    attributes?: Record<string, OTelEventScalar | Record<string, OTelEventScalar>>;\n}',
   },
   {
     name: 'OTelEventScalar',
     declaration: 'export type OTelEventScalar = string | number | boolean;',
+  },
+  {
+    name: 'OverviewState',
+    declaration: 'export type OverviewState = GatewayResource<GatewayOverview>;',
   },
   {
     name: 'OwnerIdentityRequest',
@@ -7577,8 +7871,36 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface PermissionCatalog {\n    options: PresetOption[];\n    defaultOptions: PresetOption[];\n    defaultPreset: string;\n}',
   },
   {
+    name: 'PiAiCompatProfile',
+    declaration: 'export interface PiAiCompatProfile {\n    supportsStore?: boolean;\n    supportsDeveloperRole?: boolean;\n    supportsReasoningEffort?: boolean;\n    supportsUsageInStreaming?: boolean;\n    supportsFinishReason?: boolean;\n    maxTokensField?: NonNullable<OpenAICompletionsCompat[\'maxTokensField\']>;\n    requiresToolResultName?: boolean;\n    requiresAssistantAfterToolResult?: boolean;\n    requiresThinkingAsText?: boolean;\n    requiresReasoningContentOnAssistantMessages?: boolean;\n    thinkingFormat?: PiAiThinkingFormat;\n    chatTemplateKwargs?: NonNullable<OpenAICompletionsCompat[\'chatTemplateKwargs\']>;\n    chatTemplateArgs?: NonNullable<OpenAICompletionsCompat[\'chatTemplateArgs\']>;\n    supportsThinkingTokenBudget?: boolean;\n    thinkingTokenBudgetField?: PiAiThinkingTokenBudgetField;\n    vllmPriority?: number;\n    supportsMaxOutputTokens?: boolean;\n    supportsStrictMode?: boolean;\n    cacheControlFormat?: NonNullable<OpenAICompletionsCompat[\'cacheControlFormat\']>;\n    supportsLongCacheRetention?: boolean;\n    supportsEagerToolInputStreaming?: boolean;\n    supportsCacheControlOnTools?: boolean;\n    supportsTemperature?: boolean;\n    forceAdaptiveThinking?: boolean;\n    allowEmptySignature?: boolean;\n    supportsStrictTools?: boolean;\n}',
+  },
+  {
+    name: 'PiAiDiscoveryContext',
+    declaration: 'export type PiAiDiscoveryContext = Readonly<Pick<LlmModelDiscoveryRequest, \'provider\' | \'baseURL\' | \'api\'>>;',
+  },
+  {
+    name: 'PiAiModality',
+    declaration: 'export type PiAiModality = Model<Api>[\'input\'][number];',
+  },
+  {
+    name: 'PiAiModelProfile',
+    declaration: 'export interface PiAiModelProfile {\n    id: string;\n    name?: string;\n    contextWindow?: number;\n    maxTokens?: number;\n    input?: PiAiModality[];\n    reasoningEfforts?: false | PiAiReasoningEfforts;\n    compat?: PiAiCompatProfile;\n}',
+  },
+  {
+    name: 'PiAiReasoningEfforts',
+    declaration: 'export type PiAiReasoningEfforts = Partial<Record<ModelThinkingLevel, string | null>>;',
+  },
+  {
     name: 'PiAiRequestHeaderContext',
     declaration: 'export interface PiAiRequestHeaderContext extends Readonly<Pick<GenerateOptions<string>, \'provider\' | \'model\' | \'sessionId\' | \'purpose\'>> {\n    readonly baseURL: string;\n}',
+  },
+  {
+    name: 'PiAiThinkingFormat',
+    declaration: 'export type PiAiThinkingFormat = NonNullable<OpenAICompletionsCompat[\'thinkingFormat\']>;',
+  },
+  {
+    name: 'PiAiThinkingTokenBudgetField',
+    declaration: 'export type PiAiThinkingTokenBudgetField = NonNullable<OpenAICompletionsCompat[\'thinkingTokenBudgetField\']>;',
   },
   {
     name: 'PlatformSession',
@@ -7843,6 +8165,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'ProviderRequestId',
     declaration: 'export type ProviderRequestId = Branded<\'ProviderRequestId\'>;',
+  },
+  {
+    name: 'ProvisionInput',
+    declaration: 'export interface ProvisionInput {\n    binding: Binding;\n    credentialRef: string;\n    provider: string;\n    endpoint: string;\n    apiKey: string;\n    authorizedModels: readonly string[];\n    capabilities: readonly PiAiModelProfile[];\n    preferredModels: readonly string[];\n    signal: AbortSignal;\n}',
   },
   {
     name: 'PrunedEntry',
@@ -9077,10 +9403,6 @@ export const TYPE_API: readonly TypeApiEntry[] = [
     declaration: 'export interface ShellSandboxInfo {\n    mode: SandboxMode;\n    denied: boolean;\n    enforcement?: SandboxEnforcement;\n    runnerFailed?: boolean;\n}',
   },
   {
-    name: 'SignInAttemptId',
-    declaration: 'export type SignInAttemptId = Branded<\'SignInAttemptId\'>;',
-  },
-  {
     name: 'SignInAttemptView',
     declaration: 'export interface SignInAttemptView {\n    readonly id: SignInAttemptId;\n    readonly phase: \'initializing\' | \'waiting-browser\' | \'exchanging\' | \'committing\' | \'succeeded\' | \'cancelled\' | \'expired\' | \'failed\';\n    readonly authorizeUrl?: string;\n    readonly expiresAt?: number;\n    readonly errorCode?: SignInErrorCode;\n}',
   },
@@ -9451,6 +9773,10 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'SurfaceSnapshot',
     declaration: 'export interface SurfaceSnapshot {\n    readonly generation: number;\n    readonly tree: readonly SerializedNode[] | null;\n}',
+  },
+  {
+    name: 'SyncResult',
+    declaration: 'export type SyncResult = {\n    status: \'ready\';\n    provider: string;\n    modelIds: string[];\n    needsModelSelection: boolean;\n} | {\n    status: \'key-required\' | \'capabilities-required\' | \'key-outcome-unknown\';\n};',
   },
   {
     name: 'SystemMessage',
@@ -10007,6 +10333,22 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'UpdateTeamTaskRequest',
     declaration: 'export interface UpdateTeamTaskRequest {\n    readonly taskId: TeamTaskId;\n    readonly expectedRevision: number;\n    readonly action: TeamTaskAction;\n    readonly subject?: string;\n    readonly description?: string;\n    readonly blockedBy?: readonly TeamTaskId[];\n    readonly writeScopes?: readonly string[];\n    readonly owner?: SessionId;\n}',
+  },
+  {
+    name: 'UsageMetric',
+    declaration: 'export type UsageMetric = \'requests\' | \'cost\' | \'tokens\';',
+  },
+  {
+    name: 'UsagePeriod',
+    declaration: 'export type UsagePeriod = \'7d\' | \'month\' | \'30d\';',
+  },
+  {
+    name: 'UsageRequest',
+    declaration: 'export interface UsageRequest {\n    readonly period: UsagePeriod;\n    readonly metric: UsageMetric;\n    readonly force?: boolean;\n}',
+  },
+  {
+    name: 'UsageState',
+    declaration: 'export type UsageState = GatewayResource<GatewayUsage>;',
   },
   {
     name: 'UserMessage',

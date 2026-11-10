@@ -38,7 +38,16 @@
   "dependencies": {
     "@deepseek-ai/dsh-client-ui-uwork": "workspace:*",
     "@deepseek-ai/dsh-uwork-company-market": "workspace:*",
-    "@deepseek-ai/dsh-client-ui-uwork-company-market": "workspace:*"
+    "@deepseek-ai/dsh-client-ui-uwork-company-market": "workspace:*",
+    "@deepseek-ai/dsh-native-authorization": "workspace:*",
+    "@deepseek-ai/dsh-uwork-enterprise": "workspace:*",
+    "@deepseek-ai/dsh-uwork-gateway-service": "workspace:*",
+    "@deepseek-ai/dsh-uwork-model-provisioning": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-uwork-enterprise": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-uwork-usage": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-uwork-interactions": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-uwork-conversation": "workspace:*",
+    "@deepseek-ai/dsh-client-ui-uwork-workbench": "workspace:*"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~"

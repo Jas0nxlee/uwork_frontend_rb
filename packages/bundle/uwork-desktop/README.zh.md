@@ -1,5 +1,5 @@
 ---
-description: "UWork 桌面 profile 的品牌与公开公司技能。"
+description: "UWork 桌面 profile 的品牌、企业身份、托管模型路由、用量与公开公司技能。"
 kind: "package-bundle"
 ---
 
@@ -9,7 +9,7 @@ kind: "package-bundle"
 
 ## 概述
 
-为 dsh Web 界面加入 UWork 侧栏、首页品牌及支持校验安装的 PUBLIC 公司技能目录，关闭默认鲸鱼品牌层。此 bundle 必须排在基础与 Web bundle 之后；此 fork 的 Desktop 产品配置将该层纳入初始化、打包和恢复。
+在原生 dsh 界面上组合 UWork 展示、原生企业登录、托管模型路由、企业账号与用量及经过校验的 PUBLIC 公司技能，并关闭默认鲸鱼品牌层。此 bundle 必须排在基础与 Web bundle 之后；此 fork 的 Desktop 产品配置将该层纳入初始化、打包和恢复。
 
 ## 目录
 
@@ -44,7 +44,9 @@ kind: "package-bundle"
 <details>
 <summary>实现内部说明</summary>
 
-补丁关闭 ui-brand-official 行，再加入 ui-uwork、匿名公司目录 Host 及其插件标签页。目录来源配置在 Host 行，浏览和内容安装不需要企业身份。已启用安装通过原生技能 provider 提供。其余模型、会话、权限和工作台贡献沿用前面各层；后续 profile 补丁仍能覆盖这些行。
+补丁关闭 ui-brand-official，加入 UWork 品牌、匿名公司目录及其插件标签页。目录浏览与安装不需要企业身份；已启用安装通过原生技能 provider 提供。原生授权与企业身份负责登录及仅 Host 持有的凭据。网关服务通过 Host 协议客户端提供安全账号与用量投影。托管配置通过原生 llm-pi-ai 安装显式企业路由，保留个人 provider 与默认模型。企业账号及用量 UI 展示安全投影；会话、权限和工作台仍由前面各层负责。对话、交互及工作台展示通过原生 owner 扩展点接入，不复制会话、composer 决策或 pane 状态。后续 profile 补丁仍可覆盖这些行。
+
+企业组织与回调 allowlist 来自公开 UWork 发行配置，不含会话 token 或模型 key。真实认证后的能力验证与正式桌面验收仍独立于此组合。
 
 </details>
 
@@ -53,23 +55,32 @@ kind: "package-bundle"
 
 - [Profiles](../../boot/app-boot/README.zh.md)
 - [UWork](../../client/ui-uwork/README.zh.md)
+- [企业身份](../../credentials/uwork-enterprise/README.zh.md)
+- [原生授权](../../credentials/native-authorization/README.zh.md)
+- [网关服务](../../boot/uwork-gateway-service/README.zh.md)
+- [托管模型配置](../../llm/uwork-model-provisioning/README.zh.md)
+- [对话展示](../../client/ui-uwork-conversation/README.zh.md)
+- [原生交互展示](../../client/ui-uwork-interactions/README.zh.md)
+- [原生工作台展示](../../client/ui-uwork-workbench/README.zh.md)
+- [企业账号 UI](../../client/ui-uwork-enterprise/README.zh.md)
+- [企业用量 UI](../../client/ui-uwork-usage/README.zh.md)
 - [公司目录](../../boot/uwork-company-market/README.zh.md)
 - [Web](../web-app/README.zh.md)
 
 <a id="model-experience"></a>
 ## 模型体验
 
-通过 `dsh-uwork-company-market` 间接影响；已启用安装的技能由 `dsh-tool-skill` 渲染。品牌和目录浏览不添加模型输入。
+通过 `dsh-tool-skill` 渲染的已启用公司技能及原生 `llm-pi-ai` 渲染的托管企业选择间接影响；品牌、登录、账号展示及用量读取不添加模型输入。
 
 #### KV Cache effect
 
-公司技能启用状态变化可在后续模型请求中追加替换技能目录。
+公司技能启用状态变化可在后续模型请求中追加替换技能目录。配置过程不重写会话选择或现有请求前缀；实际模型请求由后续选择与适配器行为负责。
 
 ## 已知限制与后续工作
 
 <a id="known-limitations-and-deferred-work"></a>
 
-- 企业身份和网关用量尚未装配。
+- 缺少已认证测试身份时，真实员工登录、授权网关推理、账号切换及用量记账仍未验证。公开发现与合成 fixture 不能替代这些证据。
 - Windows x64 和 Mac ARM 签名安装包及原生验收尚待完成。
 
 <a id="dev-note"></a>

@@ -23,6 +23,11 @@
   // this client-registered project must not also hold them (one program
   // cannot see both sides of the cordis Context merges).
   "exclude": [
+    "tests/uwork-workbench.e2e.ts",
+    "tests/uwork-interactions.e2e.ts",
+    "tests/uwork-conversation.e2e.ts",
+    "tests/uwork-enterprise.e2e.ts",
+    "tests/uwork-enterprise-usage.e2e.ts",
     "tests/home-whale.e2e.ts",
     "tests/uwork-brand.e2e.ts",
     "tests/uwork-company-market.e2e.ts",

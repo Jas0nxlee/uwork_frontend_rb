@@ -4,6 +4,8 @@
 
 本清单执行 [迁移方案](plan.md)，范围为 Windows x64、Mac ARM 上的 UWork UI、企业微信与自动模型配置、PUBLIC 公司技能市场、企业网关统计和 `.uwork`。实施已开始；当前进展和检查证据见 [实施记录](implementation-status.md)。源码调研和单元测试不代表桌面发行验收。
 
+当前勾选表示该条源码实现及可执行的 Linux/浏览器验证已完成，不表示真实企业或 Windows/macOS 发行验收通过。T02、T06 的签名 runtime、T22 双平台复核及 T36–T39 仍保留未完成；模拟签发方与真实员工联调严格区分。具体证据见[当前实施记录](implementation-status.md)、[UI 复核](ui-migration-review.md)和[上游维护](upstream-maintenance.md)。
+
 每项按一个可验收行为提交。预计涉及超过约五个业务源文件时，继续按操作拆分；包 manifest、构建配置、类型生成、README 和配套测试随所属行为提交，不另积攒到最后。下面的包路径为拟定落点，既有路径以方案链接为准。
 
 ## 目录
@@ -40,16 +42,16 @@
 
 ### T04 集中发行身份
 
-- [ ] 增加构建与 Main 共用的 UWork 产品配置，覆盖产品名、appId、图标、关于和更新源。
-- [ ] 使用独立 Next Preview 身份，避免与旧 UWork/Preview 的 userData、单实例、协议和 feed 冲突。
+- [x] 增加构建与 Main 共用的 UWork 产品配置，覆盖产品名、appId、图标、关于和更新源。
+- [x] 使用独立 Next Preview 身份，避免与旧 UWork/Preview 的 userData、单实例、协议和 feed 冲突。
 
 验收：启动及安装包各品牌入口一致，内部 dsh 名称和许可归属保留。验证：发行配置拒绝非法值、构建元数据和启动 smoke。依赖：T01。落点：`apps/desktop/src/`、`apps/desktop/scripts/`。规模：M，元数据与资源分提交。
 
 ### T05 `.uwork` 启动与 CLI 一致性
 
 - [x] 早期 bootstrap 解析发行配置中的 home，Preview 默认落 `.uwork/harness-preview`，保持显式 DSH_HOME 优先；正式发行通过同一元数据配置。
-- [ ] Desktop Host、捆绑 CLI、插件管理及子进程复用已解析值；Electron userData 单独设置。
-- [ ] 有旧 `.uwork/v2`、`.uwork/cli`、`.dsh` 的测试环境中不误读写或自动合并。
+- [x] Desktop Host、捆绑 CLI、插件管理及子进程复用已解析值；Electron userData 单独设置。
+- [x] 有旧 `.uwork/v2`、`.uwork/cli`、`.dsh` 的测试环境中不误读写或自动合并。
 
 验收：首开、重启和 CLI 均在同一新根工作；旧根不变。验证：临时 home 子进程检查、路径快照、旧文件 hash/mtime 比较。依赖：T04。落点：Desktop/desktop-host 启动适配、home-paths 消费点。规模：M。
 
@@ -57,7 +59,7 @@
 
 - [x] 建立 UWork Desktop bundle，先以最小可挂载服务验证构建图。
 - [ ] 纳入签名 runtime、Desktop 内置 bundles、profile 初始化及恢复集合。
-- [ ] 禁用 UWork 组成中的官方品牌/强制账号引导贡献，不移除用户自定义模型能力。
+- [x] 禁用 UWork 组成中的官方品牌/强制账号引导贡献，不移除用户自定义模型能力。
 
 验收：无网首次启动具备内置插件，恢复模式保留产品必需入口；仍通过 dsh profile 启动。验证：built profile dump/启动 smoke、恢复流程。依赖：T04–T05。落点：`packages/bundle/uwork-desktop`、Desktop profile 收集。规模：按 bundle、收集、恢复三个 S 子项。
 
@@ -65,8 +67,8 @@
 
 ### T07 原生入门与扫码载体
 
-- [ ] 引入可替换的认证状态/动作接入，不把企业身份塞进 DeepSeek account。
-- [ ] 建立隔离扫码视图、导航约束、取消、关闭、窗口退出清理。
+- [x] 引入可替换的认证状态/动作接入，不把企业身份塞进 DeepSeek account。
+- [x] 建立隔离扫码视图、导航约束、取消、关闭、窗口退出清理。
 
 验收：Welcome 可由企业插件驱动，非法导航被拒绝；未认证 secret 不传 Renderer。验证：载体测试、两平台扫码空流程/取消 smoke。依赖：T02、T06。落点：Desktop Welcome、预加载允许接口及企微 carrier。规模：M。
 
@@ -74,22 +76,22 @@
 
 ### T08 登录尝试与 code/handoff 交换
 
-- [ ] 实现组织配置校验、nonce、state、时限、单次消费和并发尝试约束。
-- [ ] 支持原生 callback 与 handoff claim，提交前核对用户/组织及尝试有效性。
+- [x] 实现组织配置校验、nonce、state、时限、单次消费和并发尝试约束。
+- [x] 支持原生 callback 与 handoff claim，提交前核对用户/组织及尝试有效性。
 
 验收：成功、202等待、错误组织、重复/过期/取消回调的结果明确且无陈旧提交。验证：状态机测试和真实扫码。依赖：T02、T07。落点：`credentials/uwork-enterprise` Host。规模：callback 与 handoff 各 M。
 
 ### T09 身份恢复、注销和账号切换
 
-- [ ] 用 credentials grant 保存 token，服务端 refresh 验证恢复，不以 JWT decode 当认证。
-- [ ] 注销/切换递增身份代际，取消旧请求并清理旧企业状态；不触碰个人 provider 和公共市场安装。
+- [x] 用 credentials grant 保存 token，服务端 refresh 验证恢复，不以 JWT decode 当认证。
+- [x] 注销/切换递增身份代际，取消旧请求并清理旧企业状态；不触碰个人 provider 和公共市场安装。
 
 验收：重启和双账号切换不串身份；失效可重登录，取消后不得提交。验证：跨窗口/跨进程恢复、脱敏、故障注入及真实双账号测试。依赖：T08。落点：企业状态服务、凭证适配及测试。规模：M。
 
 ### T10 企业网关配置获取
 
-- [ ] 实现有效 Key 复用/必要创建、HTTPS 网关解析、套餐和授权模型获取。
-- [ ] 处理请求超时结果不明及部分响应失败，Key 生成后未知结果先查询再重试。
+- [x] 实现有效 Key 复用/必要创建、HTTPS 网关解析、套餐和授权模型获取。
+- [x] 处理请求超时结果不明及部分响应失败，Key 生成后未知结果先查询再重试。
 
 验收：不重复创建 Key，不用内网 HTTP，不因统计失败丢弃有效登录。验证：API 样本解析/错误测试、测试企业实调。依赖：T09。落点：企业 API client 与网关编排。规模：M。
 
@@ -97,22 +99,22 @@
 
 ### T11 受管 provider 配置与崩溃恢复
 
-- [ ] 将企业 route 映射至 llm-pi-ai，凭证引用与配置分离，绑定 org/user/generation。
-- [ ] 处理 settings revision 冲突、credentials/settings 分阶段提交、失败补偿和启动恢复。
+- [x] 将企业 route 映射至 llm-pi-ai，凭证引用与配置分离，绑定 org/user/generation。
+- [x] 处理 settings revision 冲突、credentials/settings 分阶段提交、失败补偿和启动恢复。
 
 验收：只改企业自有 route，个人配置不丢；没有半提交 ready，注销后旧 route 不再接新请求。验证：并发编辑、每提交阶段中断、失效账号及 provider 行为测试。依赖：T10。落点：`llm/uwork-model-provisioning`。规模：配置/恢复两个 M。
 
 ### T12 模型能力与默认选择
 
-- [ ] 建立实际模型能力映射，授权目录缩减会撤销旧模型，后备发现不扩大权限。
-- [ ] 按发行 preferredModels 与授权目录交集，经 agentDefaultModel 保存企业默认策略，保留个人默认和 Session 显式选择。
+- [x] 建立实际模型能力映射，授权目录缩减会撤销旧模型，后备发现不扩大权限。
+- [x] 按发行 preferredModels 与授权目录交集，经 agentDefaultModel 保存企业默认策略，保留个人默认和 Session 显式选择。
 
 验收：关键模型流式/工具/图像或推理能力与声明一致，撤权不静默换模型。验证：focused model tests、keyless 选择回放、真实模型API。依赖：T11。落点：受管模型插件、能力映射及 snapshots。规模：M。
 
 ### T13 企业账号与模型 UI
 
-- [ ] 统一 Welcome/设置/模型页状态，展示扫码、过期、已登录但配置失败及重试。
-- [ ] 企业 provider 卡片说明受管字段，显示脱敏状态并支持明确的刷新/替换操作。
+- [x] 统一 Welcome/设置/模型页状态，展示扫码、过期、已登录但配置失败及重试。
+- [x] 企业 provider 卡片说明受管字段，显示脱敏状态并支持明确的刷新/替换操作。
 
 验收：无强制 DeepSeek 引导回流；首开和重启都可完成企业闭环。验证：真实页面浅暗/窄窗/键盘及失败状态，双平台包内操作。依赖：T07–T12。落点：企业 Client 面、模型/设置 slots。规模：按账号/模型两个 M。
 
@@ -143,15 +145,15 @@
 
 ### T17 网关用量 Host 读取
 
-- [ ] 解析 usage/stats、套餐、周期/单位、successRate 和模型分布。
-- [ ] 缓存隔离并控制过期，取消旧筛选请求，401/403/429及网络错误分类。
+- [x] 解析 usage/stats、套餐、周期/单位、successRate 和模型分布。
+- [x] 缓存隔离并控制过期，取消旧筛选请求，401/403/429及网络错误分类。
 
 验收：不把失败当零，不把本地 token 当账单，不串账号。验证：样本/单位测试、过滤竞争及实际同区间对账。依赖：T09–T10。落点：企业网关服务。规模：M。
 
 ### T18 使用统计企业网关页
 
-- [ ] 展示账号/网关/脱敏Key、套餐、周期指标、趋势、排行、同步/刷新。
-- [ ] 清楚区分本地统计与网关统计，错误保留已有数据并标时间。
+- [x] 展示账号/网关/脱敏Key、套餐、周期指标、趋势、排行、同步/刷新。
+- [x] 清楚区分本地统计与网关统计，错误保留已有数据并标时间。
 
 验收：源本次范围内操作可用，图表和单位正确，长名称/窄窗不遮操作。验证：页面状态、统计样本截图、真实请求对账。依赖：T17。落点：`client/ui-uwork-usage`。规模：M。
 
@@ -159,28 +161,28 @@
 
 ### T19 主题、品牌与首页
 
-- [ ] 迁入 U/UWork/UCAS 资源，使用成对主题 token 与品牌/hero 插槽。
-- [ ] 统一文本层级、控件、弹窗、空错状态，保留焦点和可访问性。
+- [x] 迁入 U/UWork/UCAS 资源，使用成对主题 token 与品牌/hero 插槽。
+- [x] 统一文本层级、控件、弹窗、空错状态，保留焦点和可访问性。
 
 验收：主界面与加载阶段无错误品牌，两主题实际资源正确。验证：截图对比、资源许可/产物检查及本地化检查。依赖：T01、T06。落点：`client/ui-uwork`、Desktop 静态资源。规模：品牌/主题/首页三个 S。
 
 ### T20 导航与布局
 
-- [ ] 明确唯一 layout/sidebar slot owner；通用 presenter 可替换且保留服务/子槽位。
-- [ ] 迁入紧凑导航，保留草稿、选择与面板恢复。
+- [x] 明确唯一 layout/sidebar slot owner；通用 presenter 可替换且保留服务/子槽位。
+- [x] 迁入紧凑导航，保留草稿、选择与面板恢复。
 
 验收：Windows/macOS顶栏、宽窄窗、快捷键和多面板正确。验证：布局行为/slot接口测试、真实页面比对及必要 Session 回放。依赖：T19、T01。落点：UWork layout 展示、最小上游扩展。规模：presenter/侧栏两个 M。
 
 ### T21 对话、输入及工作台呈现
 
-- [ ] 对齐消息、工具卡片、输入、模型菜单、附件和审批/询问呈现，沿用 dsh 行为与记录。
-- [ ] 对齐文件/浏览器/终端/文档标签布局，不迁旧RPC或Session store。
+- [x] 对齐消息、工具卡片、输入、模型菜单、附件和审批/询问呈现，沿用 dsh 行为与记录。
+- [x] 对齐文件/浏览器/终端/文档标签布局，不迁旧RPC或Session store。
 
 验收：原 dsh 核心交互与队列/停止/恢复不回归。验证：逐组件族GUI测试和记录回放，真实工作台操作。依赖：T20。落点：UWork Client 展示贡献。规模：按消息、输入、工作台分别 M，禁止一次复制整个客户端。
 
 ### T22 设置和全局状态收口
 
-- [ ] 本次设置、市场、用量、企业账号沿用统一导航、错误与加载反馈。
+- [x] 本次设置、市场、用量、企业账号沿用统一导航、错误与加载反馈。
 - [ ] 全页面浅暗/语言/长内容/键盘和两个平台审查，修复遗漏及混用的样式。
 
 验收：T01 清单全部有真实页面证据，超范围业务没有空壳入口。验证：完整场景矩阵，按仓库要求进行产品/设计复核。依赖：T13、T16、T18、T21。落点：UWork Client 与验收记录。规模：按页面族 S/M。
@@ -219,7 +221,7 @@
 
 ### T40 上游兼容、文档和正式发行准备
 
-- [ ] 完成插件README/JSDoc、本地化、必要persistence acknowledgement/upgrade guide及构建分类。
+- [x] 完成插件README/JSDoc、本地化、必要persistence acknowledgement/upgrade guide及构建分类。
 - [ ] 记录所有上游文件改动和slot/API兼容检查，演练一次明确基线的上游更新。
 - [ ] 决定正式产品版本与runtime版本、安装身份、更新feed及可支持的数据导入，保留恢复方案。
 

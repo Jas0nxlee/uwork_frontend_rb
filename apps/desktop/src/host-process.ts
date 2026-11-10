@@ -3,6 +3,7 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import { join } from 'node:path'
 import { z } from 'zod'
+import type { NativeAuthorizationProvider, NativeAuthorizationState, NativeAuthorizationAttempt } from '@deepseek-ai/dsh-native-authorization/types'
 import type { PlatformSession } from '@deepseek-ai/dsh-deepseek-account'
 import { desktopNodeEnvironment } from './node-environment.ts'
 import { parsePluginOperationRecord, type PluginOperationRecord, type PluginOperationRunId } from '@deepseek-ai/dsh-plugin-manager/diagnostic'
@@ -25,7 +26,9 @@ interface PlatformSessionEvent {
   readonly session: PlatformSession | null
 }
 
-type DesktopHostEvent = ReadyEvent | FatalEvent | PlatformSessionEvent | {
+type NativeAuthorizationRequest = { readonly type: 'native-authorization'; readonly action: 'state' | 'start' | 'complete' | 'poll' | 'cancel'; readonly choiceId?: string; readonly id?: string; readonly url?: string }
+
+type DesktopHostEvent = { readonly type: 'native-authorization-state'; readonly state: NativeAuthorizationState } | { readonly type: 'native-authorization'; readonly requestId: number; readonly value?: unknown; readonly error?: string } | ReadyEvent | FatalEvent | PlatformSessionEvent | {
   readonly type: 'starting'
   readonly runId: PluginOperationRunId
 } | { readonly type: 'shutdown-complete' } | {
@@ -60,11 +63,26 @@ export const QUIT_INSPECTION_DEADLINE_MS = 2_000
 
 const MAX_HOST_DIAGNOSTIC_CHARS = 64 * 1024
 const runIdSchema = z.uuid()
+const nativeStateSchema = z.object({
+  status: z.enum(['signed-out', 'pending', 'signed-in']),
+  choices: z.array(z.object({ id: z.string().max(256), label: z.string().max(1024) }).strict()).max(256),
+  selectedChoiceId: z.string().max(256).optional(),
+  attempt: z.object({ id: z.string().max(256), expiresAt: z.number() }).strict().optional(),
+  error: z.enum(['expired', 'failed']).optional(),
+}).strict()
+const nativeAttemptSchema = z.object({
+  id: z.string().max(256), authorizationUrl: z.url().max(16384), callbackUrl: z.url().max(16384),
+  allowedNavigationOrigins: z.array(z.url().max(2048)).max(256), expiresAt: z.number(),
+}).strict()
 
 function isDesktopHostEvent(message: unknown): message is DesktopHostEvent {
   if (typeof message !== 'object' || message === null || !('type' in message)) return false
   const candidate = message as Record<string, unknown>
   switch (candidate.type) {
+    case 'native-authorization-state':
+      return nativeStateSchema.safeParse(candidate.state).success
+    case 'native-authorization':
+      return Number.isSafeInteger(candidate.requestId) && (candidate.error === undefined || typeof candidate.error === 'string')
     case 'starting':
       return runIdSchema.safeParse(candidate.runId).success
     case 'shutdown-complete':
@@ -245,6 +263,7 @@ export class DesktopHostProcess {
       }
       if (message.type === 'starting') this.runId = message.runId
       else if (message.type === 'ready') this.readyResolve({ url: message.url, injections: message.injections })
+      else if (message.type === 'native-authorization-state') { for (const listener of this.nativeAuthorizationListeners) listener(message.state) }
       else if (message.type === 'platform-session') this.onPlatformSession?.(message.session)
       else if (message.type === 'shutdown-complete') {
         if (this.stopping) this.shutdownCompleted = true
@@ -305,9 +324,45 @@ export class DesktopHostProcess {
     return response.resource
   }
 
+  private readonly nativeAuthorizationListeners = new Set<(state: NativeAuthorizationState) => void>()
+  /** Subscribe to safe product login changes. @returns subscription disposer. */
+  onNativeAuthorizationState(listener: (state: NativeAuthorizationState) => void): () => void {
+    this.nativeAuthorizationListeners.add(listener)
+    return () => { this.nativeAuthorizationListeners.delete(listener) }
+  }
+
+  /** Read the product's safe native login projection; null selects the standard Welcome. */
+  async nativeAuthorizationState(signal?: AbortSignal): Promise<NativeAuthorizationState | null> {
+    return await this.nativeAuthorizationRequest({ type: 'native-authorization', action: 'state' }, signal) as NativeAuthorizationState | null
+  }
+
+  /** Main-only facade. Authorization URLs and intercepted codes never enter renderer RPC. */
+  nativeAuthorizationProvider(): NativeAuthorizationProvider {
+    return {
+      getState: async () => {
+        const state = await this.nativeAuthorizationState()
+        if (state === null) throw new Error('Native authorization unavailable')
+        return state
+      },
+      start: async (choiceId, signal) => await this.nativeAuthorizationRequest({ type: 'native-authorization', action: 'start', choiceId }, signal) as NativeAuthorizationAttempt,
+      complete: async (id, url, signal) => await this.nativeAuthorizationRequest({ type: 'native-authorization', action: 'complete', id, url }, signal) as NativeAuthorizationState,
+      poll: async (id, signal) => await this.nativeAuthorizationRequest({ type: 'native-authorization', action: 'poll', id }, signal) as NativeAuthorizationState,
+      cancel: async id => await this.nativeAuthorizationRequest({ type: 'native-authorization', action: 'cancel', id }) as NativeAuthorizationState,
+    }
+  }
+
+  private async nativeAuthorizationRequest(request: NativeAuthorizationRequest, signal?: AbortSignal): Promise<unknown> {
+    const response = await this.control(request, 120_000, 'Native authorization timed out', 'native authorization', signal)
+    if (response.type !== 'native-authorization') throw new Error('Unexpected authorization response')
+    if (request.action === 'state' && response.value === null) return null
+    const parsed = (request.action === 'start' ? nativeAttemptSchema : nativeStateSchema).safeParse(response.value)
+    if (!parsed.success) throw new Error('Invalid native authorization response')
+    return parsed.data
+  }
+
   private async control(
     request: { readonly type: 'update-tasks'; readonly action: 'inspect' | 'lock' | 'unlock' } | { readonly type: 'quit-inspection' }
-      | { readonly type: 'file-drag-resource'; readonly address: string },
+      | { readonly type: 'file-drag-resource'; readonly address: string } | NativeAuthorizationRequest,
     deadlineMs: number, deadlineMessage: string, operation: string, signal?: AbortSignal,
   ): Promise<DesktopHostControlResponse> {
     const child = this.child
@@ -321,6 +376,7 @@ export class DesktopHostProcess {
       if (request.type === 'file-drag-resource' && child.connected) child.send({ type: 'file-drag-cancel', requestId }, (_error) => {
         // The request still rejects locally if the Host has disconnected.
       })
+      if (request.type === 'native-authorization' && child.connected) child.send({ type: 'native-authorization-cancel-request', requestId }, () => {})
       const reason: unknown = signal?.reason
       this.controlRequests.get(requestId)?.reject(reason instanceof Error ? reason : new Error(deadlineMessage))
     }

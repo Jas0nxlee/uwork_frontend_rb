@@ -1,0 +1,39 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "lib/types"
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../vendor/cordis"
+    },
+    {
+      "path": "../../../vendor/schemastery"
+    },
+    {
+      "path": "../../credentials/credentials"
+    },
+    {
+      "path": "../../settings/settings"
+    },
+    {
+      "path": "../../core/agent-default-model"
+    },
+    {
+      "path": "../llm-pi-ai"
+    },
+    {
+      "path": "../../credentials/uwork-enterprise"
+    },
+    {
+      "path": "../../boot/uwork-gateway"
+    },
+    {
+      "path": "../../typert/protocol"
+    }
+  ]
+}

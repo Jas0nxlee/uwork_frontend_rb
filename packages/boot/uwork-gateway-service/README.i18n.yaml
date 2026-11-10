@@ -1,0 +1,34 @@
+# Bilingual-pair consistency record for README.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write packages/boot/uwork-gateway-service/README.md
+/:
+  en: 64ec7d7da942abfc
+  zh: d6ec0fec1ce2dd0d
+/deepseek-ai-dsh-uwork-gateway-service:
+  en: d21ee07544f85890
+  zh: e106098be12acf01
+/deepseek-ai-dsh-uwork-gateway-service/summary:
+  en: eb37e0f6636f9008
+  zh: 966f3a1f244d6989
+/deepseek-ai-dsh-uwork-gateway-service/table-of-contents:
+  en: fe1ecb09a73d1c7a
+  zh: 2da3411d6c0d88b4
+/deepseek-ai-dsh-uwork-gateway-service/use-this-package:
+  en: da270deb39b3e1de
+  zh: a6530c79e680cd1e
+/deepseek-ai-dsh-uwork-gateway-service/understand-the-implementation:
+  en: c0f111e287e9b2d9
+  zh: c027e6bd9695e7bb
+/deepseek-ai-dsh-uwork-gateway-service/model-experience:
+  en: 1c48310e7d83a4b6
+  zh: 48b7d9d76bf0ea49
+/deepseek-ai-dsh-uwork-gateway-service/model-experience/kv-cache-effect:
+  en: 14e154d457e058f9
+  zh: 76f7177a7cf86186
+/deepseek-ai-dsh-uwork-gateway-service/known-limitations-and-deferred-work:
+  en: 3019a29f90788f1d
+  zh: 621963aa9a4923df
+/deepseek-ai-dsh-uwork-gateway-service/known-limitations-and-deferred-work/dev-note:
+  en: 6196175422e51bbe
+  zh: bfe7c3c658f2ff8b

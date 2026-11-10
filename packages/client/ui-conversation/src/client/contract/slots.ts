@@ -288,6 +288,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * portal to the document body because the docked composer contains them.
      */
     'conversation.composer': { kind: 'chain'; scope: 'session'; owner: ComposerChainProps }
+    /** Presentation layers around the resident composer and elected takeover; decision ownership stays with the chain. */
+    'conversation.composer.frame': { kind: 'hoc'; scope: 'root'; owner: ComposerFrameOwnerProps }
     /** Workspace picker shown by the blank-session Hero. */
     'conversation.hero.workspace': { kind: 'single'; scope: 'root'; owner: EmptyWorkspaceOwnerProps }
     /** Layers wrapping the Conversation scroll body; `hero` reports a blank, standalone home. */
@@ -372,6 +374,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
       children: {
         'conversation.session': { kind: 'single'; scope: 'session' }
         'conversation.composer': { kind: 'chain'; scope: 'session' }
+        'conversation.composer.frame': { kind: 'hoc'; scope: 'root' }
         'conversation.composer.bar': { kind: 'single'; scope: 'session-maybe' }
         'conversation.input.dock': { kind: 'list'; scope: 'session' }
         'conversation.hero.frame': { kind: 'hoc'; scope: 'root' }
@@ -632,6 +635,12 @@ export interface ComposerChainProps {
   session: SessionSnapshot | undefined
   /** Effective business-owned interaction awaiting the user in this Session. */
   pendingInteraction: SessionPendingInteraction | undefined
+}
+
+/** Presentation-only discriminator; interaction implementations retain their request and answer channels. */
+export interface ComposerFrameOwnerProps {
+  /** Current pending interaction kind, absent for the ordinary resident composer. */
+  readonly interactionKind: string | undefined
 }
 
 /** Conversation state exposed to scroll-body frame layers. */

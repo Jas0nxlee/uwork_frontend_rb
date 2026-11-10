@@ -84,6 +84,12 @@ Read these pages when the attachment surface is not enough. They move from the s
 
 Message images and original previews forward context gestures through the shared gallery to [ui-context-menu](../ui-context-menu/README.md). Original authorized URLs and MIME metadata remain independent from thumbnail presentation.
 
+
+<a id="presentation-variables"></a>
+### Presentation variables
+
+Attachment owners support inherited `--dsh-attachment-preview-edge`, `--dsh-attachment-card-radius` and `--dsh-attachment-content-inset`. Defaults retain 64px preview cells, each native radius and 8px file-content vertical padding. The edge sizes the rail and compact image cells together; standalone message-image limits remain unchanged.
+
 <a id="model-experience"></a>
 ## Model Experience
 

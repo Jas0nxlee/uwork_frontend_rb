@@ -30,6 +30,18 @@ flowchart LR
   pkg_plugin_manager["plugin-manager"]
   svc_pluginManager["ctx.pluginManager<br/>Current-profile plugin and bundle management"]
   pkg_ui_settings_plugin_inventory["ui-settings-plugin-inventory"]
+  pkg_native_authorization["native-authorization"]
+  svc_nativeAuthorization["ctx.nativeAuthorization<br/>Native product sign-in seam"]
+  pkg_uwork_enterprise["uwork-enterprise"]
+  svc_uworkIdentity["ctx.uworkIdentity<br/>Enterprise identity and Host session capability"]
+  pkg_uwork_gateway_service["uwork-gateway-service"]
+  pkg_uwork_model_provisioning["uwork-model-provisioning"]
+  pkg_client_ui_uwork_enterprise["client-ui-uwork-enterprise"]
+  svc_uworkGateway["ctx.uworkGateway<br/>Enterprise account and usage projections"]
+  pkg_client_ui_uwork_usage["client-ui-uwork-usage"]
+  pkg_uwork_gateway["uwork-gateway"]
+  svc_uworkModelProvisioning["ctx.uworkModelProvisioning<br/>Managed enterprise model routes"]
+  pkg_llm_pi_ai["llm-pi-ai"]
   pkg_uwork_company_market["uwork-company-market"]
   svc_uworkCompanyMarket["ctx.uworkCompanyMarket<br/>Public company skills and installations"]
   pkg_client_ui_uwork_company_market["client-ui-uwork-company-market"]
@@ -80,7 +92,6 @@ flowchart LR
   svc_attachments["ctx.attachments<br/>Durable binary attachment storage"]
   pkg_attachment_local["attachment-local"]
   pkg_api_session_controller["api-session-controller"]
-  pkg_llm_pi_ai["llm-pi-ai"]
   pkg_llm_deepseek["llm-deepseek"]
   pkg_client_file_upload["client-file-upload"]
   svc_fileUploads["ctx.fileUploads<br/>Agent-scoped staged file uploads"]
@@ -410,6 +421,7 @@ flowchart LR
   pkg_mcp_manager --> svc_mcpManager
   pkg_mcp_resources --> svc_mcpResources
   pkg_message_feedback --> svc_messageFeedback
+  pkg_native_authorization --> svc_nativeAuthorization
   pkg_office_to_pdf --> svc_officeToPdf
   pkg_otel --> svc_otel
   pkg_permission_presets --> svc_permissionPresets
@@ -477,6 +489,10 @@ flowchart LR
   pkg_user_questions --> svc_userQuestions
   pkg_uwork_company_market --> svc_skills
   pkg_uwork_company_market --> svc_uworkCompanyMarket
+  pkg_uwork_enterprise --> svc_nativeAuthorization
+  pkg_uwork_enterprise --> svc_uworkIdentity
+  pkg_uwork_gateway_service --> svc_uworkGateway
+  pkg_uwork_model_provisioning --> svc_uworkModelProvisioning
   pkg_web --> svc_web
   pkg_web_app --> svc_webApp
   pkg_web_deepseek_api --> svc_web
@@ -492,6 +508,7 @@ flowchart LR
   svc_actionCards --> pkg_creation_recommendations
   svc_agentDefaultModel --> pkg_api_session_controller
   svc_agentDefaultModel --> pkg_headless
+  svc_agentDefaultModel --> pkg_uwork_model_provisioning
   svc_agentLoop --> pkg_base
   svc_agentLoop --> pkg_sdk_minimal
   svc_agentTeams --> pkg_tool_agent_team
@@ -506,6 +523,7 @@ flowchart LR
   svc_attachments --> pkg_llm_pi_ai
   svc_attachments --> pkg_tool_fs
   svc_authorization --> pkg_llm_pi_ai
+  svc_authorization --> pkg_uwork_enterprise
   svc_browserUse --> pkg_experimental_browser_use_chrome_devtools_mcp
   svc_browserUse --> pkg_experimental_browser_use_playwright_mcp
   svc_browserUse --> pkg_experimental_browser_use_stagehand_native
@@ -521,6 +539,8 @@ flowchart LR
   svc_credentials --> pkg_api_settings_controller
   svc_credentials --> pkg_llm_deepseek
   svc_credentials --> pkg_llm_pi_ai
+  svc_credentials --> pkg_uwork_enterprise
+  svc_credentials --> pkg_uwork_model_provisioning
   svc_cuaAccess --> pkg_cua
   svc_deepseekAccount --> pkg_api_account_controller
   svc_deepseekAccount --> pkg_llm_deepseek
@@ -587,6 +607,7 @@ flowchart LR
   svc_sessions --> pkg_session_query_sqlite
   svc_sessions --> pkg_subagent
   svc_settings --> pkg_api_settings_controller
+  svc_settings --> pkg_uwork_model_provisioning
   svc_shell --> pkg_hooks_claude_code
   svc_shell --> pkg_hooks_codex
   svc_shell --> pkg_tool_bash
@@ -635,6 +656,11 @@ flowchart LR
   svc_typert --> pkg_typert_loader
   svc_userQuestions --> pkg_tool_ask_user
   svc_uworkCompanyMarket --> pkg_client_ui_uwork_company_market
+  svc_uworkGateway --> pkg_client_ui_uwork_usage
+  svc_uworkIdentity --> pkg_client_ui_uwork_enterprise
+  svc_uworkIdentity --> pkg_uwork_gateway_service
+  svc_uworkIdentity --> pkg_uwork_model_provisioning
+  svc_uworkModelProvisioning --> pkg_client_ui_uwork_enterprise
   svc_web --> pkg_tool_web
   svc_webApp --> pkg_harness_dev_context
   svc_webServer --> pkg_client_connection
@@ -653,6 +679,9 @@ flowchart LR
   svc_workspaceRegistry --> pkg_api_workspace_controller
   svc_worktrees --> pkg_experimental_tool_worktree
   svc_fs -. event gate .-> pkg_fs_observation_policy
+  svc_uworkGateway -. event gate .-> pkg_uwork_gateway
+  svc_uworkModelProvisioning -. event gate .-> pkg_llm_pi_ai
+  svc_uworkModelProvisioning -. event gate .-> pkg_uwork_gateway
 ```
 
 | ctx 键 | 角色 | 所属包 | 实现 | 直接消费方 | 配套插件 | 说明 |
@@ -665,6 +694,10 @@ flowchart LR
 | `ctx.hmr` | `core` | [`hmr`](../packages/boot/hmr) | - | [`app-boot`](../packages/boot/app-boot) | - | 负责模块和精确配置监听；应用修改共用其队列，自动重载等待应用文件锁。 |
 | `ctx.pluginRegistryProbe` | `core` | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | 在 Host 上并发比较公共安装源响应；初始安装源推荐由 Client 负责。 |
 | `ctx.pluginManager` | `core` | [`plugin-manager`](../packages/boot/plugin-manager) | - | [`plugin-manager`](../packages/boot/plugin-manager), `ui-settings-plugin-inventory` | - | 与 CLI 共享 profile 包操作，并向 Web 和 Agent 调用方分别报告持久状态与运行状态。 |
+| `ctx.nativeAuthorization` | `seam` | [`native-authorization`](../packages/credentials/native-authorization) | [`uwork-enterprise`](../packages/credentials/uwork-enterprise) | - | - | 为私有 Desktop Host/Main 授权选择唯一产品 provider；renderer Remote 方法不暴露导航或回调。 |
+| `ctx.uworkIdentity` | `service` | [`uwork-enterprise`](../packages/credentials/uwork-enterprise) | - | [`uwork-gateway-service`](../packages/boot/uwork-gateway-service), [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning), [`client-ui-uwork-enterprise`](../packages/client/ui-uwork-enterprise) | - | 拥有原生企业登录、按 generation 隔离的凭据 grant 及可取消 Host 会话；Client 只接收无 token 的身份投影。 |
+| `ctx.uworkGateway` | `service` | [`uwork-gateway-service`](../packages/boot/uwork-gateway-service) | - | [`client-ui-uwork-usage`](../packages/client/ui-uwork-usage) | [`uwork-gateway`](../packages/boot/uwork-gateway) | 在当前身份能力内调用仅 Host 使用的网关协议客户端；暴露脱敏账号与有界记账读取，不暴露 key。 |
+| `ctx.uworkModelProvisioning` | `service` | [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning) | - | [`client-ui-uwork-enterprise`](../packages/client/ui-uwork-enterprise) | [`llm-pi-ai`](../packages/llm/llm-pi-ai), [`uwork-gateway`](../packages/boot/uwork-gateway) | 通过原生模型设置协调 generation 所有的凭据路由及恢复；Remote 方法只投影安全状态和显式用户操作。 |
 | `ctx.uworkCompanyMarket` | `service` | [`uwork-company-market`](../packages/boot/uwork-company-market) | - | [`client-ui-uwork-company-market`](../packages/client/ui-uwork-company-market) | - | 负责匿名 SkillHub 发现、经校验的内容事务及公司市场自有安装管理。 |
 | `ctx.pluginMarket` | `core` | [`plugin-market`](../packages/boot/plugin-market) | - | [`client-ui-plugin-market`](../packages/client/ui-plugin-market), [`plugin-market`](../packages/boot/plugin-market) | - | 获取并校验用户配置的索引源；安装通过插件管理器完成。 |
 | `ctx.profileContext` | `core` | [`app-boot`](../packages/boot/app-boot) | - | [`plugin-manager`](../packages/boot/plugin-manager) | - | dsh launcher 提供纯数据形式的 profile 位置与组合输入；重载调度由 dsh-hmr 负责。 |
@@ -704,11 +737,11 @@ flowchart LR
 | `ctx.remoteAccess` | `core` | [`api-remote-access`](../packages/api/remote-access) | - | [`api-gateway`](../packages/api/gateway), [`api-session-controller`](../packages/api/session-controller), [`api-workspace-controller`](../packages/api/workspace-controller) | - | 通过业务方注册的基于 role 的 policy 判定非 owner Peer 可调用哪些 Remote 方法，过滤列表结果，并为每个 Peer 推送访问快照。 |
 | `ctx.sessionPersistence` | `seam` | [`session-persistence`](../packages/session/session-persistence) | [`session-persistence-jsonl`](../packages/session/session-persistence-jsonl) | [`agent-loop`](../packages/core/agent-loop), [`tool-bash`](../packages/shell/tool-bash), [`hooks-claude-code`](../packages/experimental/hooks-claude-code), [`hooks-codex`](../packages/experimental/hooks-codex), [`session-query`](../packages/session-query/session-query), [`session-query-sqlite`](../packages/session-query/session-query-sqlite), [`message-feedback`](../packages/feedback/message-feedback) | - | JSONL backend 把 SessionEvent 词汇持久化为每个 Session 一份产物。 |
 | `ctx.configEditor` | `core` | [`config-editor`](../packages/boot/config-editor) | - | [`settings`](../packages/settings/settings), [`agent-default-model`](../packages/core/agent-default-model) | - | Persists profile config patches under the application file lock and HMR queue, then reconciles Loader entries. |
-| `ctx.settings` | `core` | [`settings`](../packages/settings/settings) | - | [`api-settings-controller`](../packages/api/settings-controller) | - | Forms project volatile Config fields from active profile entries and delegate validated edits to config-editor. Plugins consume their own Config references. |
+| `ctx.settings` | `core` | [`settings`](../packages/settings/settings) | - | [`api-settings-controller`](../packages/api/settings-controller), [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning) | - | Forms project volatile Config fields from active profile entries and delegate validated edits to config-editor. Plugins consume their own Config references. |
 | `ctx.subagentModelSelection` | `core` | [`tool-subagent`](../packages/subagent/tool-subagent) | - | [`tool-subagent`](../packages/subagent/tool-subagent) | - | 拥有默认关闭的设置命名空间；Agent 作用域的委派工具会在组合新顶层 Session 时读取它。 |
-| `ctx.credentials` | `seam` | [`credentials`](../packages/credentials/credentials) | [`credentials-local`](../packages/credentials/credentials-local) | [`api-settings-controller`](../packages/api/settings-controller), [`llm-deepseek`](../packages/llm/llm-deepseek), [`llm-pi-ai`](../packages/llm/llm-pi-ai) | - | 配置携带对机密信息的引用；提供方拥有实际值。消费方按操作解析，因此轮换后的凭据会在紧接着的下一次请求中生效；settings controller 提供不含实际值的视图和只写存储。 |
+| `ctx.credentials` | `seam` | [`credentials`](../packages/credentials/credentials) | [`credentials-local`](../packages/credentials/credentials-local) | [`api-settings-controller`](../packages/api/settings-controller), [`llm-deepseek`](../packages/llm/llm-deepseek), [`llm-pi-ai`](../packages/llm/llm-pi-ai), [`uwork-enterprise`](../packages/credentials/uwork-enterprise), [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning) | - | 配置携带对机密信息的引用；提供方拥有实际值。消费方按操作解析，因此轮换后的凭据会在紧接着的下一次请求中生效；settings controller 提供不含实际值的视图和只写存储。 |
 | `ctx.deepseekAccount` | `seam` | [`deepseek-account`](../packages/credentials/deepseek-account) | [`deepseek-account-platform`](../packages/credentials/deepseek-account-platform) | [`api-account-controller`](../packages/api/account-controller), [`llm-deepseek`](../packages/llm/llm-deepseek) | - | Host 负责浏览器授权和本地凭证；UI 使用方只接收不含 token 的状态。 |
-| `ctx.authorization` | `seam` | [`authorization`](../packages/credentials/authorization) | - | [`llm-pi-ai`](../packages/llm/llm-pi-ai) | - | flow 由知道如何取得某份凭据的插件注册，并以其写入的记录为键；seam 拥有这段对话与"每个键同时只跑一次尝试"的生命周期，而非协议本身。 |
+| `ctx.authorization` | `seam` | [`authorization`](../packages/credentials/authorization) | - | [`llm-pi-ai`](../packages/llm/llm-pi-ai), [`uwork-enterprise`](../packages/credentials/uwork-enterprise) | - | flow 由知道如何取得某份凭据的插件注册，并以其写入的记录为键；seam 拥有这段对话与"每个键同时只跑一次尝试"的生命周期，而非协议本身。 |
 | `ctx.productAnalytics` | `service` | [`client-product-analytics`](../packages/client/product-analytics) | - | - | - | 根据 Host 动态采集策略接收指定桌面事件、补充可用登录身份并监听实时压缩。 |
 | `ctx.otel` | `service` | [`otel`](../packages/telemetry/otel) | - | [`host-product-telemetry-otel`](../packages/host/product-telemetry-otel), [`session-telemetry-otel`](../packages/session/session-telemetry-otel) | - | 产品埋点和 Session 反馈适配器通过同一个注入服务创建独立上报通道。 |
 | `ctx.productTelemetry` | `service` | [`host-product-telemetry-otel`](../packages/host/product-telemetry-otel) | - | - | - | 通过 OTLP/HTTP 发送显式提交的分析事件；仅挂载插件不会采集信息。 |
@@ -732,7 +765,7 @@ flowchart LR
 | `ctx.sessionProjectionCache` | `core` | [`session-projection-cache`](../packages/session/session-projection-cache) | - | [`api-session-controller`](../packages/api/session-controller), [`session-query`](../packages/session-query/session-query), [`session-reference`](../packages/context/session-reference) | - | 按会话持久保存投影单元状态的检查点（节流检查点，以及轮次／结束／分离时的必选检查点），提供缓存投影视图，并加速 prepared Session 的投影恢复。 |
 | `ctx.skills` | `seam` | [`skill`](../packages/skill/skill) | [`sandbox-windows-acl`](../packages/sandbox/sandbox-windows-acl), [`skill-badge`](../packages/experimental/skill-badge), [`skill-filesystem`](../packages/skill/skill-filesystem), [`skill-office`](../packages/skill/skill-office), [`uwork-company-market`](../packages/boot/uwork-company-market) | [`tool-skill`](../packages/skill/tool-skill) | - | 合并提供方的 skill（技能）目录；tool-skill 渲染会话前缀目录，并加载完整的 skill 正文。 |
 | `ctx.agents` | `core` | [`agent`](../packages/core/agent) | - | [`agent-loop`](../packages/core/agent-loop), [`acp`](../packages/acp/acp), [`subagent`](../packages/subagent/subagent) | - | 拥有实时 Agent 句柄、创建／恢复工厂 seam，以及进程本地的发起方传播。 |
-| `ctx.agentDefaultModel` | `core` | [`agent-default-model`](../packages/core/agent-default-model) | - | [`api-session-controller`](../packages/api/session-controller), [`headless`](../packages/bundle/headless) | - | Reads the default ModelSelection from volatile Config and saves selections through the profile editor. |
+| `ctx.agentDefaultModel` | `core` | [`agent-default-model`](../packages/core/agent-default-model) | - | [`api-session-controller`](../packages/api/session-controller), [`headless`](../packages/bundle/headless), [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning) | - | Reads the default ModelSelection from volatile Config and saves selections through the profile editor. |
 | `ctx.agentLoop` | `bundle` | [`agent-loop`](../packages/core/agent-loop) | - | [`base`](../packages/bundle/base), [`sdk-minimal`](../packages/bundle/sdk-minimal) | - | 唯一的具体循环插件；扩展包依赖 dsh-agent 的事件和服务，而不依赖此包。 |
 | `ctx.mcpManager` | `core` | [`mcp-manager`](../packages/mcp/mcp-manager) | - | - | - | 依据自身 volatile servers 配置对账 mcp-client 实例，聚合它们的连接状态，并向管理界面提供 restart 与 probe。 |
 | `ctx.schedule` | `core` | [`schedule`](../packages/schedule/schedule) | - | - | - | 独立于 Session 的加载状态存储任务，并将到期消息排入每个任务的目标 Session。 |

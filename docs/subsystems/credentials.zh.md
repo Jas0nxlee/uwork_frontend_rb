@@ -367,6 +367,147 @@ abstract getDeviceIdentity(): Promise<{ deviceId?: string; userId?: AccountUserI
 
 Source: [`packages/credentials/deepseek-account/src/index.ts`](../../packages/credentials/deepseek-account/src/index.ts)
 
+<a id="ctxnativeauthorization--nativeauthorization"></a>
+
+### `ctx.nativeAuthorization` — `NativeAuthorization`
+
+Registry read only by the private Desktop Host bridge, never exposed through Remote.
+
+```ts cordis-catalog
+/**
+ * Select one provider for this registration lifetime.
+ * @param provider - product-selected authentication owner.
+ * @returns lifetime disposer; a second provider is rejected.
+ */
+register(provider: NativeAuthorizationProvider): () => void
+
+/**
+ * Read the provider selected by product composition.
+ * @returns selected private provider, or undefined for the standard account Welcome.
+ */
+getProvider(): NativeAuthorizationProvider | undefined
+```
+
+Source: [`packages/credentials/native-authorization/src/index.ts`](../../packages/credentials/native-authorization/src/index.ts)
+
+<a id="ctxuworkgateway--gatewayservice"></a>
+
+### `ctx.uworkGateway` — `GatewayService`
+
+Read-only enterprise gateway Remote service.
+
+```ts cordis-catalog
+/** Read safe endpoint, masked key records, subscriptions and authorized model filters.
+ * @param signal - Caller cancellation.
+ * @returns Current identity's overview or a safe unavailable state.
+ */
+@Remote async getOverview(signal: AbortSignal): Promise<OverviewState>
+
+/** Refresh model permissions together with their owning account overview.
+ * @param signal - Caller cancellation.
+ * @returns Fresh safe overview; failure retains only this identity's last success.
+ */
+@Remote async refreshModels(signal: AbortSignal): Promise<OverviewState>
+
+/** Read the requested usage selection and cancel an older selection's pending read.
+ * @param input - Period, metric and explicit server refresh request.
+ * @param signal - Caller cancellation.
+ * @returns Aggregates, authentication absence, or a classified failure with an optional last success.
+ */
+@Remote async readUsage(input: UsageRequest, signal: AbortSignal): Promise<UsageState>
+
+/** Observe identity changes so open Client resources withdraw previous account data.
+ * @param signal - Subscriber cancellation.
+ * @returns Current safe identity binding, then coalesced changes; null means unauthenticated.
+ */
+@Remote({ mode: 'stream' }) async *watchIdentity(signal: AbortSignal): AsyncIterable<GatewayBinding | null>
+```
+
+Source: [`packages/boot/uwork-gateway-service/src/index.ts`](../../packages/boot/uwork-gateway-service/src/index.ts)
+
+<a id="ctxuworkidentity--enterpriseidentity"></a>
+
+### `ctx.uworkIdentity` — `EnterpriseIdentity`
+
+Owns only enterprise identity. Personal provider settings and company/personal skills are outside this service.
+
+```ts cordis-catalog
+/**
+ * Safe configured organization choices; no callbacks, issuer secrets or tokens.
+ * @returns public organizations and the configured default.
+ */
+@Remote listOrganizations(): { defaultOrgId: string; organizations: Array<{ orgId: string; label: string }> }
+
+/**
+ * Observes revocation and verifies stored grants before publishing an authenticated state.
+ * @returns token-free state, or restoring while another verification is in progress.
+ * @throws IdentityError when storage or issuer verification fails.
+ */
+@Remote async getState(): Promise<IdentityState>
+
+/**
+ * Publishes safe state initially and after identity changes; intermediate updates may coalesce.
+ * @param signal - subscriber cancellation, combined with plugin lifetime.
+ * @returns issuer-verified current state followed by safe changes; ends on cancellation.
+ */
+@Remote({ mode: 'stream' }) async *watchState(signal: AbortSignal): AsyncIterable<IdentityState>
+
+/** Durable tombstone prevents older login/refresh writers from resurrecting a logged-out session. */
+@Remote async signOut(): Promise<void>
+
+/**
+ * Host/Main only. Durably revokes the previous generation before contacting the issuer.
+ * @param orgId - exact allowlisted organization ID.
+ * @param signal - optional caller cancellation; without it plugin lifetime still applies.
+ * @returns private native navigation without handoff secret or token.
+ * @throws IdentityError for an unknown organization, stale attempt or issuer failure.
+ */
+async startSignIn(orgId: string, signal?: AbortSignal): Promise<NativeSignInAttempt>
+
+/**
+ * Main-only callback ingestion. Exactly one code submission is admitted per attempt.
+ * @param attemptId - current native attempt ID.
+ * @param callbackUrl - Main-intercepted URL; never forward through application Renderer.
+ * @param signal - optional caller cancellation, combined with the attempt lifetime.
+ * @returns verified public state after the credential grant commits.
+ * @throws IdentityError for an invalid callback, expiry, duplicate submission or issuer failure.
+ */
+async completeSignIn(attemptId: string, callbackUrl: string, signal?: AbortSignal): Promise<IdentityState>
+
+/**
+ * Main-only polling. 202 is pending; transient and protocol failures remain failures.
+ * @param attemptId - current native attempt ID.
+ * @param signal - optional caller cancellation, combined with attempt lifetime.
+ * @returns public state; pending attempts remain signed out.
+ */
+async pollSignIn(attemptId: string, signal?: AbortSignal): Promise<IdentityState>
+
+/**
+ * Cancels only this attempt's generation and awaits owned work; newer identity is left intact.
+ * @param attemptId - attempt being withdrawn; an already retired ID is a no-op.
+ */
+async cancelSignIn(attemptId: string): Promise<void>
+
+/**
+ * Restores after issuer refresh, preserving stored user and organization. Network errors never authenticate.
+ * @param signal - optional caller cancellation; concurrent callers join the first verification.
+ * @returns verified safe state, or signed-out for an empty or issuer-revoked grant.
+ * @throws IdentityError for invalid grants, stale generations or issuer failure.
+ */
+restoreSession(signal?: AbortSignal): Promise<IdentityState>
+
+/**
+ * Host-only capability, cancelled by identity changes and validated again before returning.
+ * @param run - Host operation; must honor its session signal and keep the token private.
+ * @param signal - optional caller cancellation, combined with identity and plugin lifetimes.
+ * @returns the operation result only while its authenticated generation remains current.
+ * @throws IdentityError when signed out, expired, revoked or unable to verify a saved grant.
+ */
+async withSession<T>(run: (session: IdentitySession) => Promise<T>, signal?: AbortSignal): Promise<T>
+```
+
+Source: [`packages/credentials/uwork-enterprise/src/index.ts`](../../packages/credentials/uwork-enterprise/src/index.ts)
+
 <a id="authorization-events"></a>
 
 ### `authorization/*` events
@@ -486,6 +627,48 @@ Local grant removal has completed.
 ```
 
 Source: [`packages/credentials/deepseek-account/src/index.ts`](../../packages/credentials/deepseek-account/src/index.ts)
+
+<a id="native-authorization-events"></a>
+
+### `native-authorization/*` events
+
+<a id="native-authorizationchanged--emit"></a>
+
+#### `native-authorization/changed` — emit
+
+A product identity provider has committed a renderer-safe authorization state.
+
+```ts cordis-catalog
+/**
+ * A product identity provider has committed a renderer-safe authorization state.
+ * @mode emit
+ * @param state - token-free organization choices, attempt progress and session status.
+ */
+'native-authorization/changed'(state: NativeAuthorizationState): void
+```
+
+Source: [`packages/credentials/native-authorization/src/index.ts`](../../packages/credentials/native-authorization/src/index.ts)
+
+<a id="uwork-identity-events"></a>
+
+### `uwork-identity/*` events
+
+<a id="uwork-identitychanged--emit"></a>
+
+#### `uwork-identity/changed` — emit
+
+Emitted when safe identity changes or is withdrawn. Never contains credentials.
+
+```ts cordis-catalog
+/**
+ * Emitted when safe identity changes or is withdrawn. Never contains credentials.
+ * @mode emit
+ * @param state - safe identity projection after the transition.
+ */
+'uwork-identity/changed'(state: IdentityState): void
+```
+
+Source: [`packages/credentials/uwork-enterprise/src/index.ts`](../../packages/credentials/uwork-enterprise/src/index.ts)
 <!-- END GENERATED cordis-surface -->
 
 账号服务定义提供 getState、getProfile、getBalance、getUnnotifiedBonuses、ackBonusNotified、startSignIn、cancelSignIn、signOut、watch 及仅限 Host 的 resolveToken 和 getPlatformSession。平台提供者使用 AuthorizationFlow 和私有 GrantRecord 实现这些操作。AccountView 区分本地存在与服务器验证；尝试 ID 将取消绑定到单次本地流程。参见[账号包](../../packages/credentials/deepseek-account/README.zh.md)。

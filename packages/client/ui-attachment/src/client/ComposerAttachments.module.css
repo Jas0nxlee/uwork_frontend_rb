@@ -8,17 +8,17 @@
 
 .imageItem {
   position: relative;
-  width: 64px;
-  height: 64px;
+  width: var(--dsh-attachment-preview-edge, 64px);
+  height: var(--dsh-attachment-preview-edge, 64px);
 }
 
 .thumbnail {
-  width: 64px;
-  height: 64px;
+  width: var(--dsh-attachment-preview-edge, 64px);
+  height: var(--dsh-attachment-preview-edge, 64px);
   padding: 0;
   overflow: hidden;
   border: 0.5px solid var(--dsw-alias-border-l2-darkmode-thin);
-  border-radius: var(--dsw-radius-xl);
+  border-radius: var(--dsh-attachment-card-radius, var(--dsw-radius-xl));
   background: var(--dsw-alias-interactive-bg-hover);
   cursor: zoom-in;
 }

@@ -28,6 +28,18 @@ flowchart LR
   pkg_plugin_manager["plugin-manager"]
   svc_pluginManager["ctx.pluginManager<br/>Current-profile plugin and bundle management"]
   pkg_ui_settings_plugin_inventory["ui-settings-plugin-inventory"]
+  pkg_native_authorization["native-authorization"]
+  svc_nativeAuthorization["ctx.nativeAuthorization<br/>Native product sign-in seam"]
+  pkg_uwork_enterprise["uwork-enterprise"]
+  svc_uworkIdentity["ctx.uworkIdentity<br/>Enterprise identity and Host session capability"]
+  pkg_uwork_gateway_service["uwork-gateway-service"]
+  pkg_uwork_model_provisioning["uwork-model-provisioning"]
+  pkg_client_ui_uwork_enterprise["client-ui-uwork-enterprise"]
+  svc_uworkGateway["ctx.uworkGateway<br/>Enterprise account and usage projections"]
+  pkg_client_ui_uwork_usage["client-ui-uwork-usage"]
+  pkg_uwork_gateway["uwork-gateway"]
+  svc_uworkModelProvisioning["ctx.uworkModelProvisioning<br/>Managed enterprise model routes"]
+  pkg_llm_pi_ai["llm-pi-ai"]
   pkg_uwork_company_market["uwork-company-market"]
   svc_uworkCompanyMarket["ctx.uworkCompanyMarket<br/>Public company skills and installations"]
   pkg_client_ui_uwork_company_market["client-ui-uwork-company-market"]
@@ -78,7 +90,6 @@ flowchart LR
   svc_attachments["ctx.attachments<br/>Durable binary attachment storage"]
   pkg_attachment_local["attachment-local"]
   pkg_api_session_controller["api-session-controller"]
-  pkg_llm_pi_ai["llm-pi-ai"]
   pkg_llm_deepseek["llm-deepseek"]
   pkg_client_file_upload["client-file-upload"]
   svc_fileUploads["ctx.fileUploads<br/>Agent-scoped staged file uploads"]
@@ -408,6 +419,7 @@ flowchart LR
   pkg_mcp_manager --> svc_mcpManager
   pkg_mcp_resources --> svc_mcpResources
   pkg_message_feedback --> svc_messageFeedback
+  pkg_native_authorization --> svc_nativeAuthorization
   pkg_office_to_pdf --> svc_officeToPdf
   pkg_otel --> svc_otel
   pkg_permission_presets --> svc_permissionPresets
@@ -475,6 +487,10 @@ flowchart LR
   pkg_user_questions --> svc_userQuestions
   pkg_uwork_company_market --> svc_skills
   pkg_uwork_company_market --> svc_uworkCompanyMarket
+  pkg_uwork_enterprise --> svc_nativeAuthorization
+  pkg_uwork_enterprise --> svc_uworkIdentity
+  pkg_uwork_gateway_service --> svc_uworkGateway
+  pkg_uwork_model_provisioning --> svc_uworkModelProvisioning
   pkg_web --> svc_web
   pkg_web_app --> svc_webApp
   pkg_web_deepseek_api --> svc_web
@@ -490,6 +506,7 @@ flowchart LR
   svc_actionCards --> pkg_creation_recommendations
   svc_agentDefaultModel --> pkg_api_session_controller
   svc_agentDefaultModel --> pkg_headless
+  svc_agentDefaultModel --> pkg_uwork_model_provisioning
   svc_agentLoop --> pkg_base
   svc_agentLoop --> pkg_sdk_minimal
   svc_agentTeams --> pkg_tool_agent_team
@@ -504,6 +521,7 @@ flowchart LR
   svc_attachments --> pkg_llm_pi_ai
   svc_attachments --> pkg_tool_fs
   svc_authorization --> pkg_llm_pi_ai
+  svc_authorization --> pkg_uwork_enterprise
   svc_browserUse --> pkg_experimental_browser_use_chrome_devtools_mcp
   svc_browserUse --> pkg_experimental_browser_use_playwright_mcp
   svc_browserUse --> pkg_experimental_browser_use_stagehand_native
@@ -519,6 +537,8 @@ flowchart LR
   svc_credentials --> pkg_api_settings_controller
   svc_credentials --> pkg_llm_deepseek
   svc_credentials --> pkg_llm_pi_ai
+  svc_credentials --> pkg_uwork_enterprise
+  svc_credentials --> pkg_uwork_model_provisioning
   svc_cuaAccess --> pkg_cua
   svc_deepseekAccount --> pkg_api_account_controller
   svc_deepseekAccount --> pkg_llm_deepseek
@@ -585,6 +605,7 @@ flowchart LR
   svc_sessions --> pkg_session_query_sqlite
   svc_sessions --> pkg_subagent
   svc_settings --> pkg_api_settings_controller
+  svc_settings --> pkg_uwork_model_provisioning
   svc_shell --> pkg_hooks_claude_code
   svc_shell --> pkg_hooks_codex
   svc_shell --> pkg_tool_bash
@@ -633,6 +654,11 @@ flowchart LR
   svc_typert --> pkg_typert_loader
   svc_userQuestions --> pkg_tool_ask_user
   svc_uworkCompanyMarket --> pkg_client_ui_uwork_company_market
+  svc_uworkGateway --> pkg_client_ui_uwork_usage
+  svc_uworkIdentity --> pkg_client_ui_uwork_enterprise
+  svc_uworkIdentity --> pkg_uwork_gateway_service
+  svc_uworkIdentity --> pkg_uwork_model_provisioning
+  svc_uworkModelProvisioning --> pkg_client_ui_uwork_enterprise
   svc_web --> pkg_tool_web
   svc_webApp --> pkg_harness_dev_context
   svc_webServer --> pkg_client_connection
@@ -651,6 +677,9 @@ flowchart LR
   svc_workspaceRegistry --> pkg_api_workspace_controller
   svc_worktrees --> pkg_experimental_tool_worktree
   svc_fs -. event gate .-> pkg_fs_observation_policy
+  svc_uworkGateway -. event gate .-> pkg_uwork_gateway
+  svc_uworkModelProvisioning -. event gate .-> pkg_llm_pi_ai
+  svc_uworkModelProvisioning -. event gate .-> pkg_uwork_gateway
 ```
 
 | ctx key | Role | Owner | Implementations | Direct consumers | Companion plugins | Note |
@@ -663,6 +692,10 @@ flowchart LR
 | `ctx.hmr` | `core` | [`hmr`](../packages/boot/hmr) | - | [`app-boot`](../packages/boot/app-boot) | - | Owns module and exact configuration watchers; application mutations share its queue and automatic reloads await the application file lock. |
 | `ctx.pluginRegistryProbe` | `core` | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | [`client-ui-plugin-manager`](../packages/client/ui-plugin-manager) | - | Races public registry responses on the Host; the Client owns the initial registry recommendation. |
 | `ctx.pluginManager` | `core` | [`plugin-manager`](../packages/boot/plugin-manager) | - | [`plugin-manager`](../packages/boot/plugin-manager), `ui-settings-plugin-inventory` | - | Shares profile package operations with the CLI and reports persisted and running state to Web and agent callers. |
+| `ctx.nativeAuthorization` | `seam` | [`native-authorization`](../packages/credentials/native-authorization) | [`uwork-enterprise`](../packages/credentials/uwork-enterprise) | - | - | Selects one product provider for private Desktop Host/Main authorization; no renderer Remote methods expose navigation or callbacks. |
+| `ctx.uworkIdentity` | `service` | [`uwork-enterprise`](../packages/credentials/uwork-enterprise) | - | [`uwork-gateway-service`](../packages/boot/uwork-gateway-service), [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning), [`client-ui-uwork-enterprise`](../packages/client/ui-uwork-enterprise) | - | Owns native enterprise sign-in, generation-scoped credential grants and cancellable Host sessions; Clients receive token-free identity projections. |
+| `ctx.uworkGateway` | `service` | [`uwork-gateway-service`](../packages/boot/uwork-gateway-service) | - | [`client-ui-uwork-usage`](../packages/client/ui-uwork-usage) | [`uwork-gateway`](../packages/boot/uwork-gateway) | Uses the Host-only gateway protocol client inside the current identity capability; exposes masked account and bounded accounting reads, never keys. |
+| `ctx.uworkModelProvisioning` | `service` | [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning) | - | [`client-ui-uwork-enterprise`](../packages/client/ui-uwork-enterprise) | [`llm-pi-ai`](../packages/llm/llm-pi-ai), [`uwork-gateway`](../packages/boot/uwork-gateway) | Coordinates generation-owned credential routes and recovery through native model settings; Remote methods project safe state and explicit user actions. |
 | `ctx.uworkCompanyMarket` | `service` | [`uwork-company-market`](../packages/boot/uwork-company-market) | - | [`client-ui-uwork-company-market`](../packages/client/ui-uwork-company-market) | - | Owns anonymous SkillHub discovery, verified content transactions and company-only installation management. |
 | `ctx.pluginMarket` | `core` | [`plugin-market`](../packages/boot/plugin-market) | - | [`client-ui-plugin-market`](../packages/client/ui-plugin-market), [`plugin-market`](../packages/boot/plugin-market) | - | Fetches and validates the index sources the user configures; installation goes through the plugin manager. |
 | `ctx.profileContext` | `core` | [`app-boot`](../packages/boot/app-boot) | - | [`plugin-manager`](../packages/boot/plugin-manager) | - | The dsh launcher supplies data-only profile locations and composition inputs; reload scheduling belongs to dsh-hmr. |
@@ -702,11 +735,11 @@ flowchart LR
 | `ctx.remoteAccess` | `core` | [`api-remote-access`](../packages/api/remote-access) | - | [`api-gateway`](../packages/api/gateway), [`api-session-controller`](../packages/api/session-controller), [`api-workspace-controller`](../packages/api/workspace-controller) | - | Decides which Remote methods a non-owner Peer may call through business-registered role-based policies, filters list results, and streams each Peer access snapshot. |
 | `ctx.sessionPersistence` | `seam` | [`session-persistence`](../packages/session/session-persistence) | [`session-persistence-jsonl`](../packages/session/session-persistence-jsonl) | [`agent-loop`](../packages/core/agent-loop), [`tool-bash`](../packages/shell/tool-bash), [`hooks-claude-code`](../packages/experimental/hooks-claude-code), [`hooks-codex`](../packages/experimental/hooks-codex), [`session-query`](../packages/session-query/session-query), [`session-query-sqlite`](../packages/session-query/session-query-sqlite), [`message-feedback`](../packages/feedback/message-feedback) | - | The JSONL backend persists the SessionEvent vocabulary as one artifact per Session. |
 | `ctx.configEditor` | `core` | [`config-editor`](../packages/boot/config-editor) | - | [`settings`](../packages/settings/settings), [`agent-default-model`](../packages/core/agent-default-model) | - | Persists profile config patches under the application file lock and HMR queue, then reconciles Loader entries. |
-| `ctx.settings` | `core` | [`settings`](../packages/settings/settings) | - | [`api-settings-controller`](../packages/api/settings-controller) | - | Forms project volatile Config fields from active profile entries and delegate validated edits to config-editor. Plugins consume their own Config references. |
+| `ctx.settings` | `core` | [`settings`](../packages/settings/settings) | - | [`api-settings-controller`](../packages/api/settings-controller), [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning) | - | Forms project volatile Config fields from active profile entries and delegate validated edits to config-editor. Plugins consume their own Config references. |
 | `ctx.subagentModelSelection` | `core` | [`tool-subagent`](../packages/subagent/tool-subagent) | - | [`tool-subagent`](../packages/subagent/tool-subagent) | - | Owns the default-off settings namespace that Agent-scoped delegation tools sample when composing a new top-level Session. |
-| `ctx.credentials` | `seam` | [`credentials`](../packages/credentials/credentials) | [`credentials-local`](../packages/credentials/credentials-local) | [`api-settings-controller`](../packages/api/settings-controller), [`llm-deepseek`](../packages/llm/llm-deepseek), [`llm-pi-ai`](../packages/llm/llm-pi-ai) | - | Configuration carries references to secrets; providers own the values. Consumers resolve per operation, so a rotated credential reaches the very next request; the settings controller exposes value-free views and write-only storage. |
+| `ctx.credentials` | `seam` | [`credentials`](../packages/credentials/credentials) | [`credentials-local`](../packages/credentials/credentials-local) | [`api-settings-controller`](../packages/api/settings-controller), [`llm-deepseek`](../packages/llm/llm-deepseek), [`llm-pi-ai`](../packages/llm/llm-pi-ai), [`uwork-enterprise`](../packages/credentials/uwork-enterprise), [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning) | - | Configuration carries references to secrets; providers own the values. Consumers resolve per operation, so a rotated credential reaches the very next request; the settings controller exposes value-free views and write-only storage. |
 | `ctx.deepseekAccount` | `seam` | [`deepseek-account`](../packages/credentials/deepseek-account) | [`deepseek-account-platform`](../packages/credentials/deepseek-account-platform) | [`api-account-controller`](../packages/api/account-controller), [`llm-deepseek`](../packages/llm/llm-deepseek) | - | The Host owns browser authorization and local credentials; UI consumers receive state without tokens. |
-| `ctx.authorization` | `seam` | [`authorization`](../packages/credentials/authorization) | - | [`llm-pi-ai`](../packages/llm/llm-pi-ai) | - | Flows are registered by the plugin that knows how to obtain one credential and keyed by the record they write; the seam owns the conversation and the one-attempt-per-key lifecycle, never the protocol. |
+| `ctx.authorization` | `seam` | [`authorization`](../packages/credentials/authorization) | - | [`llm-pi-ai`](../packages/llm/llm-pi-ai), [`uwork-enterprise`](../packages/credentials/uwork-enterprise) | - | Flows are registered by the plugin that knows how to obtain one credential and keyed by the record they write; the seam owns the conversation and the one-attempt-per-key lifecycle, never the protocol. |
 | `ctx.productAnalytics` | `service` | [`client-product-analytics`](../packages/client/product-analytics) | - | - | - | Accepts selected Desktop events, enriches available login identity, and observes live compaction under the live Host collection policy. |
 | `ctx.otel` | `service` | [`otel`](../packages/telemetry/otel) | - | [`host-product-telemetry-otel`](../packages/host/product-telemetry-otel), [`session-telemetry-otel`](../packages/session/session-telemetry-otel) | - | Product analytics and Session feedback adapters create independent reporting channels through one injected service. |
 | `ctx.productTelemetry` | `service` | [`host-product-telemetry-otel`](../packages/host/product-telemetry-otel) | - | - | - | Exports explicitly submitted analytics events through OTLP/HTTP; mounting alone collects nothing. |
@@ -730,7 +763,7 @@ flowchart LR
 | `ctx.sessionProjectionCache` | `core` | [`session-projection-cache`](../packages/session/session-projection-cache) | - | [`api-session-controller`](../packages/api/session-controller), [`session-query`](../packages/session-query/session-query), [`session-reference`](../packages/context/session-reference) | - | Durably checkpoints projection unit states per session (throttled + turn/end/detach mandatory points), serves cached projection views, and accelerates prepared-Session projection hydration. |
 | `ctx.skills` | `seam` | [`skill`](../packages/skill/skill) | [`sandbox-windows-acl`](../packages/sandbox/sandbox-windows-acl), [`skill-badge`](../packages/experimental/skill-badge), [`skill-filesystem`](../packages/skill/skill-filesystem), [`skill-office`](../packages/skill/skill-office), [`uwork-company-market`](../packages/boot/uwork-company-market) | [`tool-skill`](../packages/skill/tool-skill) | - | Merges provider skill catalogs; tool-skill renders the session-prefix catalog and loads complete skill bodies. |
 | `ctx.agents` | `core` | [`agent`](../packages/core/agent) | - | [`agent-loop`](../packages/core/agent-loop), [`acp`](../packages/acp/acp), [`subagent`](../packages/subagent/subagent) | - | Owns live Agent handles, the create/resume factory seam, and process-local initiator propagation. |
-| `ctx.agentDefaultModel` | `core` | [`agent-default-model`](../packages/core/agent-default-model) | - | [`api-session-controller`](../packages/api/session-controller), [`headless`](../packages/bundle/headless) | - | Reads the default ModelSelection from volatile Config and saves selections through the profile editor. |
+| `ctx.agentDefaultModel` | `core` | [`agent-default-model`](../packages/core/agent-default-model) | - | [`api-session-controller`](../packages/api/session-controller), [`headless`](../packages/bundle/headless), [`uwork-model-provisioning`](../packages/llm/uwork-model-provisioning) | - | Reads the default ModelSelection from volatile Config and saves selections through the profile editor. |
 | `ctx.agentLoop` | `bundle` | [`agent-loop`](../packages/core/agent-loop) | - | [`base`](../packages/bundle/base), [`sdk-minimal`](../packages/bundle/sdk-minimal) | - | The one concrete loop plugin; extension packages depend on dsh-agent events and services, not on this package. |
 | `ctx.mcpManager` | `core` | [`mcp-manager`](../packages/mcp/mcp-manager) | - | - | - | Reconciles mcp-client instances against its volatile servers configuration, aggregates their connection statuses, and serves restart and probe to management surfaces. |
 | `ctx.schedule` | `core` | [`schedule`](../packages/schedule/schedule) | - | - | - | Stores tasks independently of Session activation and queues due messages in each task's target Session. |

@@ -536,9 +536,11 @@ currentSelection(): ModelSelection
  * editor keeps its composition entry. Saves commit in submission order; a failed
  * save rejects its caller without blocking later saves.
  * @param next - resolved selection accepted by an entry point.
+ * @param expected - selection that must still own the default when the serialized write runs;
+ * a mismatch preserves the current value.
  * @returns fulfillment after the optional profile write settles.
  */
-async saveSelection(next: ModelSelection): Promise<void>
+async saveSelection(next: ModelSelection, expected?: ModelSelection): Promise<void>
 ```
 
 Source: [`packages/core/agent-default-model/src/index.ts`](../../packages/core/agent-default-model/src/index.ts)

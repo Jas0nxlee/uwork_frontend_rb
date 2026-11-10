@@ -51,6 +51,7 @@ import { runOperationReportJob, type OperationReportJobResult } from './operatio
 import { openWelcomeWindow } from './welcome-window.ts'
 import { WELCOME_IPC, needsWelcome, type WelcomeNotice } from './welcome-api.ts'
 import { connectDesktopWelcome, type DesktopWelcomeBackend } from './welcome-backend.ts'
+import { NativeAuthorizationController } from './native-authorization-controller.ts'
 import { DesktopUpdateJournal } from './update-journal.ts'
 import { DesktopUpdatePreparationError } from './update-error.ts'
 import { DesktopUpdateSchedule, resolveDesktopUpdateScheduleConfig } from './update-schedule.ts'
@@ -538,6 +539,9 @@ async function main(): Promise<void> {
   const platformView = new DesktopPlatformView(join(app.getAppPath(), 'lib', 'preload-platform-account.cjs'),
     () => locale.id === 'zh-CN' ? 'zh_CN' : 'en_US', process.platform === 'win32' ? 'win32' : 'darwin',
     owner => isMandatory() || updateOverlays.input(owner).blocked)
+  let nativeAuthorization = new NativeAuthorizationController(undefined, () => enterWorkspace())
+  let readNativeAuthorization: (() => ReturnType<DesktopHostProcess['nativeAuthorizationState']>) | undefined
+  let stopNativeAuthorizationState: (() => void) | undefined
   const backend = new DesktopBackendController((onFailure) => {
     const hostInspectPort = developmentHostInspectPort(development)
     const host = new DesktopHostProcess(resources.node, resources.dsh, activeProject,
@@ -560,12 +564,26 @@ async function main(): Promise<void> {
         if (ready.injections === undefined) throw new Error('Desktop Host did not provide boot injections')
         injections = ready.injections
         welcomeBackend = connectDesktopWelcome(ready.url, cookie)
+        const nativeState = await host.nativeAuthorizationState()
+        readNativeAuthorization = () => host.nativeAuthorizationState()
+        await nativeAuthorization.dispose()
+        nativeAuthorization = new NativeAuthorizationController(nativeState === null ? undefined : host.nativeAuthorizationProvider(),
+          () => enterWorkspace(), owner => isMandatory() || updateOverlays.input(owner).blocked)
+        if (mainWindow !== undefined && !mainWindow.isDestroyed()) nativeAuthorization.attach(mainWindow)
+        if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) nativeAuthorization.attach(welcomeWindow)
+        stopNativeAuthorizationState?.()
+        stopNativeAuthorizationState = host.onNativeAuthorizationState((state) => {
+          if (quitting || nativeState === null || state.status !== 'signed-out' || !enteredWorkspace) return
+          enteredWorkspace = false
+          void nativeAuthorization.withdraw().then(showWelcome).catch((error: unknown) => { console.error('Native authorization entry unavailable', error) })
+        })
         analyticsEnabled = await welcomeBackend.analyticsEnabled().catch(() => false)
         if (!reportedLaunch) { reportedLaunch = true; void track('desktop_app_launch', {}) }
         stopAccount?.()
         const accountBackend = welcomeBackend.account
         stopAccount = accountBackend.watch((state) => {
           if (quitting) return
+          if (nativeState !== null) return
           if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.webContents.send(WELCOME_IPC.state, state)
           const attempt = state.attempt
           if (attempt?.phase === 'waiting-browser' && attempt.authorizeUrl !== undefined && openedAttempt !== attempt.id) {
@@ -591,6 +609,7 @@ async function main(): Promise<void> {
         }, () => {
           // The stream reconnects; a transport failure does not change account state.
         }, () => {
+          if (nativeState !== null) return
           void readWelcomeState().then(async (value) => {
             if (!needsWelcome(value) || quitting) return
             pendingWelcomeNotice = 'session-expired'
@@ -604,6 +623,10 @@ async function main(): Promise<void> {
       stop: async () => {
         analyticsEnabled = false
         stopAccount?.()
+        stopNativeAuthorizationState?.()
+        stopNativeAuthorizationState = undefined
+        await nativeAuthorization.withdraw()
+        readNativeAuthorization = undefined
         try { await host.stop(requireCleanStop) }
         catch (error) {
           if (!requireCleanStop || !(error instanceof DesktopHostUncleanExitError)) throw error
@@ -676,7 +699,11 @@ async function main(): Promise<void> {
 
   const readWelcomeState = async () => {
     if (backend.host === undefined || welcomeBackend === undefined) throw new Error('desktop welcome: backend unavailable')
-    return welcomeBackend.read()
+    const state = await welcomeBackend.read()
+    const nativeState = await readNativeAuthorization?.()
+    return nativeState === undefined || nativeState === null ? state : {
+      ...state, loggedIn: nativeState.status === 'signed-in', hasApiKey: false, writable: false,
+    }
   }
   stopForRecovery = async () => {
     const reports = stopOperationReports()
@@ -743,6 +770,7 @@ async function main(): Promise<void> {
         mandatoryUI?.preparingRestart(stillActive)
         // The embedded Platform document holds credentials issued by the Host that is about to stop.
         await platformView.closeAndWait()
+        await nativeAuthorization.withdraw()
         await disposeFileDrag().catch((error: unknown) => { console.error(error) })
         requireCleanStop = true
         updateStopFailure = undefined
@@ -1144,7 +1172,7 @@ async function main(): Promise<void> {
     updates.dispose()
   })
 
-  const applicationIconPath = development ? join(app.getAppPath(), 'resources', 'icon-windows.png')
+  const applicationIconPath = development ? join(app.getAppPath(), 'resources', ...(product?.artifactStem === 'uwork-next' ? ['uwork', 'icon.png'] : ['icon-windows.png']))
     : join(process.resourcesPath, 'icon.png')
   app.setAboutPanelOptions({
     applicationName: product?.name ?? 'DeepSeek Harness',
@@ -1311,6 +1339,7 @@ async function main(): Promise<void> {
   const createMainWindow = (): BrowserWindow => {
     const window = createWindow(appPreload, false, true)
     mainWindow = window
+    nativeAuthorization.attach(window)
     browserGuests.bind(window, (guest, name) => shortcuts.attachGuest(window, guest, name))
     shortcuts.attach(window)
     window.on('focus', automaticCheck)
@@ -1419,7 +1448,7 @@ async function main(): Promise<void> {
           return { ok: true }
         },
         skip: enterWorkspace,
-      })
+      }, (window) => { nativeAuthorization.attach(window) })
       const window = welcomeWindow
       window.once('closed', () => {
         void welcomeBackend?.account.state().then((state) => {
@@ -1505,6 +1534,7 @@ async function main(): Promise<void> {
         throw error
       }),
       platformView.dispose(),
+      nativeAuthorization.dispose(),
       disposeFileDrag(),
     ].map(cleanup => cleanup.catch((error: unknown) => { console.error(error) })))
       .then(() => { app.quit() })
@@ -1520,6 +1550,7 @@ async function main(): Promise<void> {
       mandatoryUI?.dispose()
       // Installation preparation already awaited Platform storage cleanup.
       void platformView.dispose().catch((error: unknown) => { console.error(error) })
+      void nativeAuthorization.dispose().catch((error: unknown) => { console.error(error) })
       return
     }
     if (quitting) return

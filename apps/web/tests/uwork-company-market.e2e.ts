@@ -125,6 +125,12 @@ it.skipIf(webSnapshotMode() === 'record')('browses anonymously, searches every u
   await connectFreshWorkspace(page, resources.scaffold.workspaceCwd)
   const composer = page.locator('[data-composer-input][contenteditable="true"]').last()
   await composer.waitFor()
+  // The product has no guessed initial model; explicitly choose the authored replay route.
+  const model = page.getByRole('button', { name: /^Select model(?:, current|$)/ })
+  const selected = (await model.getAttribute('aria-label'))?.includes(', current:') === true
+  await model.click()
+  if (selected) await page.getByRole('menuitem', { name: /^Model\b/ }).click()
+  await page.getByRole('menuitemradio', { name: 'DeepSeek-V4-Flash', exact: true }).click()
   await composer.fill('/weather')
   await expect.poll(() => page.getByRole('listbox', { name: 'Trigger suggestions' })
     .getByRole('option', { name: /weather/u }).count()).toBe(1)
