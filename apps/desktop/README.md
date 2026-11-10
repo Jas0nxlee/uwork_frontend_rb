@@ -12,6 +12,8 @@ Desktop runs the Harness workspace in a native application. This reference cover
 
 This fork declares its distribution identity in `package.json` under `dshDesktopProduct`. Electron and the bundled CLI use `~/.uwork/harness-preview` by default; an explicit `DSH_HOME` takes precedence. Electron browser storage uses the separate `UWork Next Preview` directory. Existing `.dsh` and old UWork data are not imported automatically. Packaging and artifact verification read the same product and executable names. The runtime package version remains independent of this identity.
 
+The Desktop Host publication includes the shared startup identity helper and its declarations beside the Host and CLI entries.
+
 ## Table of Contents
 
 - [Application overview](#application-overview)

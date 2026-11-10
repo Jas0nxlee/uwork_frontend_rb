@@ -12,6 +12,8 @@ Desktop 在原生应用中运行 Harness 工作区。本参考文档说明应用
 
 此 fork 在 `package.json` 的 `dshDesktopProduct` 中声明发行身份。Electron 和捆绑 CLI 默认使用 `~/.uwork/harness-preview`；显式 `DSH_HOME` 优先。Electron 浏览器存储使用独立的 `UWork Next Preview` 目录。已有 `.dsh` 和旧 UWork 数据不会自动导入。打包和产物校验读取相同的产品及可执行文件名称。运行时包版本与发行身份保持独立。
 
+Desktop Host 发布文件除 Host 和 CLI 入口外，还包含共享的启动身份辅助模块及其类型声明。
+
 ## 目录
 
 - [应用概览](#application-overview)
