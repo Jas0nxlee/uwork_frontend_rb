@@ -9,7 +9,7 @@ kind: "package-bundle"
 
 ## 概述
 
-为 dsh Web 界面加入 UWork 侧栏与首页品牌，关闭默认鲸鱼品牌层。此 bundle 必须排在基础与 Web bundle 之后；当前尚未由桌面发行自动内置。
+为 dsh Web 界面加入 UWork 侧栏与首页品牌，关闭默认鲸鱼品牌层。此 bundle 必须排在基础与 Web bundle 之后；此 fork 的 Desktop 产品配置将该层纳入初始化、打包和恢复。
 
 ## 目录
 
@@ -69,7 +69,7 @@ kind: "package-bundle"
 <a id="known-limitations-and-deferred-work"></a>
 
 - 当前只有品牌层，尚未装配企业身份、公司市场或企业网关统计。
-- 两平台签名 runtime 内置、恢复模式和安装验收尚待完成。
+- Windows x64 和 Mac ARM 签名安装包及原生验收尚待完成。
 
 <a id="dev-note"></a>
 ### 开发备注

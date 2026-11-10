@@ -97,6 +97,19 @@ describe('desktop package-set selection', () => {
     }).toThrow(/lib\/index\.js/u)
     expect(() => { assertDesktopHostPackageFiles(files.slice(0, 1)) }).toThrow(/lib\/cli\.js/u)
   })
+
+  it.each([
+    { platform: 'win32', arch: 'x64' }, { platform: 'darwin', arch: 'arm64' },
+  ] as const)('includes configured product bundles and their production closure for $platform/$arch', (target) => {
+    const available = targetManifests()
+    const name = '@deepseek-ai/dsh-uwork-desktop'
+    available.set(name, packed(name, { dependencies: { '@deepseek-ai/dsh-client-ui-uwork': '1.0.0' } }))
+    available.set('@deepseek-ai/dsh-client-ui-uwork', packed('@deepseek-ai/dsh-client-ui-uwork'))
+    expect(selectDesktopPackageClosure(available, target, [name]).map(entry => entry.manifest.name))
+      .toEqual(expect.arrayContaining([name, '@deepseek-ai/dsh-client-ui-uwork']))
+    available.delete(name)
+    expect(() => selectDesktopPackageClosure(available, target, [name])).toThrow(`omit ${name}`)
+  })
 })
 
 const macProvider = '@deepseek-ai/dsh-experimental-cua-macos'

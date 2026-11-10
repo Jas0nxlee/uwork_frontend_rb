@@ -2,7 +2,7 @@
 
 ## 当前进展
 
-2026-11-10，在 `codex/uwork-desktop-migration` 分支开始实施。当前已完成桌面身份与路径基础改造，并增加可选的 UWork 品牌层；整个迁移尚未完成。[执行清单](todo.md)保留尚未验收的事项。
+2026-11-10，在 `codex/uwork-desktop-migration` 分支开始实施。当前已完成桌面身份与路径基础改造，UWork 品牌层已接入桌面产品的启动、打包和恢复配置；整个迁移尚未完成。[执行清单](todo.md)保留尚未验收的事项。
 
 发行元数据集中在 `apps/desktop/package.json` 的 `dshDesktopProduct`，由 Electron Main、捆绑 CLI、构建与产物脚本共同读取。默认产品名和 Electron 存储目录为 UWork Next Preview，home 为 `.uwork/harness-preview`，外部协议为 `uwork-next`，安装包前缀为 `uwork-next`。显式 DSH_HOME 优先，未声明发行元数据的普通 dsh 清单保持原行为。
 
@@ -18,7 +18,7 @@
 
 ## 尚未完成
 
-UWork UI 目前只有可选的品牌层；企微与模型自动配置、公司 SkillHub 市场、企业网关统计尚未接入。原生图标、文案、独立更新部署及 bundle 恢复集合尚未完成。当前没有生成并验收 Windows x64 或 Mac ARM 安装包，也没有进行真实登录或安装升级验收。
+UWork UI 目前只有品牌层；企微与模型自动配置、公司 SkillHub 市场、企业网关统计尚未接入。原生图标、文案和独立更新部署尚未完成。当前没有生成并验收 Windows x64 或 Mac ARM 安装包，也没有进行真实登录或安装升级验收。
 
 Office 编辑按用户最新要求延期。正式发布前仍须完成执行清单全部必交付项。
 
@@ -34,6 +34,14 @@ Office 编辑按用户最新要求延期。正式发布前仍须完成执行清�
 
 Conversation 相关 55 个测试文件、904 项测试通过；build:artifacts 八项及其后的 build:check 两项通过；默认页面构建产物启动两项通过；doc-sync 43 项通过。此检查验证默认页面和标题扩展能力，不代表 UWork 全套 UI 或桌面发行已完成。
 
-已增加可选的 `client/ui-uwork` 和 `bundle/uwork-desktop`，通过侧栏、首页标题、图标和背景插槽显示 UWork/UCAS 资源，bundle 同时禁用默认品牌层。源资产保留 Apache-2.0 许可与来源记录，许可文件列入严格发行清单。真实 CLI 的临时 profile 按 base → web-app → uwork-desktop 顺序成功解析；真实浏览器固定快照重放通过，并检查了 1680/1000px 窗口中的浅暗品牌页面。当前还没有内置到默认桌面 profile 和签名 runtime，T06 只完成建立 bundle 的子项；完整布局、模式、问候和其余 UI 仍待迁入，T19 未整项验收。
+`client/ui-uwork` 和 `bundle/uwork-desktop` 通过侧栏、首页标题、图标和背景插槽显示 UWork/UCAS 资源，bundle 同时禁用默认品牌层。源资产保留 Apache-2.0 许可与来源记录，许可文件列入严格发行清单。真实 CLI 的临时 profile 按 base → web-app → uwork-desktop 顺序成功解析；真实浏览器固定快照重放通过，并检查了 1680/1000px 窗口中的浅暗品牌页面。桌面产品默认选择此 bundle，普通 Web profile 仍可独立选择。完整布局、模式、问候和其余 UI 仍待迁入，T19 未整项验收。
 
 新品牌插件与 bundle 共七项测试通过，源码语句、分支、函数和行覆盖率均为 100%。发行约束测试与品牌测试共 174 项通过；约束和八语言元数据检查通过。最新运行时代码 build:artifacts 八项及其后的 build:check 两项通过，doc-sync 43 项通过。完整 lint 只有未改动文件中的既有 unused-disable 警告，新增文件最终 lint 通过。两个新包的独立 publint 通过，保留仓库既有 src 导出提示；完整 hygiene 的 vendor rescope 检查有六个迁移前问题，publint 读取 inspector 生成目录中的副本文件阻塞后被终止，不能报为全量通过。
+
+## 桌面默认装配与恢复
+
+`dshDesktopProduct.bundles` 追加产品必需层，开发启动、生产包集合、Electron Main、profile 初始化与恢复读取相同配置。生产依赖选择对 Windows x64 和 Mac ARM 均包含 UWork 界面包；缺少必需包、包声明或补丁会在修改用户 profile 前报错。已有 profile 补上必需层并保留后续用户 bundles；恢复备份用户 patch，只启用必需层并保留用户包文件。
+
+真实构建后的 Desktop Host 已完成初始化、启动、故障恢复和再次启动。两次启动图均包含 UWork 且不含默认品牌模块，首页 HTML 包含 UWork Client 启动数据。此测试不调用模型或真实企业服务；两个独立进程并发执行同一流程也通过。必需包声明、补丁缺失及补丁损坏的回归检查通过。测试不构成 Electron GUI、签名资源或安装包验收，T06 的跨平台成品检查仍待后续打包完成。
+
+相关九个单元测试文件通过；后续新增的缺失 bundle 声明回归用例及所在文件共 40 项通过，一项既有 Windows 路径大小写用例在 Mac 跳过。最终 build:artifacts 八项和后续 build:check 两项通过；构建后 Host 测试通过。冻结锁文件安装、包依赖策略和 workspace 发行约束检查通过。完整 lint 仅报告未修改文件中既有的 unused-disable 警告。

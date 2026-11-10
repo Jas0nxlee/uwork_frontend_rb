@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -13,6 +13,8 @@ import {
   verifyDesktopCorePackageSet,
   type DesktopCorePackageRecord,
 } from '../src/core-package-set.ts'
+import { createRuntimeProjectMetadata } from '../src/project-manager.ts'
+import { DESKTOP_HOST_PROTOCOL_VERSION } from '../src/host-protocol.ts'
 
 const roots: string[] = []
 
@@ -57,6 +59,27 @@ afterEach(() => {
 })
 
 describe('desktop core package set', () => {
+  it('requires product bundles in the verified package set before writing runtime metadata', () => {
+    const { root, dsh, base, host } = packageSetProject()
+    const release = { schemaVersion: 1, version: '1.2.3', hostProtocolVersion: DESKTOP_HOST_PROTOCOL_VERSION,
+      nodeVersion: '24.17.0', pnpmVersion: '11.7.0' } as const
+    const name = '@deepseek-ai/dsh-uwork-desktop'
+    const bundles = [base.name, name]
+    expect(() => { createRuntimeProjectMetadata(root, release, bundles) }).toThrow(`omits required bundle ${name}`)
+    expect(existsSync(join(root, 'package.json'))).toBe(false)
+    const body = Buffer.from('uwork')
+    const uwork = record(name, 'uwork.tgz', body)
+    writeFileSync(join(root, DESKTOP_PACKAGES_DIR, uwork.file), body)
+    writeFileSync(join(root, DESKTOP_PACKAGE_SET_FILE), JSON.stringify({ schemaVersion: 1, packages: [dsh, base, host, uwork] }))
+    createRuntimeProjectMetadata(root, release, bundles)
+    const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+      dependencies: Record<string, string>
+      dsh: { profile: { bundles: string[] } }
+    }
+    expect(manifest.dsh.profile.bundles).toEqual(bundles)
+    expect(manifest.dependencies[name]).toBe('file:./desktop-packages/uwork.tgz')
+  })
+
   it('pins the direct dsh dependency and every internal package to local tarballs', () => {
     const { root } = packageSetProject()
     const packageSet = verifyDesktopCorePackageSet(root, '1.2.3')

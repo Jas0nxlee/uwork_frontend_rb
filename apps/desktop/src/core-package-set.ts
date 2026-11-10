@@ -28,7 +28,7 @@ export interface DesktopCorePackageRecord {
   readonly integrity: string
 }
 
-/** Complete union of the first-party package closures rooted at dsh and its private Desktop Host. */
+/** First-party package closures rooted at dsh, its private Host and the distribution's bundles. */
 export interface DesktopCorePackageSet {
   readonly schemaVersion: 1
   readonly packages: readonly DesktopCorePackageRecord[]

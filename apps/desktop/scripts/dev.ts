@@ -11,6 +11,8 @@ import { developmentRuntimeDirectory, resolveDesktopBuildTarget } from './deskto
 import { prepareDevelopmentProject } from './development-project.ts'
 import { prepareDevelopmentApp } from './development-app.ts'
 import { preparePrimaryRuntime } from './prepare-primary-runtime.ts'
+import { desktopProduct } from '@deepseek-ai/dsh-desktop-host'
+import { resolveDesktopProfileBundles } from '../src/profile-bundles.ts'
 
 const APP_ROOT = resolve(import.meta.dirname, '..')
 const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
@@ -119,6 +121,8 @@ async function main(): Promise<void> {
     dependencyDir: join(REPOSITORY_ROOT, 'node_modules', '.pnpm', 'node_modules'),
     release,
     target: resolveDesktopBuildTarget(),
+    bundles: resolveDesktopProfileBundles(desktopProduct(JSON.parse(readFileSync(join(APP_ROOT, 'package.json'), 'utf8')))),
+    bundleAnchor: join(APP_ROOT, 'package.json'),
   })
   await preparePrimaryRuntime()
   await launchElectron()

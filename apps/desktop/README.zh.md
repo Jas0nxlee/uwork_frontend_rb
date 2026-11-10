@@ -14,6 +14,8 @@ Desktop 在原生应用中运行 Harness 工作区。本参考文档说明应用
 
 Desktop Host 发布文件除 Host 和 CLI 入口外，还包含共享的启动身份辅助模块及其类型声明。
 
+`dshDesktopProduct.bundles` 按顺序列出标准 Web bundles 之后的产品层，此 fork 选择 [UWork 层](../../packages/bundle/uwork-desktop/README.zh.md)。打包将其生产依赖集合纳入本地包集，开发启动从应用清单解析相同的层。profile 准备会将必需层补至用户 bundles 之前；恢复只保留必需层，仍保留已安装包文件。运行时缺少必需包时，在修改 profile 前停止准备。
+
 ## 目录
 
 - [应用概览](#application-overview)

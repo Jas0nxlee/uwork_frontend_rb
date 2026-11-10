@@ -10,6 +10,8 @@ export interface DesktopProduct {
   readonly defaultHome: string
   readonly protocol: string
   readonly artifactStem: string
+  /** Ordered product layers appended after the standard Web profile. */
+  readonly bundles?: readonly string[]
 }
 
 function object(value: unknown): value is Record<string, unknown> {
@@ -43,7 +45,15 @@ export function desktopProduct(manifest: unknown): DesktopProduct | undefined {
     || !/^[a-z][a-z0-9-]+$/u.test(protocol) || !/^[a-z0-9][a-z0-9-]*$/u.test(artifactStem)) {
     throw new Error('desktop product: invalid installation identity or default home')
   }
-  return { name, appId, userData, defaultHome, protocol, artifactStem }
+  const bundles = value.bundles
+  if (bundles !== undefined && (!Array.isArray(bundles)
+    || !bundles.every((entry): entry is string => typeof entry === 'string'
+      && /^(?:@[a-z0-9][a-z0-9._~-]*\/[a-z0-9][a-z0-9._~-]*|[a-z0-9][a-z0-9._~-]*)$/u.test(entry))
+    || new Set(bundles).size !== bundles.length)) {
+    throw new Error('desktop product: invalid or duplicate bundles')
+  }
+  return { name, appId, userData, defaultHome, protocol, artifactStem,
+    ...(bundles === undefined ? {} : { bundles: [...bundles] }) }
 }
 
 /**

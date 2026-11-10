@@ -250,6 +250,7 @@ const harness = await vi.hoisted(async () => {
     showItemInFolder: vi.fn(),
     protocolHandle: vi.fn<(scheme: string, handler: (request: Request) => Response | Promise<Response>) => void>(),
     applyRelease: vi.fn(() => { preparing.resolve(); return prepared.promise }),
+    projectBundles: vi.fn<(bundles?: readonly string[]) => void>(),
     disableAllPlugins: vi.fn(async () => {
       pluginsEnabled = false
       return 'desktop-test-profile/cordis.patch.yml.bak-1789555200000'
@@ -359,6 +360,7 @@ vi.mock('../src/runtime-tree.ts', () => ({ readDesktopRuntime: () => ({ release:
 vi.mock('../src/paths.ts', () => ({ resolveDesktopPaths: () => ({ profile: 'desktop-test-profile' }) }))
 vi.mock('../src/project-manager.ts', () => ({
   DesktopProjectManager: class {
+    constructor(_paths: unknown, _runtime: unknown, bundles?: readonly string[]) { harness.projectBundles(bundles) }
     readonly applyRelease = harness.applyRelease
     disableAllPlugins = harness.disableAllPlugins
 
@@ -752,10 +754,14 @@ describe('desktop main startup', () => {
       name: 'UWork Next Preview', appId: 'io.github.jas0nxlee.uwork.next',
       userData: 'UWork Next Preview', defaultHome: '~/.uwork/harness-preview',
       protocol: 'uwork-next', artifactStem: 'uwork-next',
+      bundles: ['@deepseek-ai/dsh-uwork-desktop'],
     }
     const explicitHome = process.env.DSH_HOME
     await readyForUpdate()
     expect(harness.app.setName).toHaveBeenCalledWith('UWork Next Preview')
+    expect(harness.projectBundles).toHaveBeenCalledWith([
+      '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-uwork-desktop',
+    ])
     expect(harness.app.setPath).toHaveBeenCalledWith('userData', join(harness.app.getPath('appData'), 'UWork Next Preview'))
     expect(harness.app.setAppUserModelId).toHaveBeenCalledWith('io.github.jas0nxlee.uwork.next')
     expect(harness.app.setAsDefaultProtocolClient).toHaveBeenCalledWith('uwork-next')

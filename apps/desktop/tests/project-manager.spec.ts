@@ -5,7 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { resolveDesktopPaths } from '../src/paths.ts'
 import { DesktopProjectManager } from '../src/project-manager.ts'
 import { readProfilePlugins } from '@deepseek-ai/dsh-app-boot'
-import { runtimeFixture } from './runtime-fixture.ts'
+import { runtimeFixture, writePackage } from './runtime-fixture.ts'
+import { readDesktopRuntime, writeDesktopRuntime } from '../src/runtime-tree.ts'
 
 const roots: string[] = []
 function temporaryRoot(): string {
@@ -43,6 +44,62 @@ afterEach(() => {
 })
 
 describe('desktop external plugin profile', () => {
+  it('restores required product layers before user bundles and retains them during recovery', async () => {
+    const { manager: original } = setup()
+    await original.applyRelease()
+    seedPlugin(original)
+    const bundles = ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-uwork-desktop']
+    const runtime = readDesktopRuntime(original.runtime.dsh)
+    const name = '@deepseek-ai/dsh-uwork-desktop'
+    writePackage(join(original.runtime.dsh, 'node_modules'), name, { dsh: { bundle: { patch: './bundle.yml' } } })
+    writeFileSync(join(original.runtime.dsh, 'node_modules', name, 'bundle.yml'), '[]\n')
+    writeDesktopRuntime(original.runtime.dsh, runtime.release, [...runtime.sharedPackages.map(entry => entry.name), name])
+    const manager = new DesktopProjectManager(original.paths, original.runtime, bundles)
+    await manager.applyRelease()
+    const manifestPath = join(manager.paths.profile, 'package.json')
+    const readBundles = () => (JSON.parse(readFileSync(manifestPath, 'utf8')) as {
+      dsh: { profile: { bundles: string[] } }
+    }).dsh.profile.bundles
+    expect(readBundles()).toEqual([...bundles, 'plugin'])
+    const before = readFileSync(manifestPath, 'utf8')
+    await manager.applyRelease()
+    expect(readFileSync(manifestPath, 'utf8')).toBe(before)
+    await manager.disableAllPlugins()
+    expect(readBundles()).toEqual(bundles)
+    expect(existsSync(join(manager.paths.profile, 'node_modules/plugin/package.json'))).toBe(true)
+  })
+
+  it('refuses an incomplete runtime before modifying an existing product profile', async () => {
+    const { manager: original } = setup()
+    await original.applyRelease()
+    const manifest = join(original.paths.profile, 'package.json')
+    const before = readFileSync(manifest, 'utf8')
+    const manager = new DesktopProjectManager(original.paths, original.runtime,
+      ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-uwork-desktop'])
+    await expect(manager.applyRelease()).rejects.toThrow('omits required bundle @deepseek-ai/dsh-uwork-desktop')
+    expect(readFileSync(manifest, 'utf8')).toBe(before)
+  })
+
+  it.each(['missing', 'invalid'] as const)('refuses a %s built-in patch before changing profile files', async (failure) => {
+    const { manager } = setup()
+    await manager.applyRelease()
+    const manifest = join(manager.paths.profile, 'package.json')
+    const before = readFileSync(manifest, 'utf8')
+    const patch = join(manager.runtime.dsh, 'node_modules/@deepseek-ai/dsh-web-app/bundle.yml')
+    if (failure === 'missing') unlinkSync(patch)
+    else writeFileSync(patch, ': invalid bundle patch')
+    await expect(manager.applyRelease()).rejects.toThrow()
+    expect(readFileSync(manifest, 'utf8')).toBe(before)
+  })
+
+  it('rejects a required package that no longer declares a bundle', async () => {
+    const { manager } = setup()
+    const manifest = join(manager.runtime.dsh, 'node_modules/@deepseek-ai/dsh-web-app/package.json')
+    writeFileSync(manifest, '{}\n')
+    await expect(manager.applyRelease()).rejects.toThrow('declares no bundle')
+    expect(existsSync(join(manager.paths.profile, 'package.json'))).toBe(false)
+  })
+
   it('preserves installed packages, profile state, and the lockfile when preparing a launch', async () => {
     const { manager } = setup()
     await manager.applyRelease()

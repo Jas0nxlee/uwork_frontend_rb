@@ -14,6 +14,8 @@ This fork declares its distribution identity in `package.json` under `dshDesktop
 
 The Desktop Host publication includes the shared startup identity helper and its declarations beside the Host and CLI entries.
 
+`dshDesktopProduct.bundles` lists ordered product layers after the standard Web bundles. This fork selects the [UWork layer](../../packages/bundle/uwork-desktop/README.md). Packaging includes its production dependency closure in the local package set. Development resolves the same layers from the application manifest. Profile preparation restores required layers ahead of user bundles; recovery retains only those required layers and preserves installed package files. Missing required runtime packages stop preparation before profile changes.
+
 ## Table of Contents
 
 - [Application overview](#application-overview)

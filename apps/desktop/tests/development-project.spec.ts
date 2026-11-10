@@ -31,6 +31,47 @@ afterEach(() => {
 })
 
 describe('desktop development project', () => {
+  it('links configured product bundles and their unhoisted dependencies into the development runtime', () => {
+    const root = temporaryRoot()
+    const cli = join(root, 'cli')
+    const host = join(root, 'host')
+    const app = join(root, 'app')
+    const hoisted = join(root, 'hoisted')
+    for (const directory of [cli, host, app, hoisted]) mkdirSync(directory, { recursive: true })
+    writeFileSync(join(cli, 'package.json'), JSON.stringify({ name: '@deepseek-ai/dsh', version: '1.2.3' }))
+    writeFileSync(join(host, 'package.json'), JSON.stringify({ name: '@deepseek-ai/dsh-desktop-host', version: '1.2.3' }))
+    mkdirSync(join(host, 'lib'))
+    writeFileSync(join(host, 'lib/index.js'), '')
+    writeFileSync(join(app, 'package.json'), '{}')
+    const bundles = ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-uwork-desktop']
+    const dependency = '@deepseek-ai/dsh-client-ui-uwork'
+    const ui = join(root, 'ui')
+    mkdirSync(ui)
+    writeFileSync(join(ui, 'package.json'), JSON.stringify({ name: dependency, version: '1.2.3' }))
+    for (const name of bundles) {
+      const directory = join(app, 'node_modules', name)
+      mkdirSync(directory, { recursive: true })
+      writeFileSync(join(directory, 'package.json'), JSON.stringify({ name, version: '1.2.3',
+        dependencies: name === bundles[2] ? { [dependency]: 'workspace:*' } : {},
+      }))
+      if (name === bundles[2]) {
+        const link = join(directory, 'node_modules', dependency)
+        mkdirSync(join(link, '..'), { recursive: true })
+        symlinkSync(ui, link, process.platform === 'win32' ? 'junction' : 'dir')
+      }
+    }
+    const project = prepareDevelopmentProject({ projectDir: join(root, 'runtime'), cliDir: cli, hostDir: host,
+      dependencyDir: hoisted, release: release(), target: 'mac-arm64', bundles, bundleAnchor: join(app, 'package.json') })
+    const manifest = JSON.parse(readFileSync(join(project, 'package.json'), 'utf8')) as { dsh: { profile: { bundles: string[] } } }
+    expect(manifest.dsh.profile.bundles).toEqual(bundles)
+    expect(realpathSync(join(project, 'node_modules', dependency))).toBe(realpathSync(ui))
+    for (const name of bundles) {
+      expect(realpathSync(join(project, 'node_modules', name))).toBe(realpathSync(join(app, 'node_modules', name)))
+    }
+    const descriptor = JSON.parse(readFileSync(join(project, 'desktop-runtime.json'), 'utf8')) as { sharedPackages: { name: string }[] }
+    expect(descriptor.sharedPackages.map(entry => entry.name)).toEqual(expect.arrayContaining([...bundles, dependency]))
+  })
+
   it('includes declared workspace packages missing from the hoist directory in the runtime inventory', () => {
     const root = temporaryRoot()
     const cli = join(root, 'cli')
@@ -66,6 +107,12 @@ describe('desktop development project', () => {
     writeFileSync(join(host, 'package.json'), '{"name":"@deepseek-ai/dsh-desktop-host","version":"1.2.3"}\n')
     writeFileSync(join(host, 'lib', 'index.js'), '')
     writeFileSync(join(dependencies, '@deepseek-ai', 'dsh', 'package.json'), '{}\n')
+    for (const name of ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app']) {
+      const directory = join(dependencies, name)
+      mkdirSync(directory, { recursive: true })
+      writeFileSync(join(directory, 'package.json'), JSON.stringify({ name, version: '1.2.3', dsh: { bundle: { patch: './bundle.yml' } } }))
+      writeFileSync(join(directory, 'bundle.yml'), '[]\n')
+    }
     mkdirSync(join(dependencies, 'plain-dependency'))
     writeFileSync(join(dependencies, 'plain-dependency', 'package.json'), '{}\n')
     mkdirSync(join(dependencies, '@scope', 'dependency'))

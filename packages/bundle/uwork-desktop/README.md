@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Add UWork sidebar and home branding to the dsh Web surface and withdraw the default whale layer. Apply after the base and Web bundles; the desktop distribution does not yet include this layer automatically.
+Add UWork sidebar and home branding to the dsh Web surface and withdraw the default whale layer. Apply after the base and Web bundles; this fork's Desktop product configuration includes the layer in initialization, packaging and recovery.
 
 ## Table of Contents
 
@@ -69,7 +69,7 @@ None.
 <a id="known-limitations-and-deferred-work"></a>
 
 - This layer currently provides branding; enterprise identity, company market, and enterprise gateway usage are not yet composed.
-- Inclusion in both signed platform runtimes, recovery mode, and installer acceptance remain pending.
+- Signed Windows x64 and Mac ARM installers and their native acceptance remain pending.
 
 <a id="dev-note"></a>
 ### Dev Note

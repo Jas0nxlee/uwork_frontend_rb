@@ -22,13 +22,15 @@ import {
 import type { DesktopPaths } from './paths.ts'
 import type { DesktopRelease } from './release.ts'
 import { readDesktopRuntime } from './runtime-tree.ts'
-import { initProfile, removeLinkProjections, sanitizeProfile } from '@deepseek-ai/dsh-app-boot'
-import { PROFILE_TEMPLATES, type ProfileTemplate } from '@deepseek-ai/dsh-official-bundles'
+import {
+  bundlePatchPaths, initProfile, loadOverlayPatches, readProfileManifest,
+  removeLinkProjections, sanitizeProfile, writeProfileBundles,
+} from '@deepseek-ai/dsh-app-boot'
+import { resolveDesktopProfileBundles } from './profile-bundles.ts'
 
 const PROJECT_NAME = '@deepseek-ai/dsh-desktop-runtime'
 const DSH_PACKAGE = '@deepseek-ai/dsh'
 const CORE_BUILD_PACKAGE = '@deepseek-ai/dsh-subprocess-local'
-const WEB_PROFILE = PROFILE_TEMPLATES.web as ProfileTemplate
 const WORKSPACE_SETTINGS = 'nodeLinker: hoisted\nautoInstallPeers: false\n'
 function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${JSON.stringify(value, undefined, 2)}\n`, { mode: 0o600 })
@@ -61,10 +63,12 @@ export class DesktopProjectManager {
   /**
    * @param paths - Electron-owned package state and reserved desktop profile paths.
    * @param runtime - location of the bundled application runtime.
+   * @param bundles - Ordered built-in layers retained during initialization and recovery.
    */
   constructor(
     readonly paths: DesktopPaths,
     readonly runtime: { readonly dsh: string },
+    readonly bundles: readonly string[] = resolveDesktopProfileBundles(),
   ) {}
 
   /**
@@ -73,7 +77,7 @@ export class DesktopProjectManager {
    * @returns Backup path after the locked profile write, or undefined if the patch was absent.
    */
   async disableAllPlugins(): Promise<string | undefined> {
-    return this.withLock(() => sanitizeProfile('dsh', this.paths.profile, WEB_PROFILE.bundles))
+    return this.withLock(() => sanitizeProfile('dsh', this.paths.profile, this.bundles))
   }
 
   /**
@@ -82,9 +86,18 @@ export class DesktopProjectManager {
   async applyRelease(): Promise<void> {
     await this.withLock(() => {
       // Validation only: an unreadable or mismatched runtime descriptor stops preparation before the Host starts.
-      readDesktopRuntime(this.runtime.dsh)
+      const runtime = readDesktopRuntime(this.runtime.dsh)
+      for (const name of this.bundles) {
+        if (!runtime.sharedPackages.some(entry => entry.name === name)) {
+          throw new Error(`desktop project: runtime omits required bundle ${name}`)
+        }
+        const directory = join(this.runtime.dsh, 'node_modules', name)
+        const bundle = readProfileManifest('desktop project', directory).dsh?.bundle
+        if (bundle === undefined) throw new Error(`desktop project: required package ${name} declares no bundle`)
+        for (const patch of bundlePatchPaths(directory, bundle)) loadOverlayPatches('desktop project', patch)
+      }
       migrateProfileSettings(this.paths.profile)
-      createPluginProfile(this.paths.profile)
+      createPluginProfile(this.paths.profile, this.bundles)
       removeLinkProjections(this.paths.profile)
     })
   }
@@ -129,16 +142,29 @@ export class DesktopProjectManager {
   }
 }
 
-/** Create build-only project metadata for materializing the signed runtime. */
-export function createRuntimeProjectMetadata(projectDir: string, release: DesktopRelease): void {
+/**
+ * Create project metadata for materializing the signed runtime.
+ * @param projectDir - Build directory containing the verified local package set.
+ * @param release - Release identity required of the packaged CLI and Host.
+ * @param bundles - Required profile layers supplied by the local package set.
+ * @throws When any required profile layer is absent from the package set.
+ */
+export function createRuntimeProjectMetadata(
+  projectDir: string, release: DesktopRelease, bundles: readonly string[] = resolveDesktopProfileBundles(),
+): void {
   mkdirSync(projectDir, { recursive: true, mode: 0o700 })
   const packageSet = verifyDesktopCorePackageSet(projectDir, release.version)
+  for (const name of bundles) {
+    if (!packageSet.packages.some(entry => entry.name === name)) {
+      throw new Error(`desktop project: package set omits required bundle ${name}`)
+    }
+  }
   const manifest = {
     name: PROJECT_NAME,
     private: true,
     version: '0.0.0',
     dependencies: desktopCorePackageOverrides(packageSet),
-    dsh: { profile: { bundles: [...WEB_PROFILE.bundles] } },
+    dsh: { profile: { bundles: [...bundles] } },
   }
   writeJson(join(projectDir, 'package.json'), manifest)
   writeFileSync(
@@ -152,8 +178,11 @@ export function createRuntimeProjectMetadata(projectDir: string, release: Deskto
  * Create metadata for the unpackaged development project that links the current workspace.
  * @param projectDir - Disposable development profile directory.
  * @param release - Release identity shared by the linked CLI package and Electron shell.
+ * @param bundles - Ordered built-in profile layers available from the linked workspace.
  */
-export function createDevelopmentProjectMetadata(projectDir: string, release: DesktopRelease): void {
+export function createDevelopmentProjectMetadata(
+  projectDir: string, release: DesktopRelease, bundles: readonly string[] = resolveDesktopProfileBundles(),
+): void {
   mkdirSync(projectDir, { recursive: true, mode: 0o700 })
   const manifest = {
     name: PROJECT_NAME,
@@ -163,13 +192,24 @@ export function createDevelopmentProjectMetadata(projectDir: string, release: De
       [DSH_PACKAGE]: release.version,
       [DESKTOP_HOST_PACKAGE]: release.version,
     },
-    dsh: { profile: { bundles: [...WEB_PROFILE.bundles] } },
+    dsh: { profile: { bundles: [...bundles] } },
   }
   writeJson(join(projectDir, 'package.json'), manifest)
   writeFileSync(join(projectDir, 'pnpm-workspace.yaml'), workspaceFile(), { mode: 0o600 })
 }
 
-/** Create the first external plugin profile without running a package manager. */
-export function createPluginProfile(projectDir: string): void {
-  initProfile(projectDir, WEB_PROFILE.bundles)
+/**
+ * Initialize the external profile and keep required layers ahead of user bundles.
+ * @param projectDir - Profile directory, with writes excluded by the caller.
+ * @param bundles - Ordered built-in layers required by this distribution.
+ */
+export function createPluginProfile(projectDir: string, bundles: readonly string[] = resolveDesktopProfileBundles()): void {
+  initProfile(projectDir, bundles)
+  const manifest = readProfileManifest('dsh', projectDir)
+  const previous = manifest.dsh?.profile?.bundles ?? []
+  const required = new Set(bundles)
+  const resolved = [...bundles, ...previous.filter(name => !required.has(name))]
+  if (resolved.length !== previous.length || resolved.some((name, index) => name !== previous[index])) {
+    writeProfileBundles(projectDir, manifest, resolved)
+  }
 }

@@ -30,6 +30,21 @@ describe('desktop distribution identity', () => {
     expect(environment).toEqual({ DSH_HOME: '/explicit/home', DSH_AGENTS_HOME: '/shared/agents' })
   })
 
+  it('retains ordered product bundles without adding them to an ordinary distribution', () => {
+    const bundles = ['@company/desktop', '@company/branding']
+    expect(desktopProduct({ dshDesktopProduct: { ...product, bundles } }))
+      .toEqual({ ...product, bundles })
+    expect(desktopProduct({ dshDesktopProduct: { ...product, bundles: [] } }))
+      .toEqual({ ...product, bundles: [] })
+  })
+
+  it.each([
+    null, 'plugin', [42], ['../plugin'], ['@company/desktop@1'], [' plugin'],
+    ['@company/desktop', '@company/desktop'],
+  ])('rejects malformed or repeated product bundle names: %j', (bundles) => {
+    expect(() => desktopProduct({ dshDesktopProduct: { ...product, bundles } })).toThrow('bundles')
+  })
+
   it.each([
     { userData: '../UWork' }, { defaultHome: '~/.uwork/../.dsh' },
     { protocol: 'https:' }, { appId: '' }, { artifactStem: '../package' }, { name: '' },

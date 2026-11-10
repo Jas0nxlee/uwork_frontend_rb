@@ -18,6 +18,7 @@ import type { DesktopRelease } from '../src/release.ts'
 import { DESKTOP_RUNTIME_FILE, type DesktopRuntimeDescriptor } from '../src/runtime-tree.ts'
 import type { DesktopAutoUpdateTarget } from './desktop-auto-update-environment.mjs'
 import { desktopTargetPlatform } from './desktop-build-paths.mjs'
+import { resolveBundleDir } from '@deepseek-ai/dsh-app-boot'
 
 interface PackageManifest {
   readonly name?: string
@@ -39,6 +40,10 @@ export interface DevelopmentProjectOptions {
   readonly release: DesktopRelease
   /** Build target whose prepared payload the disposable project runs against. */
   readonly target: DesktopAutoUpdateTarget
+  /** Explicit built-in layers; omission uses the standard Web profile. */
+  readonly bundles?: readonly string[]
+  /** Package manifest anchoring bundle resolution; defaults to the CLI manifest. */
+  readonly bundleAnchor?: string
 }
 
 function readManifest(path: string): PackageManifest {
@@ -144,14 +149,24 @@ export function prepareDevelopmentProject(options: DevelopmentProjectOptions): s
     throw new Error('desktop development: apps/desktop-host/lib/index.js is missing; run pnpm run build')
   }
 
+  const bundleDirectories = (options.bundles ?? []).map(name => ({ name,
+    directory: resolveBundleDir('dsh', name, options.bundleAnchor ?? join(options.cliDir, 'package.json'), options.cliDir),
+  }))
   removeOwnedPath(options.projectDir)
-  createDevelopmentProjectMetadata(options.projectDir, options.release)
+  createDevelopmentProjectMetadata(options.projectDir, options.release, options.bundles)
   const destinationModules = join(options.projectDir, 'node_modules')
   mkdirSync(destinationModules, { recursive: true })
+  const workspaceRoots = [options.cliDir, options.hostDir, ...bundleDirectories.map(entry => entry.directory)]
   const names = [
     ...mirrorDependencyLinks(options.dependencyDir, destinationModules),
-    ...mirrorWorkspaceDependencies([options.cliDir, options.hostDir], destinationModules),
+    ...mirrorWorkspaceDependencies(workspaceRoots, destinationModules),
   ]
+  for (const { name, directory } of bundleDirectories) {
+    const destination = join(destinationModules, name)
+    removeOwnedPath(destination)
+    linkDirectory(directory, destination)
+    names.push(name)
+  }
   const dshLink = join(destinationModules, '@deepseek-ai', 'dsh')
   removeOwnedPath(dshLink)
   linkDirectory(options.cliDir, dshLink)

@@ -776,6 +776,9 @@ importers:
       '@deepseek-ai/dsh-util-file-drag':
         specifier: workspace:*
         version: link:../../packages/util/file-drag
+      '@deepseek-ai/dsh-uwork-desktop':
+        specifier: workspace:*
+        version: link:../../packages/bundle/uwork-desktop
       '@deepseek-ai/node-addon-system':
         specifier: workspace:~
         version: link:../../native/system/packages/entry
