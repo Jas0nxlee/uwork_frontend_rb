@@ -24,4 +24,4 @@ Brand and home artwork continue through native brand and hero slots. The convers
 
 ## Consequences
 
-Product presentation can withdraw without removing the native navigation owner. Source artwork and palette provenance retain an Apache-2.0 notice. The theme and navigation slice does not establish complete migration of message, approval, or workbench page families; those require their own assembled-page evidence.
+Product presentation can withdraw without removing the native navigation owner. The copied source artwork and palette retain their Apache-2.0 notice. The theme and navigation slice does not establish complete migration of message, approval, or workbench page families; those require their own assembled-page evidence.

@@ -3,8 +3,8 @@
 # After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write apps/desktop/resources/uwork/README.md
 /uwork-native-brand-assets:
-  en: cb129bec4cab81dc
-  zh: 309e663f3784ebe2
+  en: c7b8e68892abe7de
+  zh: bde8b0f8040e8468
 /uwork-native-brand-assets/release-qualification:
   en: a26408d0bc41c70b
   zh: b47b8e37b3331223

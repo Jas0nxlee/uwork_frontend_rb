@@ -222,7 +222,7 @@
 ### T40 上游兼容、文档和正式发行准备
 
 - [x] 完成插件README/JSDoc、本地化、必要persistence acknowledgement/upgrade guide及构建分类。
-- [ ] 记录所有上游文件改动和slot/API兼容检查，演练一次明确基线的上游更新。
+- [x] 记录所有上游文件改动和slot/API兼容检查，演练一次明确基线的上游更新。
 - [ ] 决定正式产品版本与runtime版本、安装身份、更新feed及可支持的数据导入，保留恢复方案。
 
 验收：必要检查通过，所有必交付项完成；产品/设计审查与两平台发布条件有证据。验证：focused checks、最新build:artifacts后的build:check、docs/lint、最终diff和安装证据审查。依赖：T39。落点：包文档、发行配置、上游差异及用户升级说明。规模：按文档/合并/发行分别 M。

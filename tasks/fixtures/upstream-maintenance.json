@@ -1,23 +1,31 @@
 {
   "kind": "uwork-upstream-compatibility-audit",
-  "version": 1,
-  "observedAt": "2026-11-10T13:48:59.302682+00:00",
+  "version": 2,
+  "observedAt": "2026-11-10T16:24:35.368261+00:00",
   "upstream": "fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159",
-  "head": "ca1e717b048694e33686b6e6cb2c02532255edfc",
+  "head": "7da4d9fa098ec30ad627ce3d1c2fd624389f66f1",
   "mergeBase": "fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159",
-  "snapshotTree": "c7babdad79b7c1d2528038c0f66136eecd7fb013",
-  "snapshotCommit": "94cb6f7a7f3210c72e875e3d8ac682f2740175fd",
+  "snapshotTree": "b8f169fb3952ca8b7c1bdcb0dc7be75e2f73a80e",
+  "snapshotCommit": "7da4d9fa098ec30ad627ce3d1c2fd624389f66f1",
   "scopes": [
     "apps/desktop",
     "apps/desktop-host",
+    "packages/client/ui-attachment",
+    "packages/client/ui-chat",
+    "packages/client/ui-conversation",
+    "packages/client/ui-dockkit",
+    "packages/client/ui-primitives",
     "packages/client/ui-sidebar",
+    "packages/client/ui-sidebar-right",
+    "packages/client/ui-tool",
+    "packages/core/agent-default-model",
     "packages/llm/llm-pi-ai"
   ],
   "mergeTreeExitCode": 0,
-  "mergeTreeStdout": "c7babdad79b7c1d2528038c0f66136eecd7fb013",
+  "mergeTreeStdout": "b8f169fb3952ca8b7c1bdcb0dc7be75e2f73a80e",
   "mergeTreeStderr": "",
-  "changedFiles": 279,
-  "note": "Temporary index and unreferenced snapshot commit only; no ref, actual index, worktree or branch changed.",
+  "changedFiles": 521,
+  "note": "Committed reachable source snapshot only; no ref, actual index, worktree or branch changed.",
   "commands": [
     {
       "argv": [
@@ -36,10 +44,10 @@
         "merge-tree",
         "--write-tree",
         "fcc0ad462172522aaf5c93a7b2e01f6b9f0b0159",
-        "94cb6f7a7f3210c72e875e3d8ac682f2740175fd"
+        "7da4d9fa098ec30ad627ce3d1c2fd624389f66f1"
       ],
       "exitCode": 0,
-      "stdout": "c7babdad79b7c1d2528038c0f66136eecd7fb013",
+      "stdout": "b8f169fb3952ca8b7c1bdcb0dc7be75e2f73a80e",
       "stderr": ""
     }
   ]

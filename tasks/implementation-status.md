@@ -101,3 +101,5 @@ Host 与 Client 的 208 项定向测试通过，涉及新增源码的语句、�
 - 工作台另以真实 bash PTY 执行无副作用命令并验证关闭后 PID 退出；真实 XLSX Worker 拒绝编辑，DOCX 经既有 LibreOfficeKit/PDF Worker 显示中文，源文件保持不变。Office 编辑仍延期。
 
 Preview 继续采用当前 app/runtime 清单版本 `0.2.2-rc.1`，独立 appId/userData/protocol/feed namespace；不自动导入旧 UWork 或 `.dsh` 数据，也不覆盖旧更新源。正式签名版本、Publisher、部署 feed 与平台验收属于尚未完成的发行条件。完整呈现采纳与保留理由、准确截图运行目录及证据边界见 [UI 复核](ui-migration-review.md)。
+
+最终可达代码提交已执行上游只读合并审计：12 个共享扩展范围、相对固定上游 521 个变化文件，merge-tree 成功且 tree 与代码提交一致。精确命令保存在 `tasks/fixtures/upstream-maintenance.json` version 2；固定上游为共同祖先，此结果不代表未来双边分歧无冲突。

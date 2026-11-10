@@ -4,29 +4,20 @@
 
 ## 固定基线与演练结果
 
-2026-11-10 13:48:59 UTC，`git ls-remote origin refs/heads/master` 返回与本地 `origin/master` 相同的固定对象。精确 commit SHA 及时间写入受版本控制的[本次原始证据](fixtures/upstream-maintenance.json)；维护文档以符号引用和 tree digest 记录结果，遵守仓库不固定链接历史 commit 的规则：
+最终代码已提交后，对可达产品集成提交执行只读审计。精确对象、观察时间、原始命令和输出均保存在[版本控制证据](fixtures/upstream-maintenance.json)的 version 2 记录中。`snapshotCommit` 与 `head` 相同，普通 clone 可以获取该代码提交；后续文档提交更新审计记录、任务状态及文档格式与措辞，不改变产品代码。
 
 | 对象 | 观察值或原始证据字段 |
 | --- | --- |
-| origin/master | `origin/master`，原始证据 `upstream` / `mergeBase` |
-| 当前 HEAD | 观察时 `HEAD`，原始证据 `head` |
-| merge-base | `origin/master`，原始证据 `upstream` / `mergeBase` |
-| 共享改动快照 tree | `c7babdad79b7c1d2528038c0f66136eecd7fb013` |
-| 无引用快照 commit | 原始证据 `snapshotCommit` |
+| origin/master | `git ls-remote origin refs/heads/master` 的实际返回值，证据 `upstream` |
+| 可达代码提交 | 证据 `head` / `snapshotCommit` |
+| merge-base | 与固定上游相同，证据 `mergeBase` |
+| 已提交代码 tree | 证据 `snapshotTree` / `mergeTreeStdout` |
 
-快照使用临时 `GIT_INDEX_FILE`，从 HEAD 读取索引，再纳入当时 `apps/desktop`、`apps/desktop-host`、`packages/client/ui-sidebar`、`packages/llm/llm-pi-ai` 的已跟踪和未跟踪改动；相对上游共 279 个文件。`git write-tree` 与 `git commit-tree` 仅生成无引用 Git 对象；实际索引、工作区、当前分支和任何 ref 均未切换或更新，临时索引已删除。
+`git merge-tree --write-tree <upstream-object> <head-object>` 退出码为 0，无 stderr，合并 tree 与代码提交 tree 一致。相对固定上游共 521 个文件发生变化。审计未创建临时 commit，未修改实际索引、工作区、当前分支或 ref，也未执行实际 merge、checkout 或 reset。
 
-执行 `git merge-tree --write-tree <upstream-object> <snapshot-object>`，退出码为 0，输出合并 tree 为 `c7babdad79b7c1d2528038c0f66136eecd7fb013`，无冲突或 stderr。原始观察记录位于[版本控制证据](fixtures/upstream-maintenance.json)，关键事实已完整记录在本文。
+当前固定上游是共同祖先，所以这次结果证明已提交代码可合入该固定基线，没有双边分歧；它不能预测未来上游修改相同位置时的冲突。早期 version 1 的四目录混合工作区观察已由此次完整、可达的代码证据替代；验证器保留对历史 version 1 记录的严格兼容测试。
 
-此结果的边界明确：当前 origin/master 正是分叉共同祖先，因此演练证明这批快照可合入该固定上游，没有双边分歧；它不能证明将来上游修改相同位置时无冲突。演练后仍有并行开发，最终提交需对新的固定上游 SHA 重做演练及受影响检查。没有实际 merge、checkout、reset、push、上传或发布。
-
-精确上游与分支基线由版本控制 JSON 保留，reviewer 可在 clone 中核对可达对象；无引用的临时 snapshot commit 不会随普通 clone 传输，因此 JSON 本身不能重建该早期混合工作区。最终提交落定后应对可达 HEAD 重跑同一命令，更新证据；本文不把临时对象当作可下载的发行 commit。
-
-## 最终可达提交复核协议
-
-前述 version 1 证据是早期四目录混合工作区的历史观察，不能证明其后的共享改动。最终证据使用同一 JSON 路径的 version 2：`snapshotCommit` 必须等于 `head`，仅对已经提交且可达的代码执行同样的 `ls-remote` 与 `merge-tree --write-tree`。两种版本均保留精确字段、规范可读 JSON、成功命令及固定说明的约束；version 2 不创建临时 commit 或修改实际索引。本文更新时尚未替换早期 fixture，最终真实命令和结果由提交落定后的证据更新给出。
-
-version 2 的审计范围固定为 `apps/desktop`、`apps/desktop-host`、`packages/client/ui-attachment`、`packages/client/ui-chat`、`packages/client/ui-conversation`、`packages/client/ui-dockkit`、`packages/client/ui-primitives`、`packages/client/ui-sidebar`、`packages/client/ui-sidebar-right`、`packages/client/ui-tool`、`packages/core/agent-default-model`、`packages/llm/llm-pi-ai`。这覆盖最终共享扩展面，而非只审查新增产品插件。范围增删、快照与 HEAD 不一致、任意说明文字或额外字段均不会获得引用门禁例外。
+version 2 的审计范围固定为 `apps/desktop`、`apps/desktop-host`、`packages/client/ui-attachment`、`packages/client/ui-chat`、`packages/client/ui-conversation`、`packages/client/ui-dockkit`、`packages/client/ui-primitives`、`packages/client/ui-sidebar`、`packages/client/ui-sidebar-right`、`packages/client/ui-tool`、`packages/core/agent-default-model`、`packages/llm/llm-pi-ai`。这覆盖最终共享扩展面。验证器仅接受同一证据路径的精确字段、规范 JSON、两条成功命令及固定说明；范围增删、快照与代码 HEAD 不一致、额外文字或字段均不会获得引用门禁例外。
 
 ## 新增公共扩展面
 
@@ -65,6 +56,6 @@ version 2 的审计范围固定为 `apps/desktop`、`apps/desktop-host`、`packa
 
 本轮没有观察到实际 merge-tree 冲突。将来优先审查共享 shell 返回结构、pi-ai dispatch/signal 组装、Desktop Main/Host 生命周期和上游打包/升级脚本；这些位置的语义变化即使能自动合并也需要上述测试复核。UWork 专属业务保持在独立插件包和产品 bundle，避免把企业业务规则继续塞入这些共享扩展面。
 
-T40 的早期固定 SHA 演练、新增 API 兼容记录及最终可达提交复核协议已记录；最终 version 2 命令证据仍需随可达代码提交更新。整体 T40 完成仍依赖主任务对产品组合、持久化确认、locale、构建分类及最终门禁的汇总；本记录不越权勾选全部任务。
+T40 的固定基线演练、共享 API 兼容记录和最终可达代码审计已完成。产品组合、持久化记录、locale 和构建分类通过本地门禁；正式产品版本与发行验收仍按主任务保留待办。
 
 Windows x64 / Mac ARM 正式签名、公证、安装、连续版本更新、真实员工登录及授权推理仍需真实平台与凭据；Linux 源码测试和原仓库 Mac ad hoc workflow 不能替代。用户没有授权公网发布、上传或切换旧 feed，本次未执行这些操作。

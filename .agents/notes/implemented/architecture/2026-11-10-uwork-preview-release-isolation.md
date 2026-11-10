@@ -26,7 +26,7 @@ The fixed upstream compatibility baseline is preserved in the versioned [audit t
 
 **Disable every update path for Preview.** Rejected because an independent test namespace preserves repeatable signed upgrade qualification while legacy production and website destinations remain closed.
 
-**Redraw the UWork icon.** Rejected because the user supplied an existing product repository with native brand assets. Reusing those assets preserves provenance and avoids inventing a new product mark.
+**Redraw the UWork icon.** Rejected because the user supplied an existing product repository with native brand assets. Reusing those files preserves the supplied product mark and its recorded source hashes.
 
 **Keep the fixed baseline only in scratch.** Rejected because a reviewer receiving a clone would lose the exact audit inputs and observed outputs. The versioned schema retains those facts while keeping ordinary maintained-reference restrictions.
 

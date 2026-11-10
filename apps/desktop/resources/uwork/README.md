@@ -16,7 +16,7 @@ The `uwork-next` distribution uses PNG for Windows executable/About,
 ICO for the Windows tray, and the native ICNS for macOS. Other distributions
 retain their original assets. No artwork was invented or recolored.
 
-These assets establish branding provenance only. They do not establish code
+The recorded hashes identify the source files copied for this brand. They do not establish code
 signing, notarization, installation, update acceptance, or permission to publish.
 
 ## Release qualification
