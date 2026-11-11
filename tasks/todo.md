@@ -4,6 +4,8 @@
 
 本清单执行 [迁移方案](plan.md)，范围为 Windows x64、Mac ARM 上的 UWork UI、企业微信与自动模型配置、PUBLIC 公司技能市场、企业网关统计和 `.uwork`。实施已开始；当前进展和检查证据见 [实施记录](implementation-status.md)。源码调研和单元测试不代表桌面发行验收。
 
+按用户 2026-11-11 的要求，当前优先执行 T37 的 [Mac ARM 本地打包与安装检查](mac-arm-acceptance.md)，T36 的 Windows x64 打包和验收随后处理。无 Developer ID 证书时先验证本地 ad hoc Preview；正式签名、公证及升级条件继续保留。
+
 当前勾选表示该条源码实现及可执行的 Linux/浏览器验证已完成，不表示真实企业或 Windows/macOS 发行验收通过。T02、T06 的签名 runtime、T22 双平台复核及 T36–T39 仍保留未完成；模拟签发方与真实员工联调严格区分。具体证据见[当前实施记录](implementation-status.md)、[UI 复核](ui-migration-review.md)和[上游维护](upstream-maintenance.md)。
 
 每项按一个可验收行为提交。预计涉及超过约五个业务源文件时，继续按操作拆分；包 manifest、构建配置、类型生成、README 和配套测试随所属行为提交，不另积攒到最后。下面的包路径为拟定落点，既有路径以方案链接为准。
@@ -200,6 +202,7 @@
 
 ### T37 Mac ARM 安装候选
 
+- [x] 生成本地 ad hoc Preview DMG，完成完整性、实际捆绑运行时及 Applications 复制安装检查；[原生界面验收仍待完成](mac-arm-acceptance.md)。
 - [ ] 完成Developer ID签名、公证和helper一致性，产出DMG及更新产物。
 - [ ] 从DMG安装到Applications验证权限、窗口、输入、原生能力及离线启动。
 

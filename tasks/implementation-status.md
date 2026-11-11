@@ -2,7 +2,7 @@
 
 ## 当前进展
 
-2026-11-10，`codex/uwork-desktop-migration` 已接通企业身份、原生扫码载体、受管模型、公司技能市场、企业用量和 UWork 展示层。源码及本环境可执行的 Linux/浏览器链路已有验证；真实员工联调、Windows x64/Mac ARM 签名安装与升级仍未完成。[执行清单](todo.md)区分已实现条目与未满足的发行条件。
+2026-11-11，`codex/uwork-desktop-migration` 已同步 GitHub 的企业身份、原生扫码载体、受管模型、公司技能市场、企业用量和 UWork 展示层。按用户要求优先进行 Mac ARM 本地打包与安装，Windows x64 后续处理。既有 Linux/浏览器验证与本次 [Mac ARM 验收](mac-arm-acceptance.md) 分别记录；真实员工联调、两平台正式签名安装及升级仍未完成。[执行清单](todo.md)区分已实现条目与未满足的发行条件。
 
 发行元数据集中在 `apps/desktop/package.json` 的 `dshDesktopProduct`，由 Electron Main、捆绑 CLI、构建与产物脚本共同读取。默认产品名和 Electron 存储目录为 UWork Next Preview，home 为 `.uwork/harness-preview`，外部协议为 `uwork-next`，安装包前缀为 `uwork-next`。显式 DSH_HOME 优先，未声明发行元数据的普通 dsh 清单保持原行为。
 
