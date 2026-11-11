@@ -49,6 +49,7 @@ jobs:
           packages/llm/uwork-model-provisioning/tests
           packages/llm/llm/tests/topology.spec.ts
           packages/llm/llm-pi-ai/tests/discovery.spec.ts
+          packages/util/http-proxy/tests
           packages/boot/uwork-gateway/tests
           packages/boot/uwork-gateway-service/tests
           packages/boot/uwork-company-market/tests
@@ -138,6 +139,7 @@ jobs:
             '' \
             '自定义模型提供商保存时自动获取 Models.dev 的上下文、输出上限及文本/图片能力，相关字段以只读方式显示。' \
             '支持本地目录缓存与离线回退，无法匹配的型号会提示错误并保留原配置。' \
+            '修复企业认证服务与 Node TLS 密钥交换兼容性，恢复桌面启动后的登录校验。' \
             '' \
             '此版本为未签名预览版，沿用现有独立安装标识。Windows 安装后交互需在目标机器验收。' \
             '' \

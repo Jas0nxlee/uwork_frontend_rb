@@ -21,6 +21,8 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用此包
 
+以插件形式挂载本包并配置 `origins` 与 `ecdhCurve`，只对这些精确 HTTPS 源应用 TLS 密钥交换偏好。其他目标使用既有 dispatcher。代理路由遵循启动环境，卸载时恢复先前 dispatcher。UWork 组合为企业认证端点选择 `X25519:prime256v1`，以兼容不支持混合密钥交换的 TLS 1.3 服务。
+
 调用方显式提供 `apiBaseUrl`、精确部署白名单 `allowedModelEndpointOrigins`、`timeoutMs`、`maxResponseBytes` 和 `maxItems`。控制地址必须是配置的 HTTPS origin。DNS 名称格式并不证明公网路由；模型端点必须匹配部署 origin 白名单。请求拒绝重定向，身份 bearer 只发送到该 origin。响应字节与集合长度均有限制。取消、超时、认证、授权、限流、网络和数据格式失败分别报告。
 
 用量保留服务器计费数值，并明确单位未指定；成功率转换为比例。缺失或失败的统计不会变成零。仅公开 `llm_base_url`。仅给出源地址时使用 `/v1`，保留显式路径；丢弃内部端点字段。

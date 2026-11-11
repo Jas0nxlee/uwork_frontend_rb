@@ -60,15 +60,26 @@ export interface DispatcherOptions {
    * for a caller that cannot tolerate an idle h2 session's informational `UND_ERR_INFO` error.
    */
   readonly allowH2?: boolean
+  /** TLS key-exchange curves for endpoints with restricted ClientHello support. */
+  readonly ecdhCurve?: string
 }
 
 /**
- * Translate the optional policy into undici's Agent option, preserving its own default when unset.
+ * Translate optional protocol and TLS choices into undici connection options.
  * @param options - dispatcher choices.
- * @returns the allowH2 fragment to spread into every Agent and ProxyAgent.
+ * @returns options for direct pools and proxy destination TLS connections.
  */
-function h2Options(options: DispatcherOptions): { readonly allowH2?: boolean } {
-  return options.allowH2 === undefined ? {} : { allowH2: options.allowH2 }
+function h2Options(options: DispatcherOptions): {
+  readonly allowH2?: boolean
+  readonly connect?: { readonly ecdhCurve: string }
+  readonly requestTls?: { readonly ecdhCurve: string }
+} {
+  return {
+    ...options.allowH2 === undefined ? {} : { allowH2: options.allowH2 },
+    ...options.ecdhCurve === undefined ? {} : {
+      connect: { ecdhCurve: options.ecdhCurve }, requestTls: { ecdhCurve: options.ecdhCurve },
+    },
+  }
 }
 
 /**

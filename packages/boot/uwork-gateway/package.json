@@ -33,7 +33,9 @@
   ],
   "dependencies": {
     "@deepseek-ai/dsh-brand": "workspace:*",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "@deepseek-ai/dsh-http-proxy": "workspace:*",
+    "undici": "8.11.2"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "workspace:~"

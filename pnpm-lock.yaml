@@ -2431,6 +2431,12 @@ importers:
       '@deepseek-ai/dsh-brand':
         specifier: workspace:*
         version: link:../../util/brand
+      '@deepseek-ai/dsh-http-proxy':
+        specifier: workspace:*
+        version: link:../../util/http-proxy
+      undici:
+        specifier: 8.11.2
+        version: 8.11.2
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -29797,7 +29803,6 @@ snapshots:
   '@types/yauzl@2.10.3':
     dependencies:
       '@types/node': 22.20.1
-    optional: true
 
   '@typescript-eslint/types@8.61.0': {}
 

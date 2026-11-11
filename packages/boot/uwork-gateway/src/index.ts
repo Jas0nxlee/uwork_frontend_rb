@@ -1,4 +1,5 @@
 /** Bounded Host-only enterprise gateway transport. No credential or raw response logging. */
+export { Config, apply } from './transport-plugin.ts'
 import { brandString } from '@deepseek-ai/dsh-brand'
 import { z } from 'zod'
 import type { GatewayConfig, GatewayFailureKind, GatewayKey, GatewayKeyId, GatewayModel, GatewayPlanModels, GatewaySession, GatewaySubscription, GatewayUsage, UsageRequest } from './types.ts'

@@ -51,6 +51,20 @@ afterEach(() => {
 })
 
 describe('HTTP/2 is opt-out, not the default', () => {
+  it('carries configured TLS curves to direct and proxied destination connections', async () => {
+    const dispatcher = await createRouteDispatcher(env({ HTTPS_PROXY: 'http://127.0.0.1:9' }), { ecdhCurve: 'X25519:prime256v1' })
+    try {
+      const agent = lastOf('Agent')
+      const factory = agent?.options.factory as (origin: string, options: Record<string, unknown>) => unknown
+      factory('https://proxied.test', {})
+      factory('http://direct.test', {})
+      expect(lastOf('ProxyAgent')?.options.requestTls).toEqual({ ecdhCurve: 'X25519:prime256v1' })
+      expect(lastOf('Pool')?.options.connect).toEqual({ ecdhCurve: 'X25519:prime256v1' })
+    } finally {
+      await dispatcher.close()
+    }
+  })
+
   it('keeps undici\'s HTTP/2 default when installation carries no override', async () => {
     const dispose = await installProxyFromEnvironment(env({ HTTP_PROXY: 'http://127.0.0.1:9' }), () => undefined)
     try {

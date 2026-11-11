@@ -16,6 +16,11 @@
     provider: ''
     model: ''
 - insert:
+    - id: uwork-transport
+      name: '@deepseek-ai/dsh-uwork-gateway'
+      config:
+        origins: [https://pivot.ucas.com.cn:23090]
+        ecdhCurve: X25519:prime256v1
     - id: ui-uwork
       name: '@deepseek-ai/dsh-client-ui-uwork'
     - id: uwork-company-market

@@ -25,6 +25,8 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
+`DispatcherOptions.ecdhCurve` 指定调用方自有 dispatcher 的 TLS 密钥交换组，也适用于经代理访问的目标。省略时采用 Node 默认值。证书和主机名验证保持启用。
+
 无需挂载，也无需配置。`dsh` 启动器会在第一个插件加载之前，为每个 profile 解析并安装策略，因此导出了 `HTTPS_PROXY` 的用户在所有位置都会走代理。本包是库而非插件，因为传输策略每个进程只有一个答案：没有第二个实现可替换，也没有比进程更窄的作用域可赋予。
 
 ### 编写新的出站调用

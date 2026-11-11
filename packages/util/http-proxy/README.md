@@ -25,6 +25,8 @@ Use this package to apply one outbound HTTP proxy policy to Harness requests tha
 <a id="use-this-package"></a>
 ## Use this package
 
+`DispatcherOptions.ecdhCurve` selects the TLS key-exchange groups for a caller-owned dispatcher, including TLS to destinations reached through a proxy. Omitting it retains the Node default. Certificate and hostname verification remain enabled.
+
 Nothing to mount, and nothing to configure. The `dsh` launcher resolves and installs the policy for every profile before the first plugin loads, so a user who exports `HTTPS_PROXY` is proxied everywhere. This is a library rather than a plugin because transport policy has one answer per process: there is no second implementation to swap and no scope narrower than the process to give one.
 
 ### Writing a new outbound call
