@@ -54,7 +54,6 @@ jobs:
       - run: pnpm run doc-sync
 
   package:
-    needs: validate
     strategy:
       fail-fast: false
       matrix:
