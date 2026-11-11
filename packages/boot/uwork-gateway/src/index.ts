@@ -151,13 +151,14 @@ export class GatewayClient {
     } catch { throw new GatewayRequestError('invalid', undefined, 'unknown') }
   }
   /** Read the advertised public endpoint, discarding internal endpoint fields.
-   * @returns Public HTTPS model endpoint.
+   * @returns Public HTTPS model endpoint; a bare origin uses the OpenAI `/v1` prefix.
    */
   async readPublicEndpoint(): Promise<string> {
     const result = parse(z.object({ llm_base_url: text }), await this.send('GET', '/api/auth/orgs'))
     try {
       const url = publicHttps(result.llm_base_url)
       if (!this.allowedOrigins.has(url.origin)) throw new Error('Model endpoint is not allowlisted')
+      if (url.pathname === '/') url.pathname = '/v1'
       const endpoint = url.href.replace(/\/$/, '')
       this.publicEndpoint = endpoint
       return endpoint

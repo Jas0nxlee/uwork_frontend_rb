@@ -104,18 +104,35 @@ describe('managed route transaction', () => {
     const first = f.engine.provision(f.input); const second = f.engine.provision(f.input)
     await expect(first).rejects.toMatchObject({ code: 'REVOKED' }); await second
   })
-  it('updates a same-account enterprise default after recovery but retains a different account default', async () => {
-    const f = fixture(); await f.engine.provision(f.input); f.setDefault({ provider: 'uwork-gen', model: 'allowed' })
+  it('retains the same-account route and chosen default after recovery without reusing a revoked credential', async () => {
+    const f = fixture()
+    const input = { ...f.input, authorizedModels: ['allowed', 'alternate'], capabilities: [...f.input.capabilities,
+      { id: 'alternate', contextWindow: 8192, maxTokens: 1024, input: ['text' as const] }] }
+    await f.engine.provision(input)
+    f.setDefault({ provider: 'uwork-gen', model: 'alternate' })
     await f.engine.recover()
-    await f.engine.provision({ ...f.input, provider: 'uwork-second', credentialRef: 'UWORK_SECOND' })
-    expect(f.selection.provider).toBe('uwork-second')
+    const refreshed = await f.engine.provision({ ...input, provider: 'uwork-second', credentialRef: 'UWORK_SECOND' })
+    expect(refreshed.provider).toBe('uwork-gen')
+    expect(f.selection).toEqual({ provider: 'uwork-gen', model: 'alternate' })
+    expect(f.secrets.has('UWORK_GEN')).toBe(false)
+    expect(f.secrets.has('UWORK_SECOND')).toBe(true)
     await f.engine.recover()
     await f.engine.provision({ ...f.input, provider: 'uwork-third', credentialRef: 'UWORK_THIRD', binding: { ...f.input.binding, userId: 'other' } })
-    expect(f.selection.provider).toBe('uwork-second')
+    expect(f.selection.provider).toBe('uwork-gen')
     await f.engine.recover()
     f.setDefault({ provider: 'uwork-third', model: 'allowed' })
     await f.engine.provision({ ...f.input, provider: 'uwork-fourth', credentialRef: 'UWORK_FOURTH', binding: { ...f.input.binding, orgId: 'other' } })
     expect(f.selection.provider).toBe('uwork-third')
+  })
+  it('keeps committed authorization after a refresh reader leaves until the verified identity ends', async () => {
+    const f = fixture()
+    const read = new AbortController()
+    const route = await f.engine.provision({ ...f.input, signal: read.signal, identitySignal: f.controller.signal })
+    const admitted = f.engine.requestSignal(route.provider, 'allowed', f.input.endpoint, route.profile)
+    read.abort()
+    expect(admitted?.aborted).toBe(false)
+    f.controller.abort()
+    expect(admitted?.aborted).toBe(true)
   })
   it.each([{ endpoint: 'http://gateway.example/v1' }, { credentialRef: 'PERSONAL_KEY' },
     { provider: 'personal' }, { authorizedModels: [] }, { capabilities: [{ id: 'allowed' }] }])('rejects unsafe or unverified input %j', async (patch) => {
@@ -167,4 +184,11 @@ describe('managed route transaction', () => {
     await f.engine.recover()
     expect(f.doc.providers['uwork-gen']).toBeDefined(); expect(f.secrets.size).toBe(0)
   })
+})
+
+it('replaces only an explicitly retired default with an authorized preferred model', async () => {
+  const f = fixture()
+  f.setDefault({ provider: 'deepseek-official', model: 'deepseek-flash' })
+  await f.engine.provision({ ...f.input, retiredDefaultProviders: ['deepseek-official'] })
+  expect(f.selection).toEqual({ provider: 'uwork-gen', model: 'allowed' })
 })

@@ -354,3 +354,26 @@ it('describes an entry whose required field only the profile supplies, and repor
   const failures = (): unknown[] => restored.logger.buffer.filter(message => message.type === 'error').map((message): unknown => message.args[0])
   await vi.waitFor(() => { expect(failures()).toContainEqual(expect.objectContaining({ message: 'refresh failed' })) })
 })
+
+it('reserves protected fields for their plugin owner, including ancestor writes', async () => {
+  const { ctx, profile } = await fixture()
+  await ctx.settings.update('first', { count: 3 })
+  let writeOwned = async () => {}
+  const owner = ctx.plugin({ inject: ['settings'], apply(child) {
+    child.effect(() => child.settings.protectPath('first', ['count']))
+    writeOwned = () => child.settings.update('first', { count: 7 })
+  } })
+
+  await owner.await()
+  expect(ctx.settings.describe().find(row => row.ns === 'first')?.readOnlyPaths).toEqual([['count']])
+  const before = readFileSync(profile.patchPath, 'utf8')
+  await expect(ctx.settings.update('first', { count: 9 })).rejects.toThrow('managed by a plugin')
+  await expect(ctx.settings.mutate('first', [{ op: 'unset', path: ['count'] }])).rejects.toThrow('managed by a plugin')
+  await expect(ctx.settings.replace('first', { count: 9 })).rejects.toThrow('managed by a plugin')
+  expect(readFileSync(profile.patchPath, 'utf8')).toBe(before)
+  await ctx.settings.update('first', { list: [{ name: 'unprotected' }] })
+  await writeOwned()
+  expect(ctx.settings.describe().find(row => row.ns === 'first')?.value).toMatchObject({ count: 7 })
+  await owner.dispose()
+  await ctx.settings.update('first', { count: 9 })
+})

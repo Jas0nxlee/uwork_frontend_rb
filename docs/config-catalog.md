@@ -4752,7 +4752,7 @@ export interface Organization {
 
 - `inject`: `uworkIdentity`
 - `refs`: `GatewayConfig` (`@deepseek-ai/dsh-uwork-gateway/types`)
-- `source`: [`packages/boot/uwork-gateway-service/src/index.ts:11`](../packages/boot/uwork-gateway-service/src/index.ts)
+- `source`: [`packages/boot/uwork-gateway-service/src/index.ts:12`](../packages/boot/uwork-gateway-service/src/index.ts)
 
 ```ts config-catalog
 /** Request and successful-read cache budgets. */
@@ -4769,6 +4769,7 @@ export interface Config extends GatewayConfig {
 ## `@deepseek-ai/dsh-uwork-model-provisioning`
 
 - `inject`: `credentials` · `settings` · `agentDefaultModel`
+- `refs`: `GatewayModel` (`@deepseek-ai/dsh-uwork-gateway/types`)
 - `source`: [`packages/llm/uwork-model-provisioning/src/index.ts:19`](../packages/llm/uwork-model-provisioning/src/index.ts)
 
 ```ts config-catalog
@@ -4787,6 +4788,28 @@ interface Config {
   maxItems: number
   /** Release-owned initial model order; empty requires explicit user selection. */
   preferredModels: string[]
+  /** Exact known text/tool routes and client budgets when the endpoint lists only model IDs. */
+  legacyTextCatalog: LegacyTextCatalog | null
+  /** Per-model release capabilities used when the endpoint omits those fields. */
+  modelCatalog: ModelCatalogEntry[]
+  /** Removed product providers whose saved default may move to an authorized enterprise model. */
+  retiredDefaultProviders: string[]
+}
+
+/** Release-declared text/tool routes for a legacy OpenAI directory lacking capability metadata. */
+export interface LegacyTextCatalog {
+  /** Exact endpoint model IDs eligible for these client budgets. */
+  readonly modelIds: readonly string[]
+  /** Client context budget, used only when the endpoint does not declare a limit. */
+  readonly contextWindow: number
+  /** Client output budget, used only when the endpoint does not declare a limit. */
+  readonly maxOutputTokens: number
+}
+
+/** Release-declared model capabilities for endpoint directories that omit metadata. */
+export interface ModelCatalogEntry extends GatewayModel {
+  /** Explicit request dialect for providers requiring a thinking object. */
+  readonly thinkingFormat?: 'deepseek'
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-uwork-model-provisioning -->

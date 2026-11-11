@@ -192,7 +192,11 @@ export default class EnterpriseIdentity extends TypertRemoteService {
       while (!isAborted(lifetime)) {
         if (dirty) {
           dirty = false
-          const state = await this.getState()
+          let state = await this.getState()
+          if (state.status === 'restoring') {
+            await this.restoration
+            state = this.stateWithoutRestoring()
+          }
           if (isAborted(lifetime)) break
           yield state
         } else {

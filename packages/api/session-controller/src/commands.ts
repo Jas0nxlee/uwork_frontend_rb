@@ -321,6 +321,10 @@ export class SessionCommandController {
   async prompt(request: SessionPromptRequest, source: MessageSource): Promise<SessionPromptValue> {
     const agent = await this.resolveAgent(request.sessionId)
     if (this.hasPromptRequest(agent.session, request.requestId)) return { accepted: true }
+    if (agent.model.current() === undefined) {
+      throw new RemoteError('session/model-unavailable', 'Select an available model before sending a message.',
+        { provider: '', model: '' })
+    }
     if (request.content.length === 0) {
       try {
         return await agent.runMaintenance(() => {

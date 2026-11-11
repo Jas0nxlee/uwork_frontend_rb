@@ -21,7 +21,7 @@ function mount(data: UsagePageData, failed = false) {
 }
 it('renders request, token and quota data without inventing currency and keeps an output snapshot', () => {
   const view = mount({ status: 'ready', overview, usage })
-  expect(view.container.textContent).toMatchInlineSnapshot('"Enterprise usageRefreshPeriodLast 7 daysThis monthLast 30 daysMetricRequestsCostTokensGateway and accountOrganizationsynthetic-orgUsersynthetic-userPublic gateway endpointhttps://models.example.com/v1Gateway API keysNo gateway API keys2026-11-01 – 2026-11-07Requests10Success rate90%Cost2.5Accounting unit not specifiedTokens120Daily usageDaily usageDateRequests2026-11-0110Usage by modelModelRequestsShare (server value)Costsynthetic-model101002.5SubscriptionsAccounting unit not specifiedSynthetic subscriptionUsed 25 of 100"')
+  expect(view.container.textContent).toMatchInlineSnapshot('"Enterprise usageRefreshPeriodLast 7 daysThis monthLast 30 daysMetricRequestsCostTokensGateway and accountOrganizationSynthetic organizationUserSynthetic employeePublic gateway endpointhttps://models.example.com/v1Gateway API keysNo gateway API keys2026-11-01 – 2026-11-07Requests10Success rate90%Cost2.5Accounting unit not specifiedTokens120Daily usageDaily usageDateRequests2026-11-0110Usage by modelModelRequestsShare (server value)Costsynthetic-model101002.5SubscriptionsAccounting unit not specifiedSynthetic subscriptionUsed 25 of 100"')
   expect(view.container.textContent).not.toMatch(/USD|CNY|\$|¥/)
   expect(view.getAllByRole('table')).toHaveLength(2)
   expect(view.getByRole('img', { name: 'Daily usage' })).toBeTruthy()
@@ -63,14 +63,16 @@ it('handles empty periods and subscriptions and uses existing icon geometry', ()
   expect(icon.container.querySelector('svg')?.getAttribute('width')).toBe('20')
   for (const copy of Object.values(dictionaries)) expect(Object.keys(copy)).toEqual(Object.keys(en))
 })
-it('shows only safe account binding, public endpoint and masked key metadata', () => {
+it('shows account names, public endpoint and masked key metadata', () => {
   if (overview.status !== 'ready') throw new Error('Synthetic overview must be ready')
   const view = mount({ status: 'ready', usage, overview: { ...overview, data: { ...overview.data, keys: [
     { id: brandString<GatewayKeyId>('synthetic-one'), alias: 'Synthetic managed key', maskedKey: 'sk-***1234', status: 'active' },
     { id: brandString<GatewayKeyId>('synthetic-two'), alias: null, maskedKey: 'sk-***5678', status: 'disabled' },
   ] } } })
-  expect(view.getByText('synthetic-org')).toBeTruthy()
-  expect(view.getByText('synthetic-user')).toBeTruthy()
+  expect(view.getByText('Synthetic organization')).toBeTruthy()
+  expect(view.getByText('Synthetic employee')).toBeTruthy()
+  expect(view.queryByText('synthetic-org')).toBeNull()
+  expect(view.queryByText('synthetic-user')).toBeNull()
   expect(view.getByText('https://models.example.com/v1')).toBeTruthy()
   expect(view.getByText('Synthetic managed key')).toBeTruthy()
   expect(view.getByText('Unnamed key')).toBeTruthy()

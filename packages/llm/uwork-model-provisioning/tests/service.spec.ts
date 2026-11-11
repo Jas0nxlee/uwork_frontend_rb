@@ -30,6 +30,7 @@ async function fixture(options: {
   let conflictRecord: CredentialRecord | undefined
   let defaultSelection = { provider: '', model: '' }
   const secrets = new Map<string, string>()
+  const protections = new Set<string>()
   const ctx = new Context(); onTestFinished(() => ctx.fiber.dispose())
   ctx.provide('credentials', {
     readRecord: async (key: string) => {
@@ -44,7 +45,13 @@ async function fixture(options: {
     describe: async (ref: string) => ({ configured: secrets.has(ref), writable: true }),
     set: async (ref: string, secret: string) => { secrets.set(ref, secret) }, unset: async (ref: string) => { secrets.delete(ref) },
   } as never)
-  ctx.provide('settings', { describe: () => available ? [{ ns: 'llm-pi-ai', revision, value, user: value }] : [],
+  ctx.provide('settings', {
+    protectPath: (_ns: string, path: readonly string[]) => {
+      const key = path.join('/')
+      protections.add(key)
+      return () => { protections.delete(key) }
+    },
+    describe: () => available ? [{ ns: 'llm-pi-ai', revision, value, user: value }] : [],
     mutate: async (_ns: string, ops: { op: string; path: readonly [string, string]; value?: object }[]) => {
       const providers: Record<string, unknown> = { ...value.providers }
       for (const op of ops) {
@@ -57,7 +64,7 @@ async function fixture(options: {
   ctx.provide('agentDefaultModel', { currentSelection: () => defaultSelection, saveSelection: async (next: typeof defaultSelection) => { defaultSelection = next } } as never)
   await ctx.plugin(Provisioning, options.gateway ? { gatewayApiBaseUrl: 'https://control.example', allowedModelEndpointOrigins: ['https://models.example'], preferredModels: options.preferredModels ?? ['m'] } : {})
   if (!options.skipRecovery) await ctx.uworkModelProvisioning.recover()
-  return { ctx, secrets, records,
+  return { ctx, secrets, records, protections,
     repairJournal: () => { journalUnavailable = false },
     setDefault: (next: typeof defaultSelection) => { defaultSelection = next },
     setRecord: (next: CredentialRecord) => { records.set(journalKey, next) },
@@ -72,12 +79,14 @@ it('composes request lifecycle listeners and keeps secret values outside setting
   await f.ctx.uworkModelProvisioning.provision({ ...input(), signal: controller.signal })
   const request = { provider: 'uwork-gen', model: 'm', baseURL: 'https://gateway.example/v1' }
   const managed = f.ctx.waterfall('llm-pi-ai/request-signal', request, () => undefined)!
+  expect(f.protections.has('providers/uwork-gen')).toBe(true)
   expect(managed.aborted).toBe(false); controller.abort(); expect(managed.aborted).toBe(true)
   expect(f.ctx.waterfall('llm-pi-ai/request-signal', { ...request, provider: 'personal' }, () => undefined)).toBe(inherited.signal)
   f.ctx.uworkModelProvisioning.revoke()
   expect(() => f.ctx.waterfall('llm-pi-ai/request-signal', request, () => undefined)).toThrow()
   await f.ctx.uworkModelProvisioning.recover()
   expect(f.secrets.size).toBe(0)
+  expect(f.protections.size).toBe(0)
 })
 it('returns a standalone route signal without requiring another listener', async () => {
   const f = await fixture(); await f.ctx.uworkModelProvisioning.provision(input())

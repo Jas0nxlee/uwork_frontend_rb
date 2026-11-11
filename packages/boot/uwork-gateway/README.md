@@ -22,7 +22,7 @@ Host-only enterprise gateway protocol reference. Construct a client inside `uwor
 
 The caller resolves `apiBaseUrl`, exact deployment `allowedModelEndpointOrigins`, `timeoutMs`, `maxResponseBytes` and `maxItems`. The control address must be a configured HTTPS origin. DNS syntax is not proof of public routing; the model endpoint must match the deployment origin allowlist. Requests reject redirects and transmit the identity bearer only to that origin. Responses have bounded bytes and collection lengths. Cancellation, timeout, authentication, authorization, rate limiting, transport and invalid data remain distinct failures.
 
-Usage preserves server accounting amounts with an unspecified unit; success rates become fractions. Missing or failed aggregates never become zero. Only the public `llm_base_url` is exposed. Internal endpoint fields are discarded.
+Usage preserves server accounting amounts with an unspecified unit; success rates become fractions. Missing or failed aggregates never become zero. Only the public `llm_base_url` is exposed. A bare origin uses `/v1`; an explicit path is retained. Internal endpoint fields are discarded.
 
 Key secrets are Host-only return values. Generation makes exactly one request. Network errors, server failures and invalid successful responses leave an unknown mutation outcome; callers must persist an intent and reconcile by alias before another generation attempt.
 

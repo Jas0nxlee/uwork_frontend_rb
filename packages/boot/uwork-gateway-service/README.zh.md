@@ -21,7 +21,7 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用此包
 
-配置控制面 `apiBaseUrl`、精确部署白名单 `allowedModelEndpointOrigins`、请求 `timeoutMs`、`maxResponseBytes`、`maxItems` 与成功读取缓存时长 `cacheTtlMs`。请求在身份服务按代次隔离的 Host 回调内执行。概览包含公网端点、脱敏密钥元数据、订阅与明确的授权模型限制；既不显示也不生成密钥。
+配置控制面 `apiBaseUrl`、精确部署白名单 `allowedModelEndpointOrigins`、请求 `timeoutMs`、`maxResponseBytes`、`maxItems` 与成功读取缓存时长 `cacheTtlMs`。请求在身份服务按代次隔离的 Host 回调内执行。概览包含已认证用户的显示名、配置的组织名称、公网端点、脱敏密钥元数据、订阅与明确的授权模型限制；既不显示也不生成密钥。
 
 用量缓存按组织、用户、代次、周期和指标隔离。身份变化清除缓存。新用量筛选会取消旧筛选。刷新失败时，过期读取可保留同身份、同筛选的 `lastSuccess` 及观察时间。未登录状态不发送请求，也不包含统计数值。错误不会变成虚构的零。
 

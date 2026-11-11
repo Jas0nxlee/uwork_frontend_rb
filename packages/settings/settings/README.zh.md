@@ -30,6 +30,8 @@ kind: "package-reference"
   name: '@deepseek-ai/dsh-settings'
 ```
 
+插件通过 `ctx.settings.protectPath(ns, path)` 保留托管配置子树，并将其 disposer 注册为 effect。所属插件可写入该子树，其他调用者的修改会在持久化前被拒绝，包括替换父级的操作。描述信息通过 `readOnlyPaths` 提供这些路径。
+
 此插件没有配置字段。表单只展示活动且可唯一定位的 profile 条目中的 volatile 字段。普通配置仍通过 Cordis 配置文件编辑。
 
 Settings 启动后、Loader 完成所有条目的加载时，早期版本留在 harness home 中的 `settings.yaml` 会被导入一次：每个 section 写入同名条目（`ui-developer-tools` → `ui-settings`、`ui-onboarding` → `ui-settings-general`、`shell` → 当前平台的 shell 执行器条目），文件在第一次写入前改名为 `settings.yaml.imported`，被当前组合拒绝的 section 会记录日志并只保留在改名后的文件中。

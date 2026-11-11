@@ -20,7 +20,7 @@ Host service reference for safe enterprise gateway account and usage reads. Moun
 
 ## Use this package
 
-Configure the control-plane `apiBaseUrl`, exact deployment `allowedModelEndpointOrigins`, request `timeoutMs`, `maxResponseBytes`, `maxItems` and successful-read `cacheTtlMs`. Requests run inside the identity owner's generation-scoped Host callback. Overview contains the public endpoint, masked key metadata, subscriptions and explicit authorized-model restrictions; it never reveals or generates keys.
+Configure the control-plane `apiBaseUrl`, exact deployment `allowedModelEndpointOrigins`, request `timeoutMs`, `maxResponseBytes`, `maxItems` and successful-read `cacheTtlMs`. Requests run inside the identity owner's generation-scoped Host callback. Overview contains the verified user’s display name, the configured organization label, the public endpoint, masked key metadata, subscriptions and explicit authorized-model restrictions; it never reveals or generates keys.
 
 Usage caches are separated by organization, user, generation, period and metric. Identity changes clear cached observations. A newer usage selection cancels the older selection. Expired reads may retain a same-identity, same-selection `lastSuccess` with its observation time when a refresh fails. Signed-out states issue no requests and carry no aggregate values. Errors never become fabricated zeros.
 

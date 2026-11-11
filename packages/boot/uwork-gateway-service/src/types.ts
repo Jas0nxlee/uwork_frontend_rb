@@ -20,6 +20,10 @@ export type GatewayResource<T> = { readonly status: 'signed-out' } |
   { readonly status: 'error'; readonly reason: GatewayFailureKind | 'identity'; readonly lastSuccess?: GatewayObservation<T> }
 /** Masked account configuration; secret keys and internal endpoints are excluded. */
 export interface GatewayOverview {
+  /** Configured display name for the verified organization. */
+  readonly organizationName: string
+  /** Display name supplied by the verified identity. */
+  readonly userName: string
   readonly publicEndpoint: string
   readonly keys: readonly GatewayKey[]
   readonly subscriptions: readonly GatewaySubscription[]

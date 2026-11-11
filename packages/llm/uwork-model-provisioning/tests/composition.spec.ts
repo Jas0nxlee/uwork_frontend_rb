@@ -41,6 +41,12 @@ it('boots a real profile, commits secret-free native model settings and recovers
     provider: 'uwork-one', credentialRef: 'UWORK_ONE', endpoint: 'https://gateway.example/v1', apiKey: 'enterprise-secret-fixture',
     authorizedModels: ['allowed'], capabilities: [{ id: 'allowed', contextWindow: 8192, maxTokens: 1024, input: ['text'] }],
     preferredModels: ['allowed'], signal: new AbortController().signal })
+  const descriptor = ctx.settings.describe().find(row => row.ns === 'llm-pi-ai')!
+  expect(descriptor.readOnlyPaths).toEqual([['providers', 'uwork-one']])
+  await expect(ctx.settings.mutate('llm-pi-ai', [{ op: 'unset', path: ['providers', 'uwork-one'] }]))
+    .rejects.toThrow('managed by a plugin')
+  await expect(ctx.settings.update('llm-pi-ai', { providers: { 'uwork-one': { displayName: 'edited' } } }))
+    .rejects.toThrow('managed by a plugin')
   const value = ctx.settings.describe().find(row => row.ns === 'llm-pi-ai')!.value
   expect(JSON.stringify(value)).toContain('UWORK_ONE'); expect(JSON.stringify(value)).not.toContain('enterprise-secret-fixture')
   expect(ctx.agentDefaultModel.currentSelection()).toEqual({ provider: 'personal', model: 'mine' })

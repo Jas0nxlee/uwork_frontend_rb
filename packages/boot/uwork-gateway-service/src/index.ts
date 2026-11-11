@@ -2,6 +2,7 @@
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import '@deepseek-ai/dsh-uwork-enterprise'
+import type { IdentityState } from '@deepseek-ai/dsh-uwork-enterprise/types'
 import { GatewayClient, GatewayRequestError } from '@deepseek-ai/dsh-uwork-gateway'
 import type { GatewayConfig, GatewayUsage, UsageRequest } from '@deepseek-ai/dsh-uwork-gateway/types'
 import { Remote, RemoteError, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
@@ -118,18 +119,22 @@ export default class GatewayService extends TypertRemoteService {
   }
 
   private async readOverview(force: boolean, signal: AbortSignal): Promise<OverviewState> {
-    return this.read('overview', '', force, signal, this.overview, async (client) => {
+    return this.read('overview', '', force, signal, this.overview, async (client, identity) => {
       const requests = [
         client.readPublicEndpoint(), client.listKeys(), client.readSubscriptions(), client.readPlanModels(),
       ] as const
       await Promise.allSettled(requests)
       const [publicEndpoint, keys, subscriptions, planModels] = await Promise.all(requests)
-      return { publicEndpoint, keys, subscriptions, planModels }
+      const organizationName = this.ctx.uworkIdentity.listOrganizations().organizations
+        .find(organization => organization.orgId === identity.orgId)?.label ?? identity.orgId
+      return { organizationName, userName: identity.name, publicEndpoint, keys, subscriptions, planModels }
     })
   }
 
   private async read<T>(channel: 'usage' | 'overview', selection: string, force: boolean, signal: AbortSignal,
-    cache: Map<string, GatewayObservation<T>>, run: (client: GatewayClient) => Promise<T>): Promise<GatewayResource<T>> {
+    cache: Map<string, GatewayObservation<T>>,
+    run: (client: GatewayClient, identity: Extract<IdentityState, { status: 'authenticated' }>) => Promise<T>,
+  ): Promise<GatewayResource<T>> {
     this.queries.get(channel)?.abort()
     const query = new AbortController()
     this.queries.set(channel, query)
@@ -149,6 +154,7 @@ export default class GatewayService extends TypertRemoteService {
       const outcome = await this.ctx.uworkIdentity.withSession(async (session): Promise<GatewayResource<T>> => {
         const binding: GatewayBinding = { orgId: session.orgId, userId: session.userId, generation: session.generation }
         const owner = bindingKey(binding)
+        if (owner !== bindingKey(state)) throw new RemoteError('uwork-gateway/cancelled', 'Gateway identity changed', {})
         if (owner !== this.cacheOwner) {
           this.overview.clear()
           this.usage.clear()
@@ -157,7 +163,7 @@ export default class GatewayService extends TypertRemoteService {
         const previous = cache.get(selection)
         if (!force && previous !== undefined && Date.now() - previous.updatedAt < this.options.cacheTtlMs) return { status: 'ready', ...previous }
         try {
-          const data = await run(new GatewayClient(this.options, { ...session, signal: AbortSignal.any([active, session.signal]) }))
+          const data = await run(new GatewayClient(this.options, { ...session, signal: AbortSignal.any([active, session.signal]) }), state)
           return { status: 'ready', data, updatedAt: Date.now(), binding }
         } catch (error) {
           return { status: 'error', reason: failure(error), ...(previous === undefined ? {} : { lastSuccess: previous }) }

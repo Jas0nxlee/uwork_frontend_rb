@@ -179,6 +179,7 @@ export async function removeProviderProfile(
  * @returns whether to render the setup card.
  */
 export function needsSetup(row: ProviderRow, anyUsable: boolean): boolean {
+  if (row.readOnly) return false
   if (anyUsable || row.entry.provider === 'deepseek-account') return false
   if (row.entry.settingsPath.length > 0) return false
   return row.credential?.configured !== true
@@ -455,7 +456,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
               </li>
             )
           }
-          const open = !addOpen && editing?.provider === row.entry.provider
+          const open = !row.readOnly && !addOpen && editing?.provider === row.entry.provider
           const credentialConfigured = row.credential?.configured === true
           const credentialMissing = !credentialConfigured
             && row.apiKeyEnv !== undefined
@@ -468,9 +469,11 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                   {/* Only the adapter can tell a hand-declared route from a
                       shipped one it also has a stored profile for, so the tag
                       follows its answer and stays off when it gives none. */}
-                  {row.entry.declared === true
-                    ? <span className={styles['rowTag']}>{t('customTag')}</span>
-                    : null}
+                  {row.readOnly
+                    ? <span className={styles['rowTag']}>{t('managedTag')}</span>
+                    : row.entry.declared === true
+                      ? <span className={styles['rowTag']}>{t('customTag')}</span>
+                      : null}
                   {/* The store keeps the account row only while the account lists models. */}
                   {row.entry.provider === 'deepseek-account'
                     ? (
@@ -502,7 +505,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                 </span>
                 <span className={styles['rowActions']}>
                   {/* The account catalog comes from the account listing; its model overrides live in cordis.patch.yml. */}
-                  {row.entry.provider === 'deepseek-account'
+                  {row.readOnly || row.entry.provider === 'deepseek-account'
                     ? null
                     : (
                       <button

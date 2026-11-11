@@ -3,6 +3,8 @@ import { brandString } from '@deepseek-ai/dsh-brand'
 import { GatewayRequestError } from '@deepseek-ai/dsh-uwork-gateway'
 import type { GatewayKey, GatewayKeyId, GatewayModel } from '@deepseek-ai/dsh-uwork-gateway/types'
 import type { IdentitySession, OrganizationId, IdentityGeneration } from '@deepseek-ai/dsh-uwork-enterprise/types'
+import Provisioning from '../src/index.ts'
+import type { ModelCatalogEntry } from '../src/types.ts'
 import { ModelSynchronizer, nativeCapabilities, type KeyIntent, type SyncPorts } from '../src/synchronizer.ts'
 
 const model: GatewayModel = { id: 'allowed', contextWindow: 8192, maxOutputTokens: 1024, inputModalities: ['text'], supportsTools: true, supportsReasoning: false }
@@ -19,7 +21,7 @@ function fixture() {
     generateKey: vi.fn(async (alias: string) => ({ key: { ...key, alias }, apiKey: 'generated-key' })),
     listEndpointModels: vi.fn(async () => [model]),
   }
-  const provision = vi.fn<SyncPorts['provision']>(async () => {})
+  const provision = vi.fn<SyncPorts['provision']>(async input => input.provider)
   const ports: SyncPorts = { withSession: run => run(session), client: () => client, readIntent: async () => intent,
     writeIntent: async (_binding, next) => { intent = next }, provision, revoke: vi.fn(), needsModelSelection: () => false }
   return { abort, client, ports, provision, setKeys: (next: readonly GatewayKey[]) => { keys = next },
@@ -84,6 +86,14 @@ it('does not activate unknown or unauthorized endpoint models', async () => {
   expect(await f.sync.sync(false, new AbortController().signal)).toEqual({ status: 'capabilities-required' })
   expect(f.provision).not.toHaveBeenCalled()
 })
+it('admits only configured and authorized legacy text routes without replacing explicit capability refusals', () => {
+  const legacy = { modelIds: ['allowed', 'not-authorized', 'tool-less', 'image-only'], contextWindow: 8192, maxOutputTokens: 1024 }
+  expect(nativeCapabilities([{ id: 'allowed' }, { id: 'unconfigured' }, { id: 'not-authorized' },
+    { id: 'tool-less', supportsTools: false }, { id: 'image-only', inputModalities: ['image'] }],
+  ['allowed', 'unconfigured', 'tool-less', 'image-only'], legacy)).toEqual([
+    { id: 'allowed', contextWindow: 8192, maxTokens: 1024, input: ['text'], reasoningEfforts: false },
+  ])
+})
 it('aborts before any request if the owning identity is revoked', async () => {
   const f = fixture(); f.abort.abort()
   await expect(f.sync.sync(false, new AbortController().signal)).rejects.toThrow()
@@ -136,4 +146,28 @@ it('does not supersede current-account synchronization with a stale other-accoun
   expect((await current).status).toBe('ready')
   await expect(stale).rejects.toMatchObject({ code: 'IDENTITY_CHANGED' })
   expect(f.client.generateKey).not.toHaveBeenCalled()
+})
+
+it('restores per-model context, images and exact reasoning levels from the release catalog', () => {
+  const declared = { id: 'allowed', contextWindow: 1048576, maxOutputTokens: 32768,
+    inputModalities: ['text', 'image'] as const, supportsTools: true, supportsReasoning: true,
+    reasoningLevels: ['low', 'high', 'max'] as const, thinkingFormat: 'deepseek' as const }
+  expect(nativeCapabilities([{ id: 'allowed' }], ['allowed'], undefined, [declared]))
+    .toEqual([{ id: 'allowed', contextWindow: 1048576, maxTokens: 32768, input: ['text', 'image'],
+      reasoningEfforts: { low: 'low', high: 'high', max: 'max' },
+      compat: { maxTokensField: 'max_tokens', supportsReasoningEffort: true, thinkingFormat: 'deepseek' } }])
+  expect(nativeCapabilities([{ id: 'allowed', contextWindow: 262144, inputModalities: ['text'],
+    supportsVision: false, supportsReasoning: false }], ['allowed'], undefined, [declared]))
+    .toEqual([{ id: 'allowed', contextWindow: 262144, maxTokens: 32768, input: ['text'],
+      reasoningEfforts: false, compat: { maxTokensField: 'max_tokens', supportsReasoningEffort: true, thinkingFormat: 'deepseek' } }])
+  expect(nativeCapabilities([{ id: 'allowed' }], [], undefined, [declared])).toEqual([])
+})
+
+it('keeps model-specific request dialects distinct when parsing plugin configuration', () => {
+  const model = { id: 'vision', contextWindow: 1048576, maxOutputTokens: 32768,
+    inputModalities: ['text', 'image'], supportsTools: true, supportsReasoning: true,
+    reasoningLevels: ['low', 'high', 'max'] } satisfies ModelCatalogEntry
+  const parsed = Provisioning.Config({ modelCatalog: [model, { ...model, id: 'deepseek', thinkingFormat: 'deepseek' }] })
+  expect(parsed.modelCatalog[0]?.thinkingFormat).toBeUndefined()
+  expect(parsed.modelCatalog[1]?.thinkingFormat).toBe('deepseek')
 })

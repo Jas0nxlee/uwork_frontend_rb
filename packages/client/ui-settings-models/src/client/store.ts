@@ -85,6 +85,8 @@ export interface ProviderRow {
   configured: boolean
   /** Whether the user layer alone carries the profile (removal restores the base). */
   removable: boolean
+  /** The owning plugin reserves this provider's configuration. */
+  readOnly?: boolean
   /** The credential reference the resolved profile names, when one does. */
   apiKeyEnv: string | undefined
   /** Credential state for {@link apiKeyEnv}, once described. */
@@ -250,6 +252,8 @@ export class ModelsSettingsStore {
     const namespaces = new Map(views.map(view => [view.ns, view]))
     const rows: ProviderRow[] = providers.map((entry) => {
       const namespace = namespaces.get(entry.settingsNs)
+      const readOnly = namespace?.readOnlyPaths?.some(path =>
+        path.every((key, index) => entry.settingsPath[index] === key)) === true
       const configured = namespace !== undefined
         && (entry.settingsPath.length === 0 || this.schema.getPath(namespace.value, entry.settingsPath) !== undefined)
       const removable = namespace !== undefined
@@ -259,7 +263,8 @@ export class ModelsSettingsStore {
       return {
         entry,
         configured,
-        removable,
+        removable: removable && !readOnly,
+        ...(readOnly ? { readOnly: true } : {}),
         apiKeyEnv: entry.provider === 'deepseek-account' ? undefined : apiKeyEnvOf(namespace, entry.settingsPath, this.schema),
         credential: undefined,
       }

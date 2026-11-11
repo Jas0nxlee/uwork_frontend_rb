@@ -3333,6 +3333,12 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         throws: ['If this instance already has a registered policy.'],
       },
       {
+        signature: 'protectPath(ns: string, path: readonly string[]): () => void',
+        description: 'Reserve a configuration path for writes by the calling plugin.',
+        parameters: [{ name: 'ns', description: 'Configuration namespace.' }, { name: 'path', description: 'Protected subtree, including writes that replace an ancestor.' }],
+        returns: 'Disposer to register with the owning plugin\'s effects.',
+      },
+      {
         signature: 'prepareDocument(): Promise<string>',
         description: 'Locate the profile patch for native editing.',
         parameters: [],
@@ -6892,7 +6898,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'GatewayOverview',
-    declaration: 'export interface GatewayOverview {\n    readonly publicEndpoint: string;\n    readonly keys: readonly GatewayKey[];\n    readonly subscriptions: readonly GatewaySubscription[];\n    readonly planModels: GatewayPlanModels;\n}',
+    declaration: 'export interface GatewayOverview {\n    readonly organizationName: string;\n    readonly userName: string;\n    readonly publicEndpoint: string;\n    readonly keys: readonly GatewayKey[];\n    readonly subscriptions: readonly GatewaySubscription[];\n    readonly planModels: GatewayPlanModels;\n}',
   },
   {
     name: 'GatewayPlanModels',
@@ -8168,7 +8174,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ProvisionInput',
-    declaration: 'export interface ProvisionInput {\n    binding: Binding;\n    credentialRef: string;\n    provider: string;\n    endpoint: string;\n    apiKey: string;\n    authorizedModels: readonly string[];\n    capabilities: readonly PiAiModelProfile[];\n    preferredModels: readonly string[];\n    signal: AbortSignal;\n}',
+    declaration: 'export interface ProvisionInput {\n    binding: Binding;\n    credentialRef: string;\n    provider: string;\n    endpoint: string;\n    apiKey: string;\n    authorizedModels: readonly string[];\n    capabilities: readonly PiAiModelProfile[];\n    preferredModels: readonly string[];\n    retiredDefaultProviders?: readonly string[];\n    signal: AbortSignal;\n    identitySignal?: AbortSignal;\n}',
   },
   {
     name: 'PrunedEntry',
@@ -9304,7 +9310,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SettingsDescriptor',
-    declaration: 'export interface SettingsDescriptor {\n    ns: SettingsNamespace;\n    autoGenerate: boolean;\n    schema: unknown;\n    value: unknown;\n    revision: number;\n    base?: unknown;\n    user?: unknown;\n    applies: \'live\';\n    secrets?: RedactedSecret[];\n}',
+    declaration: 'export interface SettingsDescriptor {\n    ns: SettingsNamespace;\n    autoGenerate: boolean;\n    schema: unknown;\n    value: unknown;\n    revision: number;\n    base?: unknown;\n    user?: unknown;\n    applies: \'live\';\n    secrets?: RedactedSecret[];\n    readOnlyPaths?: string[][];\n}',
   },
   {
     name: 'SettingsDocumentOpenValue',
@@ -9316,7 +9322,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'SettingsNamespaceView',
-    declaration: 'export interface SettingsNamespaceView {\n    autoGenerate: boolean;\n    ns: string;\n    schema: JsonValue;\n    value: JsonValue;\n    base?: JsonValue;\n    user?: JsonValue;\n    applies: \'live\';\n    secrets: SettingsSecretView[];\n    revision: number;\n}',
+    declaration: 'export interface SettingsNamespaceView {\n    autoGenerate: boolean;\n    ns: string;\n    schema: JsonValue;\n    value: JsonValue;\n    base?: JsonValue;\n    user?: JsonValue;\n    applies: \'live\';\n    secrets: SettingsSecretView[];\n    revision: number;\n    readOnlyPaths?: string[][];\n}',
   },
   {
     name: 'SettingsPathOp',

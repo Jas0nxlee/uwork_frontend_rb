@@ -707,6 +707,22 @@ describe('Web session model selection', () => {
     }
   })
 
+  it('keeps a model-less prompt out of the inbox until a model is selected', async () => {
+    const { ctx, sessionId, agent } = await harness()
+    onTestFinished(() => ctx.fiber.dispose())
+    const remote = await createSessionTestRemote(ctx, {
+      defaultModelSelection: () => ({ provider: '', model: '' }), cwd: '/tmp',
+    })
+    const prompt = promptRequest({ sessionId, mode: 'queue', content: [{ type: 'text', text: 'hello' }] })
+    const events = [...agent.session.snapshotEvents()]
+    expect(await remote.prompt(prompt)).toMatchObject({ ok: false, error: { code: 'session/model-unavailable' } })
+    expect(agent.followup).not.toHaveBeenCalled()
+    expect(agent.session.snapshotEvents()).toEqual(events)
+    expect(await remote.selectModel({ sessionId, provider: 'deepseek-official', model: 'deepseek-chat' })).toMatchObject({ ok: true })
+    expect(await remote.prompt(prompt)).toMatchObject({ ok: true, value: { accepted: true } })
+    expect(agent.followup).toHaveBeenCalledOnce()
+  })
+
   it('leaves uncatalogued adapters usable by core callers but unavailable to GUI selection', async () => {
     const { ctx, sessionId } = await harness()
     ctx.llm.registerAdapter(['uncatalogued'], new class extends LlmAdapter {

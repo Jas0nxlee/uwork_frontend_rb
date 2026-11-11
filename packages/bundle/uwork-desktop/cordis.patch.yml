@@ -3,6 +3,13 @@
   disabled: true
 - id: ui-settings-account
   disabled: true
+- id: llm-deepseek
+  disabled: true
+- id: llm-deepseek-account
+  disabled: true
+- id: ui-settings-models
+  config:
+    credentialOnboarding: false
 - id: agent-default-model
   config:
     provider: ''
@@ -54,7 +61,55 @@
       config:
         gatewayApiBaseUrl: https://pivot.ucas.com.cn:23090
         allowedModelEndpointOrigins: [https://llm.ucas.com.cn:15000]
-        preferredModels: []
+        retiredDefaultProviders: [deepseek-official, deepseek-account]
+        preferredModels: [ucas-deepseek-flash, ucas-gpt-mini, ucas-glm, ucas-gpt-max, ucas-deepseek-pro, ucas-kimi]
+        # UCAS release catalog; maxOutputTokens is the per-request budget, not the model output ceiling.
+        modelCatalog:
+          - id: ucas-gpt-max
+            contextWindow: 1000000
+            maxOutputTokens: 32768
+            inputModalities: [text, image]
+            supportsTools: true
+            supportsReasoning: true
+            reasoningLevels: [low, medium, high, xhigh, max]
+          - id: ucas-kimi
+            contextWindow: 1048576
+            maxOutputTokens: 32768
+            inputModalities: [text, image]
+            supportsTools: true
+            supportsReasoning: true
+            reasoningLevels: [low, high, max]
+          - id: ucas-glm
+            contextWindow: 1000000
+            maxOutputTokens: 32768
+            inputModalities: [text]
+            supportsTools: true
+            supportsReasoning: true
+            reasoningLevels: [low, high, max]
+            thinkingFormat: deepseek
+          - id: ucas-deepseek-flash
+            contextWindow: 1048576
+            maxOutputTokens: 32768
+            inputModalities: [text, image]
+            supportsTools: true
+            supportsReasoning: true
+            reasoningLevels: [low, high, max]
+            thinkingFormat: deepseek
+          - id: ucas-deepseek-pro
+            contextWindow: 1048576
+            maxOutputTokens: 32768
+            inputModalities: [text, image]
+            supportsTools: true
+            supportsReasoning: true
+            reasoningLevels: [low, high, max]
+            thinkingFormat: deepseek
+          - id: ucas-gpt-mini
+            contextWindow: 1000000
+            maxOutputTokens: 32768
+            inputModalities: [text, image]
+            supportsTools: true
+            supportsReasoning: true
+            reasoningLevels: [low, medium, high, xhigh, max]
     - id: ui-uwork-enterprise
       name: '@deepseek-ai/dsh-client-ui-uwork-enterprise'
     - id: ui-uwork-usage

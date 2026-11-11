@@ -13,7 +13,7 @@ import { GatewayClient, GatewayRequestError } from '@deepseek-ai/dsh-uwork-gatew
 import { Remote, TypertRemoteService } from '@deepseek-ai/dsh-typert-protocol'
 import { ManagedRouteTransaction, ProvisioningError, type Journal, type ProvisionInput } from './transaction.ts'
 import { ModelSynchronizer, type KeyIntent } from './synchronizer.ts'
-import type { ModelIdentityBinding, ModelProvisioningState, SyncResult } from './types.ts'
+import type { LegacyTextCatalog, ModelCatalogEntry, ModelIdentityBinding, ModelProvisioningState, SyncResult } from './types.ts'
 
 declare module '@deepseek-ai/cordis' { interface Context { uworkModelProvisioning: UworkModelProvisioning } }
 interface Config {
@@ -31,6 +31,12 @@ interface Config {
   maxItems: number
   /** Release-owned initial model order; empty requires explicit user selection. */
   preferredModels: string[]
+  /** Exact known text/tool routes and client budgets when the endpoint lists only model IDs. */
+  legacyTextCatalog: LegacyTextCatalog | null
+  /** Per-model release capabilities used when the endpoint omits those fields. */
+  modelCatalog: ModelCatalogEntry[]
+  /** Removed product providers whose saved default may move to an authorized enterprise model. */
+  retiredDefaultProviders: string[]
 }
 const journalKey = credentialKey('uwork-model-provisioning', 'route')
 
@@ -69,21 +75,67 @@ export class UworkModelProvisioning extends TypertRemoteService {
   static Config = z.object({ settingsNamespace: z.string().default('llm-pi-ai'), gatewayApiBaseUrl: z.string(),
     allowedModelEndpointOrigins: z.array(String).default([]),
     timeoutMs: z.natural().min(1).max(2147483647).default(30000), maxResponseBytes: z.natural().min(1).max(2147483647).default(524288),
-    maxItems: z.natural().min(1).max(2147483647).default(10000), preferredModels: z.array(String).default([]) })
+    maxItems: z.natural().min(1).max(2147483647).default(10000), preferredModels: z.array(String).default([]),
+    retiredDefaultProviders: z.array(String).default([]),
+    modelCatalog: z.array(z.object({
+      id: z.string().required(),
+      contextWindow: z.natural().min(1).max(2147483647).required(),
+      maxOutputTokens: z.natural().min(1).max(2147483647).required(),
+      inputModalities: z.array(z.union(['text', 'image'])).required(),
+      supportsTools: z.boolean().required(), supportsReasoning: z.boolean().required(),
+      reasoningLevels: z.array(z.union(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'])).required(),
+      thinkingFormat: z.const('deepseek'),
+    })).default([]),
+    legacyTextCatalog: z.union([z.object({ modelIds: z.array(z.string().required()).required(),
+      contextWindow: z.natural().min(1).max(2147483647).required(), maxOutputTokens: z.natural().min(1).max(2147483647).required() }),
+    z.const(null)]).default(null) })
   private readonly transaction: ManagedRouteTransaction
   private startup: Promise<void>
   private readonly synchronizer: ModelSynchronizer | undefined
   private readonly lifetime = new AbortController()
+  private readonly retiredDefaultProviders: readonly string[]
+  private readonly protectedRoutes = new Map<string, () => void>()
   private readonly pending = new Set<Promise<SyncResult>>()
   private state: ModelProvisioningState = { status: 'idle' }
   private observation = 0
   constructor(ctx: Context, config: Config) {
     super(ctx, 'uworkModelProvisioning')
+    this.retiredDefaultProviders = config.retiredDefaultProviders
+    const legacy = config.legacyTextCatalog ?? undefined
+    if (legacy !== undefined && (legacy.maxOutputTokens >= legacy.contextWindow || legacy.modelIds.length === 0
+      || legacy.modelIds.length !== new Set(legacy.modelIds).size
+      || legacy.modelIds.some(id => id.trim() === '' || id.trim() !== id))) {
+      throw new ProvisioningError('INVALID_INPUT', 'Invalid legacy enterprise model catalog')
+    }
+    const catalog = config.modelCatalog
+    if (new Set(catalog.map(model => model.id)).size !== catalog.length
+      || catalog.some(model => model.id.trim() === '' || model.id.trim() !== model.id
+        || (model.maxOutputTokens ?? 0) >= (model.contextWindow ?? 0)
+        || !model.inputModalities?.includes('text')
+        || (model.supportsReasoning && !model.reasoningLevels?.length))) {
+      throw new ProvisioningError('INVALID_INPUT', 'Invalid enterprise model capability catalog')
+    }
     const describeRoutes = () => {
       const descriptor = ctx.settings.describe().find(row => row.ns === config.settingsNamespace)
       if (descriptor === undefined) throw new ProvisioningError('RECOVERY_REQUIRED', 'Native model settings are unavailable')
       return descriptor
     }
+    const protectRoutes = (providers: Record<string, unknown>): void => {
+      for (const provider of Object.keys(providers)) {
+        if (provider.startsWith('uwork-') && !this.protectedRoutes.has(provider)) {
+          this.protectedRoutes.set(provider, ctx.settings.protectPath(config.settingsNamespace, ['providers', provider]))
+        }
+      }
+      for (const [provider, dispose] of this.protectedRoutes) {
+        if (Object.hasOwn(providers, provider)) continue
+        dispose()
+        this.protectedRoutes.delete(provider)
+      }
+    }
+    ctx.effect(() => () => {
+      for (const dispose of this.protectedRoutes.values()) dispose()
+      this.protectedRoutes.clear()
+    })
     this.transaction = new ManagedRouteTransaction({
       readJournal: async () => {
         const record = await ctx.credentials.readRecord(journalKey)
@@ -109,10 +161,11 @@ export class UworkModelProvisioning extends TypertRemoteService {
         const descriptor = describeRoutes()
         const value = descriptor.value as { providers?: Record<string, PiAiProviderProfile> }
         const user = descriptor.user as { providers?: Record<string, PiAiProviderProfile> }
+        protectRoutes(value.providers ?? {})
         return { revision: descriptor.revision, providers: structuredClone(value.providers ?? {}),
           rawProviders: structuredClone(user.providers ?? {}) }
       },
-      writeRoutes: (providers, revision) => {
+      writeRoutes: async (providers, revision) => {
         const descriptor = describeRoutes()
         const current = (descriptor.value as { providers?: Record<string, unknown> }).providers ?? {}
         const ops: import('@deepseek-ai/dsh-settings').SettingsPathOp[] = []
@@ -120,7 +173,9 @@ export class UworkModelProvisioning extends TypertRemoteService {
           if (JSON.stringify(current[key]) === JSON.stringify(providers[key])) continue
           ops.push(providers[key] === undefined ? { op: 'unset', path: ['providers', key] } : { op: 'set', path: ['providers', key], value: providers[key] })
         }
-        return ctx.settings.mutate(config.settingsNamespace, ops, revision)
+        protectRoutes({ ...current, ...providers })
+        await ctx.settings.mutate(config.settingsNamespace, ops, revision)
+        protectRoutes(providers)
       },
       currentDefault: () => ctx.agentDefaultModel.currentSelection(),
       saveDefault: (selection, expected) => ctx.agentDefaultModel.saveSelection(selection, expected),
@@ -130,10 +185,10 @@ export class UworkModelProvisioning extends TypertRemoteService {
       const intentKey = (binding: { orgId: string; userId: string }) => credentialKey('uwork-model-provisioning',
         `key-intent-${createHash('sha256').update(JSON.stringify([binding.orgId, binding.userId])).digest('hex')}`)
       this.synchronizer = new ModelSynchronizer({
-        withSession: (run, signal) => {
+        withSession: (run) => {
           const identity = ctx.get('uworkIdentity')
           if (identity === undefined) throw new ProvisioningError('REVOKED', 'Enterprise identity is unavailable')
-          return identity.withSession(run, signal)
+          return identity.withSession(run)
         },
         client: session => new GatewayClient({ apiBaseUrl: gatewayApiBaseUrl, timeoutMs: config.timeoutMs,
           allowedModelEndpointOrigins: config.allowedModelEndpointOrigins,
@@ -162,13 +217,13 @@ export class UworkModelProvisioning extends TypertRemoteService {
             return Promise.resolve({ kind: 'grant', payload: intent ?? null })
           })
         },
-        provision: input => this.provision(input), revoke: () => { this.revoke() },
+        provision: input => this.provisionRoute(input), revoke: () => { this.revoke() },
         needsModelSelection: (provider, modelIds) => {
           const selection = ctx.agentDefaultModel.currentSelection()
           return selection.provider === '' || selection.model === ''
             || (selection.provider.startsWith('uwork-') && (selection.provider !== provider || !modelIds.includes(selection.model)))
         },
-      }, config.preferredModels)
+      }, config.preferredModels, legacy, catalog)
       ctx.inject(['uworkIdentity'], (child) => {
         child.on('uwork-identity/changed', (state) => {
           this.observation++
@@ -207,10 +262,12 @@ export class UworkModelProvisioning extends TypertRemoteService {
   /** Provision fresh identity-scoped material supplied only by a Host identity callback.
    * @param input - Host-only identity, capability and secret material.
    */
-  async provision(input: ProvisionInput): Promise<void> {
+  async provision(input: ProvisionInput): Promise<void> { await this.provisionRoute(input) }
+
+  private async provisionRoute(input: ProvisionInput): Promise<string> {
     await this.startup
     await this.transaction.recover()
-    await this.transaction.provision(input)
+    return (await this.transaction.provision({ ...input, retiredDefaultProviders: this.retiredDefaultProviders })).provider
   }
   /** Close admission synchronously; durable recovery removes only this plugin's owned route. */
   revoke(): void { this.transaction.revoke() }

@@ -135,6 +135,10 @@ export const InputBar = memo(function InputBar({
       showToast(t('error.sessionInUse'))
       return
     }
+    if (error.code === 'session/model-unavailable') {
+      showToast(t('error.modelUnavailable'))
+      return
+    }
     showToast(error.code === 'session/attachment-invalid' || error.code === 'subagent/attachment-invalid'
       ? attachmentErrorText(t, error.details.reason, imageLimits)
       : `${error.message} (${error.code})`)

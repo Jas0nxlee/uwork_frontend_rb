@@ -42,6 +42,8 @@ export interface SettingsNamespaceView {
    * than silently overwriting a concurrent change.
    */
   revision: number
+  /** Subtrees reserved for their owning plugin; other settings callers cannot edit them. */
+  readOnlyPaths?: string[][]
 }
 
 /**

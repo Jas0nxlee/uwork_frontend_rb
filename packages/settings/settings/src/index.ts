@@ -2,6 +2,7 @@
 import { existsSync } from 'node:fs'
 import { readFile, rename } from 'node:fs/promises'
 import { join } from 'node:path'
+import { isDeepStrictEqual } from 'node:util'
 import { parse } from 'yaml'
 import { Context, FiberState, Service, resolveConfig, type Fiber } from '@deepseek-ai/cordis'
 import type z from '@deepseek-ai/schemastery'
@@ -28,6 +29,8 @@ export interface SettingsDescriptor {
   user?: unknown
   applies: 'live'
   secrets?: RedactedSecret[]
+  /** Configuration paths writable only by their owning plugin. */
+  readOnlyPaths?: string[][]
 }
 
 /** Wire readers always request secret redaction. */
@@ -222,10 +225,17 @@ function inheritedConfig(runtime: Fiber['runtime'] & object, inherited: unknown)
 /** Project Config schemas into forms and own optional instance-level UI policy. */
 export class SettingsForms extends Service {
   static inject = ['configEditor', 'profileContext']
-  private revisions = new Map<string, { raw: string | undefined; revision: number; ns: SettingsNamespace; autoGenerate: boolean }>()
+  private revisions = new Map<string, {
+    raw: string | undefined
+    revision: number
+    ns: SettingsNamespace
+    autoGenerate: boolean
+    protectionKey: string
+  }>()
   private closed = false
   private scheduled = false
   private readonly presentations = new Map<Fiber, { auto?: boolean }>()
+  private readonly protections = new Set<{ ns: string; path: string[]; owner: Fiber }>()
 
   constructor(private readonly ownerContext: Context) {
     super(ownerContext, 'settings')
@@ -276,6 +286,21 @@ export class SettingsForms extends Service {
     }
   }
 
+  /** Reserve a configuration path for writes by the calling plugin.
+   * @param ns Configuration namespace.
+   * @param path Protected subtree, including writes that replace an ancestor.
+   * @returns Disposer to register with the owning plugin's effects.
+   */
+  protectPath(ns: string, path: readonly string[]): () => void {
+    const protection = { ns, path: [...path], owner: this.ctx.fiber }
+    this.protections.add(protection)
+    this.invalidate()
+    return () => {
+      this.protections.delete(protection)
+      this.invalidate()
+    }
+  }
+
   private invalidate(): void {
     if (this.scheduled || this.closed) return
     this.scheduled = true
@@ -308,12 +333,14 @@ export class SettingsForms extends Service {
       const form = volatileForm(schema)
       if (form === undefined) return []
       active.add(entry.id)
+      const readOnlyPaths = [...this.protections].filter(item => item.ns === entry.options.id).map(item => [...item.path])
       const raw = JSON.stringify([entry.fiber.uid, schema.toJSON(), entry.options.config ?? {}])
+      const protectionKey = JSON.stringify(readOnlyPaths)
       const autoGenerate = this.presentations.get(entry.fiber.ctx.fiber)?.auto ?? true
       const previous = this.revisions.get(entry.id)
       const revision = previous === undefined ? 0 : previous.revision + Number(previous.raw !== raw)
-      this.revisions.set(entry.id, { raw, revision, ns: entry.options.id as SettingsNamespace, autoGenerate })
-      if (previous?.raw !== raw || previous.autoGenerate !== autoGenerate) {
+      this.revisions.set(entry.id, { raw, revision, ns: entry.options.id as SettingsNamespace, autoGenerate, protectionKey })
+      if (previous?.raw !== raw || previous.autoGenerate !== autoGenerate || previous.protectionKey !== protectionKey) {
         this.ownerContext.emit('settings/document-updated', entry.options.id as SettingsNamespace, revision)
       }
       const value = projectForm(form, plainConfig(entry.fiber.effectiveConfig))
@@ -328,6 +355,7 @@ export class SettingsForms extends Service {
         value: options?.redactSecrets ? redacted.value : value,
         base: options?.redactSecrets ? redactSecrets(form as z<never>, base).value : base,
         user: options?.redactSecrets ? redactSecrets(form as z<never>, user).value : user,
+        ...(readOnlyPaths.length ? { readOnlyPaths } : {}),
         ...options?.redactSecrets ? { secrets: redacted.secrets } : {},
       }]
     })
@@ -380,6 +408,7 @@ export class SettingsForms extends Service {
     change: (current: Record<string, unknown>, base: Record<string, unknown>, schema: z) => Record<string, unknown>,
     expected?: number, paths: readonly (readonly string[])[] = [],
   ): Promise<void> {
+    const caller = this.ctx.fiber
     const entry = this.ownerContext.configEditor.entries().find(row => row.options.id === ns)
     const schema = entry === undefined ? undefined : this.schema(entry)
     if (entry === undefined || schema === undefined) throw new Error(`No configurable plugin entry "${ns}"`)
@@ -397,6 +426,14 @@ export class SettingsForms extends Service {
       const current = projectForm(form, raw) as Record<string, unknown>
       const base = projectForm(form, inherited) as Record<string, unknown>
       const next = cloneJsonShaped(change(current, base, schema))
+      for (const protection of this.protections) {
+        if (protection.ns !== ns || protection.owner === caller) continue
+        const before = protection.path.reduce<unknown>((value, key) => member(value, key), current)
+        const after = protection.path.reduce<unknown>((value, key) => member(value, key), next)
+        if (!isDeepStrictEqual(before, after)) {
+          throw new Error(`Configuration field "${protection.path.join('.')}" is managed by a plugin`)
+        }
+      }
       const validatePaths = (value: Record<string, unknown>, node: z, path: string[] = []): void => {
         for (const [key, child] of Object.entries(value)) {
           const target = [...path, key]

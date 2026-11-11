@@ -42,10 +42,14 @@ export interface ProvisionInput {
   endpoint: string
   apiKey: string
   authorizedModels: readonly string[]
-  /** Verified gateway capability declarations, never inferred from model names. */
+  /** Explicit endpoint or release capability declarations, never inferred from model names. */
   capabilities: readonly PiAiModelProfile[]
   preferredModels: readonly string[]
+  /** Explicitly retired product routes eligible for default-selection replacement. */
+  retiredDefaultProviders?: readonly string[]
   signal: AbortSignal
+  /** Committed authorization lifetime; when omitted, the operation signal owns it too. */
+  identitySignal?: AbortSignal
 }
 /** Safe structured provisioning failure; causes remain Host-only. */
 export class ProvisioningError extends Error {
@@ -103,8 +107,10 @@ export class ManagedRouteTransaction {
   provision(input: ProvisionInput): Promise<ManagedRoute> {
     this.revoke()
     const epoch = this.epoch
+    const identitySignal = input.identitySignal ?? input.signal
     const check = (): void => {
       live(input.signal)
+      live(identitySignal)
       if (epoch !== this.epoch) throw new ProvisioningError('REVOKED', 'Enterprise provisioning was superseded')
     }
     return this.serial(async () => {
@@ -121,13 +127,17 @@ export class ManagedRouteTransaction {
       if (!models.length || models.some(model => !model.contextWindow || !model.maxTokens || !model.input?.length)) {
         throw new ProvisioningError('INVALID_INPUT', 'Authorized models require verified token limits and modalities')
       }
+      const previous = this.previousRoute
+      const sameAccount = previous !== undefined && previous.binding.orgId === input.binding.orgId
+        && previous.binding.userId === input.binding.userId
+      const provider = sameAccount ? previous.provider : input.provider
       const document = this.ports.readRoutes()
-      if (document.providers[input.provider] !== undefined
+      if (document.providers[provider] !== undefined
         || Object.values(document.providers).some(profile => profile.apiKeyEnv === input.credentialRef)) {
         throw new ProvisioningError('ROUTE_CONFLICT', 'Managed route or credential reference is already configured')
       }
       if (await this.ports.hasSecret(input.credentialRef)) throw new ProvisioningError('ROUTE_CONFLICT', 'Enterprise credential reference is already configured')
-      const route: ManagedRoute = { binding: { ...input.binding }, provider: input.provider, credentialRef: input.credentialRef,
+      const route: ManagedRoute = { binding: { ...input.binding }, provider, credentialRef: input.credentialRef,
         profile: { displayName: 'UWork', api: 'openai-completions', baseURL: endpoint.href,
           apiKeyEnv: input.credentialRef, models: structuredClone(models) } }
       const journal: Journal = { version: 1, phase: 'staged', route }
@@ -141,15 +151,15 @@ export class ManagedRouteTransaction {
         await this.ports.writeJournal({ ...journal, phase: 'committed' }, journal)
         check()
         const controller = new AbortController()
-        input.signal.addEventListener('abort', () => { controller.abort() }, { once: true, signal: controller.signal })
+        identitySignal.addEventListener('abort', () => { controller.abort() }, { once: true, signal: controller.signal })
         this.active = { route, controller }
         const current = this.ports.currentDefault()
         const preferred = input.preferredModels.find(id => models.some(model => model.id === id))
         // An existing personal default or a revoked Session selection is never rewritten.
-        const previous = this.previousRoute
-        const ownedDefault = previous !== undefined && current.provider === previous.provider
-          && previous.binding.orgId === route.binding.orgId && previous.binding.userId === route.binding.userId
-        if (preferred !== undefined && (ownedDefault || current.provider === route.provider || current.provider === '')) {
+        const ownedDefault = sameAccount && current.provider === route.provider
+        const retainsChoice = ownedDefault && models.some(model => model.id === current.model)
+        if (preferred !== undefined && !retainsChoice && (ownedDefault || current.provider === route.provider || current.provider === ''
+          || input.retiredDefaultProviders?.includes(current.provider))) {
           await this.ports.saveDefault({ provider: route.provider, model: preferred }, current)
         }
         check()

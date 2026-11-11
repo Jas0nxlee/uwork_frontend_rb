@@ -50,8 +50,8 @@ export function UsagePage({ t, useResource }: UsagePageProps): ReactNode {
     {state?.status === 'error' && state.lastSuccess !== undefined && <p className={css.meta}>{t('retained', { time: new Date(state.lastSuccess.updatedAt).toLocaleString() })}</p>}
     {overview !== undefined && <section className={css.section}><h2>{t('accountDetails')}</h2>
       <dl className={css.details}>
-        <div><dt>{t('organization')}</dt><dd>{overview.binding.orgId}</dd></div>
-        <div><dt>{t('user')}</dt><dd>{overview.binding.userId}</dd></div>
+        <div><dt>{t('organization')}</dt><dd>{overview.data.organizationName}</dd></div>
+        <div><dt>{t('user')}</dt><dd>{overview.data.userName}</dd></div>
         <div><dt>{t('endpoint')}</dt><dd>{overview.data.publicEndpoint}</dd></div>
       </dl>
       <h2>{t('keys')}</h2>

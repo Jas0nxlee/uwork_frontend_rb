@@ -36,6 +36,17 @@ describe('Host gateway protocol', () => {
     await expect(setup({ llm_base_url: 'http://10.0.0.1' }).client.readPublicEndpoint()).rejects.toMatchObject({ kind: 'invalid' })
     await expect(setup({ llm_base_url: 'https://unadmitted.example.com' }).client.readPublicEndpoint()).rejects.toMatchObject({ kind: 'invalid' })
   })
+  it('uses the OpenAI v1 API for an advertised bare origin and preserves an explicit prefix', async () => {
+    const { client, request } = setup({ llm_base_url: 'https://models.example.com' })
+    const endpoint = await client.readPublicEndpoint()
+    expect(endpoint).toBe('https://models.example.com/v1')
+    request.mockResolvedValueOnce(Response.json({ data: [{ id: 'synthetic-model' }] }))
+    expect(await client.listEndpointModels(endpoint, 'synthetic-key')).toEqual([{ id: 'synthetic-model' }])
+    expect(request).toHaveBeenLastCalledWith(new URL('https://models.example.com/v1/models'),
+      expect.objectContaining({ headers: { Accept: 'application/json', Authorization: 'Bearer synthetic-key' }, redirect: 'error' }))
+    expect(await setup({ llm_base_url: 'https://models.example.com/tenant/v1/' }).client.readPublicEndpoint())
+      .toBe('https://models.example.com/tenant/v1')
+  })
   it.each(['http://gateway.example.com', 'https://127.0.0.1', 'https://gateway.internal', 'https://name:secret@gateway.example.com', 'https://gateway.example.com/path'])('rejects unsafe control address %s', (apiBaseUrl) => {
     expect(() => setup({}, 200, { apiBaseUrl })).toThrow()
   })

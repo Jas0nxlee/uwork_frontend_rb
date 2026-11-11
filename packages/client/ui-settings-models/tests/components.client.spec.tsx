@@ -2437,3 +2437,17 @@ it.each([es, fr, de, ru, pt])('keeps capacity examples in translated validation 
     }
   }
 })
+
+it('shows protected providers as enterprise managed without edit or delete actions', async () => {
+  const scripted = scriptedFace()
+  scripted.face.settings.describe.mockResolvedValue(remoteOk({
+    writable: true, hasDocument: false,
+    namespaces: wireNamespaces().map(namespace => namespace.ns === 'llm-pi-ai'
+      ? { ...namespace, readOnlyPaths: [['providers', 'openai']] } : namespace),
+  }))
+  await mountFace(scripted)
+  const row = within(screen.getByText('openai', { exact: true }).closest('li')!)
+  expect(row.getByText(en.managedTag)).toBeTruthy()
+  expect(row.queryByRole('button', { name: openaiCopy(en.editProvider) })).toBeNull()
+  expect(row.queryByRole('button', { name: openaiCopy(en.removeProvider) })).toBeNull()
+})

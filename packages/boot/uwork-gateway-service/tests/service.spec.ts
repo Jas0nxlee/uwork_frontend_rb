@@ -25,7 +25,7 @@ function external() {
     switch (url.pathname) {
       case '/api/auth/handoff/start': return response({ handoff_id: 'synthetic-handoff', handoff_secret: 'synthetic-private-secret', expires_at: new Date(Date.now() + 60000).toISOString() }, 201)
       case '/api/auth/login':
-      case '/api/auth/refresh': return response({ token: `e30.${Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.synthetic-signature`, user: { id: user, org_id: 'synthetic-org', name: 'Synthetic employee' } })
+      case '/api/auth/refresh': return response({ token: `e30.${Buffer.from(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 })).toString('base64url')}.synthetic-signature`, user: { id: user, org_id: 'synthetic-org', name: user === 'synthetic-other-user' ? 'Other employee' : 'Synthetic employee' } })
       case '/api/auth/orgs': return response({ llm_base_url: 'https://models.example.com/v1', llm_base_url_internal: 'http://10.0.0.1/v1' })
       case '/api/keys': return response({ keys: [{ id: 1, alias: 'synthetic-alias', masked_key: 'synthetic-mask', status: 'active' }] })
       case '/api/usage': return response({ subscriptions: [] })
@@ -45,7 +45,7 @@ async function harness(cacheTtlMs = 30000, loader = false) {
   await ctx.plugin(CredentialsLocal, { path: join(directory, 'credentials.yaml'), watch: false })
   await ctx.plugin(Authorization)
   await ctx.plugin(NativeAuthorization)
-  await ctx.plugin(EnterpriseIdentity, { apiBaseUrl: 'https://issuer.example.com', organizations: [{ orgId: 'synthetic-org', corpId: 'synthetic-corp', agentId: '123', callbackUrl: 'https://issuer.example.com/callback' }], defaultOrgId: 'synthetic-org' })
+  await ctx.plugin(EnterpriseIdentity, { apiBaseUrl: 'https://issuer.example.com', organizations: [{ orgId: 'synthetic-org', label: 'Synthetic organization', corpId: 'synthetic-corp', agentId: '123', callbackUrl: 'https://issuer.example.com/callback' }], defaultOrgId: 'synthetic-org' })
   const config = { apiBaseUrl: 'https://issuer.example.com', allowedModelEndpointOrigins: ['https://models.example.com'], cacheTtlMs }
   if (loader) {
     await ctx.plugin(Loader)
@@ -81,7 +81,7 @@ it('projects only safe overview fields and refreshes model permissions explicitl
   const ctx = await harness()
   await login(ctx)
   const first = await ctx.uworkGateway.getOverview(signal())
-  expect(first).toMatchObject({ status: 'ready', data: { publicEndpoint: 'https://models.example.com/v1', keys: [{ maskedKey: 'synthetic-mask' }], planModels: { models: ['synthetic-model'] } }, binding: { userId: user } })
+  expect(first).toMatchObject({ status: 'ready', data: { organizationName: 'Synthetic organization', userName: 'Synthetic employee', publicEndpoint: 'https://models.example.com/v1', keys: [{ maskedKey: 'synthetic-mask' }], planModels: { models: ['synthetic-model'] } }, binding: { userId: user } })
   expect(JSON.stringify(first)).not.toMatch(/token|10\.0\.0\.1|private-secret/)
   const calls = request.mock.calls.length
   expect(await ctx.uworkGateway.getOverview(signal())).toEqual(first)
@@ -139,7 +139,7 @@ it('clears former identity observations on sign-out and account replacement', as
   expect(await ctx.uworkGateway.getOverview(signal())).toEqual({ status: 'signed-out' })
   user = 'synthetic-other-user'
   await login(ctx)
-  expect(await ctx.uworkGateway.getOverview(signal())).toMatchObject({ status: 'ready', binding: { userId: 'synthetic-other-user' } })
+  expect(await ctx.uworkGateway.getOverview(signal())).toMatchObject({ status: 'ready', data: { userName: 'Other employee' }, binding: { userId: 'synthetic-other-user' } })
 })
 it('reports identity verification failures without exposing persisted or previous data', async () => {
   const request = external()
@@ -180,4 +180,17 @@ it('streams initial identity and account changes, releasing subscription on canc
   const ended = iterator.next()
   controller.abort()
   expect(await ended).toMatchObject({ done: true })
+})
+
+it('rejects stale display identity when the authenticated session changes before reading', async () => {
+  const request = external()
+  const ctx = await harness()
+  await login(ctx)
+  const former = await ctx.uworkIdentity.getState()
+  user = 'synthetic-other-user'
+  await login(ctx)
+  const calls = request.mock.calls.length
+  vi.spyOn(ctx.uworkIdentity, 'getState').mockResolvedValueOnce(former)
+  expect(await ctx.uworkGateway.getOverview(signal())).toEqual({ status: 'error', reason: 'identity' })
+  expect(request).toHaveBeenCalledTimes(calls)
 })

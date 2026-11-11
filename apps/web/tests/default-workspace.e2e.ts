@@ -46,7 +46,19 @@ describe.skipIf(MODE === 'record')('web e2e: default Workspace', () => {
         await input.waitFor()
         expect(scaffold.ctx.sessions.list().map(session => session.id)).toEqual([initialSession.id])
         const prompt = fixtureUserPrompts(await readFile(fixture, 'utf8'))[0]!
+        const defaults = scaffold.ctx.agentDefaultModel
+        const configured = defaults.currentSelection()
+        const empty = { provider: '', model: '' }
+        await defaults.saveSelection(empty, configured)
+        await expect.poll(() => defaults.currentSelection()).toEqual(empty)
         await input.fill(prompt)
+        await input.press('Enter')
+        const chooseModel = page.getByText('Choose an available model. If the list is empty, check your account or model settings.', { exact: true })
+        await chooseModel.waitFor()
+        expect(await input.innerText()).toBe(prompt)
+        expect(initialSession.snapshotEvents().some(event => event.type === 'turn/start')).toBe(false)
+        await defaults.saveSelection(configured, empty)
+        await expect.poll(() => defaults.currentSelection()).toEqual(configured)
         const settled = scaffold.whenTurnSettled()
         await input.press('Enter')
         const sessionId = await settled
@@ -58,6 +70,7 @@ describe.skipIf(MODE === 'record')('web e2e: default Workspace', () => {
         expect(scaffold.ctx.sessions.get(sessionId)?.header.cwd).toBe(workspace.path)
         await assertFinalWorkspaceSnapshot(fileURLToPath(new URL('../../../snapshots/web/default-workspace', import.meta.url)), workspace.path)
         await page.getByText('DONE', { exact: true }).waitFor()
+        await chooseModel.waitFor({ state: 'hidden' })
         await compareOrRefreshGolden(EXPECTED, await captureStableAria(page, '[class*="centerCol"]', scaffold.workspaceCwd), MODE)
         expect(tripwire.pageErrors).toEqual([])
         expect(tripwire.warnings).toEqual([])

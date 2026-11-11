@@ -7,30 +7,47 @@ import type { GatewayModel } from '@deepseek-ai/dsh-uwork-gateway/types'
 import type { PiAiModelProfile, PiAiReasoningEfforts } from '@deepseek-ai/dsh-llm-pi-ai'
 import { ProvisioningError } from './transaction.ts'
 import type { Binding, ProvisionInput } from './transaction.ts'
-import type { ModelIdentityBinding, SyncResult } from './types.ts'
+import type { LegacyTextCatalog, ModelCatalogEntry, ModelIdentityBinding, SyncResult } from './types.ts'
 
 /** Durable per-account reconciliation identity written before a key creation POST. */
 export interface KeyIntent { version: 1; orgId: string; userId: string; alias: string; outcome: 'pending' | 'unknown' }
 /** Host-only collaborators; key-bearing client methods never cross Remote. */
 export interface SyncPorts {
-  withSession<T>(this: void, run: (session: IdentitySession) => Promise<T>, signal: AbortSignal): Promise<T>
+  /** Open an identity-owned lifetime without coupling it to a settings reader. */
+  withSession<T>(this: void, run: (session: IdentitySession) => Promise<T>): Promise<T>
   client(this: void, session: IdentitySession): Pick<GatewayClient, 'readPublicEndpoint' | 'readPlanModels' | 'listKeys' | 'revealKey' | 'generateKey' | 'listEndpointModels'>
   readIntent(this: void, binding: Binding): Promise<KeyIntent | undefined>
   writeIntent(this: void, binding: Binding, intent: KeyIntent | undefined, expected?: KeyIntent): Promise<void>
-  provision(this: void, input: ProvisionInput): Promise<void>
+  provision(this: void, input: ProvisionInput): Promise<string>
   needsModelSelection(this: void, provider: string, modelIds: readonly string[]): boolean
   revoke(this: void): void
 }
 
-/** Only complete, protocol-declared facts can activate an agent model.
+/** Resolve authorized capability declarations from the endpoint or the release's explicit legacy catalog.
  * @param models - Bounded endpoint capability facts.
  * @param authorized - Explicit current account authorization ids.
+ * @param legacy - Optional release-declared text/tool routes; omission requires complete endpoint declarations.
+ * @param declarations - Per-model release capabilities; explicit endpoint fields take precedence.
  * @returns Native pi-ai declarations for the verified intersection.
  */
-export function nativeCapabilities(models: readonly GatewayModel[], authorized: readonly string[]): PiAiModelProfile[] {
+export function nativeCapabilities(
+  models: readonly GatewayModel[], authorized: readonly string[],
+  legacy?: LegacyTextCatalog, declarations: readonly ModelCatalogEntry[] = [],
+): PiAiModelProfile[] {
   const allowed = new Set(authorized)
-  return models.flatMap((model) => {
-    if (!allowed.has(model.id) || model.contextWindow === undefined || model.maxOutputTokens === undefined
+  const declared = new Set(legacy?.modelIds)
+  const catalog = new Map(declarations.map(model => [model.id, model]))
+  return models.flatMap((endpoint) => {
+    if (!allowed.has(endpoint.id)) return []
+    const entry = catalog.get(endpoint.id)
+    const legacyModel = legacy !== undefined && declared.has(endpoint.id) ? {
+      ...endpoint, contextWindow: endpoint.contextWindow ?? legacy.contextWindow,
+      maxOutputTokens: endpoint.maxOutputTokens ?? legacy.maxOutputTokens,
+      inputModalities: endpoint.inputModalities ?? ['text'], supportsTools: endpoint.supportsTools ?? true,
+      supportsReasoning: endpoint.supportsReasoning ?? false,
+    } : endpoint
+    const model = { ...legacyModel, ...entry, ...endpoint }
+    if (model.contextWindow === undefined || model.maxOutputTokens === undefined
       || !model.inputModalities?.includes('text') || model.supportsTools !== true || model.supportsReasoning === undefined) return []
     const reasoningEfforts: PiAiReasoningEfforts = {}
     if (model.supportsReasoning) {
@@ -41,8 +58,10 @@ export function nativeCapabilities(models: readonly GatewayModel[], authorized: 
       if (!Object.keys(reasoningEfforts).length) return []
     }
     return [{ id: model.id, contextWindow: model.contextWindow, maxTokens: model.maxOutputTokens,
-      input: model.inputModalities.includes('image') && model.supportsVision === true ? ['text', 'image'] : ['text'],
-      reasoningEfforts: model.supportsReasoning ? reasoningEfforts : false }]
+      input: model.inputModalities.includes('image') && model.supportsVision !== false ? ['text', 'image'] : ['text'],
+      reasoningEfforts: model.supportsReasoning ? reasoningEfforts : false,
+      ...(entry === undefined ? {} : { compat: { maxTokensField: 'max_tokens' as const,
+        supportsReasoningEffort: true, ...(entry.thinkingFormat === undefined ? {} : { thinkingFormat: entry.thinkingFormat }) } }) }]
   })
 }
 
@@ -50,7 +69,8 @@ export function nativeCapabilities(models: readonly GatewayModel[], authorized: 
 export class ModelSynchronizer {
   private queue: Promise<unknown> = Promise.resolve(undefined)
   private epoch = 0
-  constructor(private readonly ports: SyncPorts, private readonly preferredModels: readonly string[]) {}
+  constructor(private readonly ports: SyncPorts, private readonly preferredModels: readonly string[],
+    private readonly legacyCatalog?: LegacyTextCatalog, private readonly modelCatalog: readonly ModelCatalogEntry[] = []) {}
   /** Read fresh authorization and provision a native route; key creation is explicitly opted in.
    * @param createKey - True only for an explicit user key-creation action.
    * @param signal - Calling operation lifetime.
@@ -73,7 +93,8 @@ export class ModelSynchronizer {
       check()
       if (expected !== undefined) { epoch = ++this.epoch; this.ports.revoke() }
       const binding: Binding = { orgId: session.orgId, userId: session.userId, generation: session.generation }
-      const client = this.ports.client(session)
+      const operation = AbortSignal.any([signal, session.signal])
+      const client = this.ports.client({ ...session, signal: operation })
       const requests = [client.readPublicEndpoint(), client.readPlanModels(), client.listKeys()] as const
       await Promise.allSettled(requests)
       const [endpoint, plan, keys] = await Promise.all(requests)
@@ -110,17 +131,17 @@ export class ModelSynchronizer {
       check()
       const catalog = await client.listEndpointModels(endpoint, apiKey)
       const authorizedModels = plan.unrestricted ? catalog.map(model => model.id) : plan.models
-      const capabilities = nativeCapabilities(catalog, authorizedModels)
+      const capabilities = nativeCapabilities(catalog, authorizedModels, this.legacyCatalog, this.modelCatalog)
       if (!capabilities.length) return { status: 'capabilities-required' }
       check()
       const id = randomUUID().replaceAll('-', '')
-      const provider = `uwork-${id}`
-      await this.ports.provision({ binding, provider, credentialRef: `UWORK_${id.toUpperCase()}`, endpoint, apiKey,
-        authorizedModels, capabilities, preferredModels: [...this.preferredModels], signal: AbortSignal.any([signal, session.signal]) })
+      const provider = await this.ports.provision({ binding, provider: `uwork-${id}`, credentialRef: `UWORK_${id.toUpperCase()}`, endpoint, apiKey,
+        authorizedModels, capabilities, preferredModels: [...this.preferredModels],
+        signal: operation, identitySignal: session.signal })
       check()
       const modelIds = capabilities.map(model => model.id)
       return { status: 'ready', provider, modelIds, needsModelSelection: this.ports.needsModelSelection(provider, modelIds) }
-    }, signal))
+    }))
     this.queue = work.catch(() => {})
     return work
   }

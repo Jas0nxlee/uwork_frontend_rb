@@ -37,6 +37,13 @@ Project Config schemas into forms and own optional instance-level UI policy.
  */
 configure(presentation: { auto?: boolean }, owner: Fiber = this.ctx.fiber): () => void
 
+/** Reserve a configuration path for writes by the calling plugin.
+ * @param ns Configuration namespace.
+ * @param path Protected subtree, including writes that replace an ancestor.
+ * @returns Disposer to register with the owning plugin's effects.
+ */
+protectPath(ns: string, path: readonly string[]): () => void
+
 /** Locate the profile patch for native editing.
  * @returns The existing profile patch path.
  */

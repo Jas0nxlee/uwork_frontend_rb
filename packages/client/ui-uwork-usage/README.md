@@ -9,7 +9,7 @@ English | [中文](README.zh.md)
 
 ## Summary
 
-Read-only enterprise usage panel with period and metric filters, request and token totals, success rates, daily aggregates, model distribution and subscription balances, safe account bindings, the public gateway endpoint and masked key metadata. Mount with the safe Host gateway service and the standard Client resources service.
+Read-only enterprise usage panel with period and metric filters, request and token totals, success rates, daily aggregates, model distribution and subscription balances, organization and user display names, the public gateway endpoint and masked key metadata. Mount with the safe Host gateway service and the standard Client resources service.
 
 ## Table of Contents
 

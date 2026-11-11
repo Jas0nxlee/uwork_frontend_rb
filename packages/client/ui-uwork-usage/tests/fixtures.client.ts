@@ -19,6 +19,7 @@ export const usage: UsageState = { status: 'ready', binding, updatedAt: 17937072
   models: [{ model: 'synthetic-model', requestCount: 10, cost: 2.5, share: 100 }],
 } }
 export const overview: OverviewState = { status: 'ready', binding, updatedAt: 1793707200000, data: {
+  organizationName: 'Synthetic organization', userName: 'Synthetic employee',
   publicEndpoint: 'https://models.example.com/v1', keys: [], planModels: { models: ['synthetic-model'], unrestricted: false, hasSubscription: true },
   subscriptions: [{ planId: 'synthetic-plan', planTitle: 'Synthetic subscription', amountTotal: 100, amountUsed: 25, amountUnit: 'unspecified', nextResetTime: null, status: 'active' }],
 } }
