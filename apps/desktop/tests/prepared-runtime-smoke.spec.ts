@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, expect, it, vi } from 'vitest'
@@ -6,6 +6,7 @@ import { smokePreparedRuntime } from '../scripts/smoke-prepared-runtime.ts'
 import { smokeDesktopRuntime } from '../scripts/smoke-runtime.ts'
 import { verifyDesktopRuntime, writeDesktopRuntime } from '../src/runtime-tree.ts'
 import { runtimeFixture } from './runtime-fixture.ts'
+import { verifyRuntimeArchive } from '../scripts/verify-runtime-archive.ts'
 
 const { payload } = vi.hoisted(() => ({ payload: vi.fn(async (..._args: unknown[]) => ({ stdout: '' })) }))
 vi.mock('node:child_process', async (importOriginal) => {
@@ -14,6 +15,7 @@ vi.mock('node:child_process', async (importOriginal) => {
     execFile: Object.assign(vi.fn(), { [promisify.custom]: payload }) }
 })
 vi.mock('../scripts/smoke-runtime.ts', () => ({ smokeDesktopRuntime: vi.fn(async () => {}) }))
+vi.mock('../scripts/verify-runtime-archive.ts', () => ({ verifyRuntimeArchive: vi.fn(async () => {}) }))
 
 const roots: string[] = []
 const hostArch = Object.getOwnPropertyDescriptor(process, 'arch')!
@@ -59,7 +61,26 @@ it('smokes an x64 target verified on an arm64 build host without revalidating ag
   await smokePreparedRuntime(root, electron, resources, descriptor)
   expect(payload.mock.calls[0]![0]).toBe(electron)
   expect(payload.mock.calls[0]![1]).toEqual(expect.arrayContaining([root, resources]))
-  expect(smokeDesktopRuntime).toHaveBeenCalledWith(root, electron, descriptor, expect.any(Object), resources)
+  expect(smokeDesktopRuntime).toHaveBeenCalledWith(root, electron, descriptor, expect.any(Object), resources, undefined)
   const environment = vi.mocked(smokeDesktopRuntime).mock.calls[0]![3]
   expect(existsSync(environment.NARB_NATIVE_CACHE_DIR!)).toBe(false)
+})
+
+it('uses verified preparation profile layers while exercising an archived runtime', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'prepared-runtime-archive-'))
+  roots.push(root)
+  const fixture = runtimeFixture(root)
+  const bundles = ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-uwork-desktop']
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ type: 'module', dsh: { profile: { bundles } } }))
+  const target = { platform: 'darwin' as const, arch: 'arm64' }
+  writeDesktopRuntime(root, fixture.release, fixture.sharedPackages.map(entry => entry.name), target)
+  const descriptor = await verifyDesktopRuntime(root, fixture.release.version, target)
+  const archive = join(root, 'app.asar')
+  const archivedRoot = join(archive, 'dsh')
+  const electron = join(root, 'electron')
+  const resources = join(root, 'runtime')
+  await smokePreparedRuntime(archivedRoot, electron, resources, descriptor, root)
+  expect(verifyRuntimeArchive).toHaveBeenCalledWith(archive, descriptor)
+  expect(smokeDesktopRuntime).toHaveBeenCalledWith(archivedRoot, electron, descriptor,
+    expect.any(Object), resources, bundles)
 })
