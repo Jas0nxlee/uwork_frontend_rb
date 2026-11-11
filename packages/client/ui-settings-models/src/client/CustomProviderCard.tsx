@@ -32,6 +32,7 @@ import { apiKeyFailure } from './apiKey.ts'
 import { ApiKeyInput } from './ApiKeyInput.tsx'
 import { EditorFooter } from './EditorFooter.tsx'
 import { validateDeepSeekModels } from './DeepSeekModelsEditor.tsx'
+import { resolveModelMetadata } from './resolve-model-metadata.ts'
 import { ModelListEditor } from './ModelListEditor.tsx'
 import type { ModelDraft } from './ModelListEditor.tsx'
 import { validateReasoningEfforts } from './ModelReasoningEfforts.tsx'
@@ -65,6 +66,9 @@ function isHttpUrl(value: string): boolean {
 
 /** Props of {@link CustomProviderCard}. */
 export interface CustomProviderCardProps {
+  /** Fetch capacities and input types instead of accepting manual values. */
+  automaticModelMetadata?: boolean | undefined
+
   /** Route ids already declared, so the card refuses to shadow one. */
   taken: readonly string[]
   /** Wire protocols the adapter can serve, in the order it reports them. */
@@ -161,6 +165,14 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
     const keyRef = deriveKeyRef(route)
     const storesKey = keyValue.length > 0
     if (!committed) {
+      let resolvedModels = models
+      if (props.automaticModelMetadata) {
+        const resolved = await resolveModelMetadata(operations,
+          { settingsNs: NS, provider: route, baseURL: normalizedBaseURL, api: protocol }, models, t)
+        if (resolved.error !== undefined) return resolved.error
+        resolvedModels = resolved.models
+        setModels(resolvedModels)
+      }
       const profile = {
         ...displayName.length === 0 ? {} : { displayName },
         // The profile names the conventional reference only when this card is
@@ -170,7 +182,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
         ...storesKey ? { apiKeyEnv: keyRef } : {},
         api: protocol,
         baseURL: normalizedBaseURL,
-        models: models.map(model => ({ ...model })),
+        models: resolvedModels.map(model => ({ ...model })),
       }
       // `taken` is a snapshot too, so the id check alone cannot see a route
       // declared after this card opened; the revision makes that race a
@@ -290,6 +302,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
           : <p className={styles['error']}>{t(keyFailure === 'keyBlank' ? 'keyBlankNew' : keyFailure)}</p>}
       </div>
       <ModelListEditor
+        automaticModelMetadata={props.automaticModelMetadata}
         models={models}
         onChange={setModels}
         reasoningLevels={reasoningLevels}

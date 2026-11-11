@@ -2,6 +2,9 @@
 
 /** English strings (the key-set source of truth for this pair). */
 export const en = {
+  metadataAutomatic: 'Automatic',
+  metadataSource: 'Input types and token limits are fetched automatically from Models.dev when you save.',
+  metadataMissing: 'Could not find complete model metadata for: {models}. Check the exact model ID or retry after the public catalog is available.',
   nav: 'Models',
   deepSeekAccount: 'DeepSeek Account',
   title: 'Models',
@@ -147,6 +150,9 @@ export type ModelsKey = keyof typeof en
 
 /** Chinese strings (same keys as {@link en}). */
 export const zh: { [Key in keyof typeof en]: string } = {
+  metadataAutomatic: '自动获取',
+  metadataSource: '保存时自动从 Models.dev 获取输入类型和 Token 上限，无需手动填写。',
+  metadataMissing: '未找到以下模型的完整能力信息：{models}。请检查完整模型 ID，或在公开目录恢复后重试。',
   nav: '模型',
   deepSeekAccount: 'DeepSeek 账号',
   title: '模型',
@@ -289,6 +295,9 @@ export const zh: { [Key in keyof typeof en]: string } = {
 
 /** Japanese copy, checked against the English keys. */
 export const ja = {
+  metadataAutomatic: '自動取得',
+  metadataSource: '保存時に Models.dev から入力形式とトークン上限を自動取得します。',
+  metadataMissing: '完全なモデル情報が見つかりません：{models}。モデル ID を確認するか、再試行してください。',
   'nav': 'モデル',
   'deepSeekAccount': 'DeepSeekアカウント',
   'title': 'モデル',
@@ -431,6 +440,9 @@ export const ja = {
 
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
+  metadataAutomatic: 'Automático',
+  metadataSource: 'Los tipos de entrada y límites se obtienen de Models.dev al guardar.',
+  metadataMissing: 'Faltan metadatos para: {models}. Comprueba el ID o inténtalo de nuevo.',
   nav: 'Modelos',
   deepSeekAccount: 'Cuenta DeepSeek',
   title: 'Modelos',
@@ -573,6 +585,9 @@ export const es = {
 
 /** French dictionary, checked against the English keys. */
 export const fr = {
+  metadataAutomatic: 'Automatique',
+  metadataSource: 'Les types d’entrée et limites sont récupérés sur Models.dev à l’enregistrement.',
+  metadataMissing: 'Métadonnées incomplètes pour : {models}. Vérifiez l’ID ou réessayez.',
   nav: 'Modèles',
   deepSeekAccount: 'Compte DeepSeek',
   title: 'Modèles',
@@ -715,6 +730,9 @@ export const fr = {
 
 /** German dictionary, checked against the English keys. */
 export const de = {
+  metadataAutomatic: 'Automatisch',
+  metadataSource: 'Eingabetypen und Tokenlimits werden beim Speichern von Models.dev abgerufen.',
+  metadataMissing: 'Unvollständige Modelldaten für: {models}. Prüfe die ID oder versuche es erneut.',
   nav: 'Modelle',
   deepSeekAccount: 'DeepSeek-Konto',
   title: 'Modelle',
@@ -857,6 +875,9 @@ export const de = {
 
 /** Russian dictionary, checked against the English keys. */
 export const ru = {
+  metadataAutomatic: 'Автоматически',
+  metadataSource: 'Типы ввода и лимиты токенов загружаются с Models.dev при сохранении.',
+  metadataMissing: 'Неполные данные моделей: {models}. Проверьте ID или повторите попытку.',
   nav: 'Модели',
   deepSeekAccount: 'DeepSeek Аккаунт',
   title: 'Модели',
@@ -999,6 +1020,9 @@ export const ru = {
 
 /** Portuguese dictionary, checked against the English keys. */
 export const pt = {
+  metadataAutomatic: 'Automático',
+  metadataSource: 'Os tipos de entrada e limites são obtidos do Models.dev ao guardar.',
+  metadataMissing: 'Metadados incompletos para: {models}. Verifique o ID ou tente novamente.',
   nav: 'Modelos',
   deepSeekAccount: 'DeepSeek Conta',
   title: 'Modelos',

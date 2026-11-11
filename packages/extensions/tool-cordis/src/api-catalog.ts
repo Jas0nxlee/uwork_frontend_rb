@@ -5321,6 +5321,14 @@ export const EVENT_API: readonly EventApiEntry[] = [
     parameters: [],
   },
   {
+    name: 'llm/discover-models',
+    mode: 'waterfall',
+    signature: '\'llm/discover-models\'(request: Omit<LlmModelDiscoveryRequest, \'apiKey\'>, signal: AbortSignal | undefined, next: () => Promise<readonly LlmDiscoveredModel[]>): Promise<readonly LlmDiscoveredModel[]>',
+    summary: 'Enrich discovered models without exposing the draft credential.',
+    description: 'Enrich discovered models without exposing the draft credential.',
+    parameters: [{ name: 'request', description: 'public endpoint, provider, and protocol identifiers.' }, { name: 'next', description: 'delegate to the registered model discovery.' }, { name: 'signal', description: 'caller cancellation.' }],
+  },
+  {
     name: 'llm/models-updated',
     mode: 'emit',
     signature: '\'llm/models-updated\'(provider: string): void',
@@ -7306,7 +7314,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'LlmModelDiscoveryRequest',
-    declaration: 'export interface LlmModelDiscoveryRequest {\n    provider?: string;\n    baseURL?: string;\n    api?: string;\n    apiKey?: string;\n}',
+    declaration: 'export interface LlmModelDiscoveryRequest {\n    provider?: string;\n    baseURL?: string;\n    api?: string;\n    modelIds?: readonly string[];\n    apiKey?: string;\n}',
   },
   {
     name: 'LlmModelInfo',

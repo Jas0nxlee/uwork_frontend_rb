@@ -74,6 +74,15 @@ declare module '@deepseek-ai/cordis' {
      */
     'llm/stream'(this: LlmRuntime, options: GenerateOptions, next: () => AsyncIterable<StreamChunk>): AsyncIterable<StreamChunk>
 
+    /**
+     * Enrich discovered models without exposing the draft credential.
+     * @param request - public endpoint, provider, and protocol identifiers.
+     * @param next - delegate to the registered model discovery.
+     * @param signal - caller cancellation.
+     * @mode waterfall
+     */
+    'llm/discover-models'(request: Omit<LlmModelDiscoveryRequest, 'apiKey'>, signal: AbortSignal | undefined, next: () => Promise<readonly LlmDiscoveredModel[]>): Promise<readonly LlmDiscoveredModel[]>
+
   }
 }
 
@@ -612,9 +621,14 @@ export class LlmRuntime extends TypertRemoteService {
     if ((request.provider ?? '').length === 0 && (request.baseURL ?? '').length === 0) {
       throw new LlmError('model discovery needs a provider route or a baseURL', 'INVALID_DISCOVERY')
     }
-    const discovered = signal === undefined
-      ? await discover(request)
-      : await discover(request, signal)
+    const publicRequest = {
+      ...request.provider === undefined ? {} : { provider: request.provider },
+      ...request.baseURL === undefined ? {} : { baseURL: request.baseURL },
+      ...request.api === undefined ? {} : { api: request.api },
+      ...request.modelIds === undefined ? {} : { modelIds: request.modelIds },
+    }
+    const discovered = await this.ctx.waterfall('llm/discover-models', publicRequest, signal,
+      () => signal === undefined ? discover(request) : discover(request, signal))
     const seen = new Set<string>()
     const models: LlmDiscoveredModel[] = []
     for (const model of discovered) {

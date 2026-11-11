@@ -32,6 +32,7 @@ import {
 import type { DeepSeekModelsValidationFailure } from './DeepSeekModelsEditor.tsx'
 import { apiKeyFailure } from './apiKey.ts'
 import { EditorFooter } from './EditorFooter.tsx'
+import { resolveModelMetadata } from './resolve-model-metadata.ts'
 import { ModelListEditor } from './ModelListEditor.tsx'
 import { validateReasoningEfforts } from './ModelReasoningEfforts.tsx'
 import type { ReasoningEffortsFailure } from './ModelReasoningEfforts.tsx'
@@ -50,6 +51,9 @@ type EditorLayout = 'deepseek' | 'pi-ai' | 'unknown'
 
 /** Props of {@link ProviderEditor}. */
 export interface ProviderEditorProps {
+  /** Fetch capacities and input types instead of accepting manual values. */
+  automaticModelMetadata?: boolean | undefined
+
   /** Provider route id. */
   provider: string
   /** Display name for the card title. */
@@ -269,7 +273,7 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
     const ns = namespace.ns
     // A pi-ai profile names the conventional reference only when this page is
     // about to store a key. Otherwise the provider keeps its native auth path.
-    const next = layout === 'pi-ai' && stringAt(draft, 'apiKeyEnv') === undefined
+    let next = layout === 'pi-ai' && stringAt(draft, 'apiKeyEnv') === undefined
       && stringAt(fallback, 'apiKeyEnv') === undefined && keyValue.length > 0
       ? schema.setPath(draft, ['apiKeyEnv'], keyRef)
       : draft
@@ -282,6 +286,14 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
       /* v8 ignore next 3 -- unreachable from the card: the same failure disables submit */
       if (failure !== undefined) {
         return `${t('model')} ${String(failure.index + 1)}: ${t(failure.key)}`
+      }
+    }
+    if (props.automaticModelMetadata && props.declared && layout === 'pi-ai' && !props.credentialOnly) {
+      const selected = (schema.getPath(next, ['models']) ?? schema.getPath(fallback, ['models'])) as Record<string, unknown>[] | undefined
+      if (selected !== undefined && selected.length > 0) {
+        const resolved = await resolveModelMetadata(operations, probe, selected, t)
+        if (resolved.error !== undefined) return resolved.error
+        next = schema.setPath(next, ['models'], resolved.models)
       }
     }
     /* v8 ignore next -- apply is only reachable from the rendered card, which required a resolved node */
@@ -526,6 +538,7 @@ export function ProviderEditor(props: ProviderEditorProps): ReactNode {
               )
               : (
                 <ModelListEditor
+                  automaticModelMetadata={props.automaticModelMetadata === true && props.declared === true}
                   {...catalogProps}
                   catalogProvider={props.declared === true ? undefined : props.provider}
                   reasoningLevels={reasoningLevels}

@@ -27,6 +27,8 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
+启用 `automaticModelMetadata` 后，自定义提供商的输入类型、上下文窗口和输出 Token 上限只读。保存时先通过 Host 发现流程解析全部模型，再写入设置；无法解析时保留草稿，并在错误中列出模型 ID。UWork 桌面组合通过公开 Models.dev 目录插件启用此模式。模型 ID 和显示名称仍可编辑。
+
 保存凭据或自定义提供方时保留已选模型。用户可在 composer 中选择可用模型。
 
 提供方列表中 DeepSeek 账号排第一，DeepSeek 排第二；第三方提供方保留目录中的相对顺序。

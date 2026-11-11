@@ -10,6 +10,7 @@
 - id: ui-settings-models
   config:
     credentialOnboarding: false
+    automaticModelMetadata: true
 - id: agent-default-model
   config:
     provider: ''
@@ -61,6 +62,8 @@
       config:
         gatewayApiBaseUrl: https://pivot.ucas.com.cn:23090
         allowedModelEndpointOrigins: [https://llm.ucas.com.cn:15000]
+        publicModelCatalog:
+          url: https://models.dev/api.json
         retiredDefaultProviders: [deepseek-official, deepseek-account]
         preferredModels: [ucas-deepseek-flash, ucas-gpt-mini, ucas-glm, ucas-gpt-max, ucas-deepseek-pro, ucas-kimi]
         # UCAS release catalog; maxOutputTokens is the per-request budget, not the model output ceiling.

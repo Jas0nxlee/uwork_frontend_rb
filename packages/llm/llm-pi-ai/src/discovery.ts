@@ -83,6 +83,10 @@ interface ListingEntry {
   max_tokens?: unknown
   max_output_tokens?: unknown
   maxTokens?: unknown
+  inputModalities?: unknown
+  input?: unknown
+  modalities?: { input?: unknown } | null
+  architecture?: { input_modalities?: unknown } | null
   limit?: ListingLimit | null
   top_provider?: ListingTopProvider | null
 }
@@ -219,11 +223,17 @@ function readListing(body: unknown): LlmDiscoveredModel[] {
       entry?.limit?.output,
       entry?.top_provider?.max_completion_tokens,
     )
+    const rawInput = entry?.inputModalities ?? entry?.input
+      ?? entry?.modalities?.input ?? entry?.architecture?.input_modalities
+    const inputModalities = Array.isArray(rawInput) && rawInput.every(value => typeof value === 'string')
+      ? rawInput.filter((value): value is 'text' | 'image' => value === 'text' || value === 'image')
+      : undefined
     models.push({
       id,
       name,
       ...contextWindow === undefined ? {} : { contextWindow },
       ...maxTokens === undefined ? {} : { maxTokens },
+      ...inputModalities === undefined || inputModalities.length === 0 ? {} : { inputModalities },
     })
   }
   return models
@@ -270,6 +280,13 @@ export async function discoverModels(
   request: LlmModelDiscoveryOperation,
   storedProfile?: () => StoredModelDiscoveryProfile | undefined,
 ): Promise<readonly LlmDiscoveredModel[]> {
+  if (request.modelIds !== undefined) {
+    if (request.modelIds.length > 1000
+      || request.modelIds.some(id => id.trim().length === 0 || id.length > 512 || /[\u0000-\u001f]/u.test(id))) {
+      throw new LlmError('Invalid model IDs for metadata lookup', 'INVALID_DISCOVERY')
+    }
+    return [...new Set(request.modelIds)].map(id => ({ id }))
+  }
   // A catalog route already has its answer, and a better one: the installed
   // entries carry context windows and output caps no listing endpoint reports.
   if (request.provider !== undefined) {

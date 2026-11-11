@@ -22,6 +22,9 @@ interface CapacityInput {
 
 /** Adapter-owned data and actions for one model row. */
 interface ModelRowProps {
+  /** Display automatically resolved capacities and input types without editing them. */
+  metadataReadOnly?: boolean | undefined
+
   model: DeepSeekModelDraft
   rowKey: number
   position: number
@@ -158,6 +161,7 @@ export function ModelRow(props: ModelRowProps): ReactNode {
                     className={styles['input']}
                     type="text"
                     inputMode="numeric"
+                    readOnly={props.metadataReadOnly}
                     value={props[field].value}
                     placeholder={props[field].placeholder}
                     aria-label={`${t(field)} ${String(position)}`}
@@ -169,7 +173,8 @@ export function ModelRow(props: ModelRowProps): ReactNode {
               ))}
               <ModelInputTypes
                 model={model} field={props.inputField} position={position}
-                fallback={props.inputFallback} disabled={disabled || props.inputLoading === true} t={t} onChange={props.onChange}
+                fallback={props.inputFallback} disabled={disabled || props.inputLoading === true || props.metadataReadOnly === true}
+                t={t} onChange={props.onChange}
               />
               {props.reasoningLevels !== undefined && props.reasoningLevels.length > 0
                 ? (

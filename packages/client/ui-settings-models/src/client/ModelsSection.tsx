@@ -39,6 +39,9 @@ import styles from './ModelsSection.module.css'
 
 /** Injected dependencies of {@link ModelsSection} (slot `inject`). */
 export interface ModelsSectionInjected {
+  /** Use automatic metadata when creating or editing custom model routes. */
+  automaticModelMetadata?: boolean | undefined
+
   /** The page store (loaded on mount, refreshed on pushed invalidations). */
   controller: ModelsSettingsStore
   hooks: {
@@ -115,7 +118,7 @@ interface CatalogDraft {
 /** Values that vary around the shared provider-editor rendering. */
 interface ProviderEditorRenderProps extends Pick<
   ProviderEditorProps,
-  'namespace' | 'schema' | 'operations' | 't' | 'readOnly' | 'onClose'
+  'namespace' | 'schema' | 'operations' | 't' | 'readOnly' | 'onClose' | 'automaticModelMetadata'
 > {
   target: EditorTarget
   row: ProviderRow
@@ -237,16 +240,16 @@ export function providerCopy(template: string, target: ProviderIdentity): string
  * @returns the section, or null while the shell has not injected yet.
  */
 export function ModelsSection(props: ModelsSectionProps): ReactNode {
-  const { controller, useSnapshot, operations, schema, t, renderSlot } = props
+  const { controller, useSnapshot, operations, schema, t, renderSlot, automaticModelMetadata } = props
   if (
     controller === undefined || useSnapshot === undefined || operations === undefined
     || schema === undefined || t === undefined
   ) return null
-  return <Loaded injected={{ controller, useSnapshot, operations, schema, t }} renderSlot={renderSlot} />
+  return <Loaded injected={{ controller, useSnapshot, operations, schema, t, automaticModelMetadata }} renderSlot={renderSlot} />
 }
 
 function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderSlot: ModelsRenderSlot }): ReactNode {
-  const { controller, operations, schema, t } = injected
+  const { controller, operations, schema, t, automaticModelMetadata = false } = injected
   const snapshot = injected.useSnapshot(value => value)
   const state = { ...snapshot, rows: snapshot.rows.map(row => row.entry.provider === 'deepseek-account'
     ? { ...row, entry: { ...row.entry, displayName: t('deepSeekAccount') } } : row) }
@@ -439,6 +442,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
               <li key={row.entry.provider} className={styles['setupCard']}>
                 {error}
                 {renderProviderEditor({
+                  automaticModelMetadata,
                   target,
                   row,
                   namespace,
@@ -554,6 +558,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
               )}
               {open
                 ? renderProviderEditor({
+                  automaticModelMetadata,
                   target,
                   row,
                   namespace,
@@ -675,6 +680,7 @@ function Loaded({ injected, renderSlot }: { injected: ModelsSectionFace; renderS
                     className={styles['addPanel']}
                   >
                     <CustomProviderCard
+                      automaticModelMetadata={automaticModelMetadata}
                       taken={state.rows.map(row => row.entry.provider)}
                       protocols={protocols}
                       reasoningLevels={reasoningLevels}

@@ -21,6 +21,8 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## 使用本包
 
+可选 `publicModelCatalog` 启用自定义提供商的模型信息查询，默认来源为 `https://models.dev/api.json`。按精确端点、模型 ID 和规范型号匹配；有歧义或未知的别名保持未解析状态。仅公开能力字段缓存到当前 profile 的 `.model-catalog` 目录。缓存有效期为 24 小时，刷新失败保留上次有效目录，并在五分钟后重试。不向该目录发送提供商凭据或用户消息。此查询不授予企业模型访问权限。
+
 在 `credentials`、`settings`、`agentDefaultModel` 和原生 `llm-pi-ai` 之后挂载。`settingsNamespace` 默认为 `llm-pi-ai`。Host 身份回调调用 `uworkModelProvisioning.provision(input)`，传入组织、用户、代次、操作与可选的身份生命周期 signal、候选路由和新凭据引用、公网 HTTPS 推理端点、API key、授权模型 id、已验证能力和模型偏好顺序。不得通过 Renderer 方法暴露此输入。配置 `gatewayApiBaseUrl` 和显式 `allowedModelEndpointOrigins` 后，身份认证变更会自动刷新授权。可选 `modelCatalog` 为缺少能力信息的端点按模型声明上下文窗口、文本/图片输入、请求输出预算、推理等级和 thinking 方言。`legacyTextCatalog` 仍可用于统一的纯文本部署。模型仍须同时在 Key 可见目录和账号授权中，服务端显式能力优先。安全 Remote 方法 `getState`、`refresh` 和 `createManagedKey` 仅返回状态。只有显式 `createManagedKey(expectedBinding, signal)` 动作能为确认时保存的精确组织、用户和代次创建密钥；按账号持久化的 intent 会在结果未知后阻止重复 POST，直到新密钥列表按别名确认结果。 托管提供商子树通过 Settings 保留给本插件更新。`retiredDefaultProviders` 指定产品已移除的提供商，其已保存默认选择会改为有授权的偏好模型。
 
 <a id="understand-the-implementation"></a>

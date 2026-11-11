@@ -313,6 +313,8 @@ export interface LlmModelDiscoveryRequest {
   baseURL?: string
   /** Wire protocol the endpoint speaks, when the draft names one. */
   api?: string
+  /** Exact model IDs to describe without interrogating the provider endpoint. */
+  modelIds?: readonly string[]
   /** Credential for this interrogation alone; the harness never stores it. */
   apiKey?: string
 }

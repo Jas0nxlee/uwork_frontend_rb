@@ -47,6 +47,8 @@ jobs:
           scripts/release/process.spec.ts
           packages/credentials/uwork-enterprise/tests
           packages/llm/uwork-model-provisioning/tests
+          packages/llm/llm/tests/topology.spec.ts
+          packages/llm/llm-pi-ai/tests/discovery.spec.ts
           packages/boot/uwork-gateway/tests
           packages/boot/uwork-gateway-service/tests
           packages/boot/uwork-company-market/tests
@@ -132,9 +134,10 @@ jobs:
           set -euo pipefail
           tag="uwork-v${BUILD_VERSION}"
           printf '%s\n' \
-            'UWork 未签名预览版：Mac ARM 与 Windows x64。' \
+            'UWork Next 未签名预览版，支持 Mac ARM 与 Windows x64。' \
             '' \
-            '本版将安装后的应用名称改为 UWork Next。' \
+            '自定义模型提供商保存时自动获取 Models.dev 的上下文、输出上限及文本/图片能力，相关字段以只读方式显示。' \
+            '支持本地目录缓存与离线回退，无法匹配的型号会提示错误并保留原配置。' \
             '' \
             '此版本为未签名预览版，沿用现有独立安装标识。Windows 安装后交互需在目标机器验收。' \
             '' \
@@ -143,5 +146,5 @@ jobs:
             'SHA256SUMS 与每个平台的构建清单随安装包提供。' > .artifacts/release-notes.md
           gh release create "$tag" .artifacts/uwork-preview/* \
             --target "$GITHUB_SHA" --prerelease \
-            --title "UWork ${BUILD_VERSION}（未签名预览版）" \
+            --title "UWork Next ${BUILD_VERSION}（未签名预览版）" \
             --notes-file .artifacts/release-notes.md

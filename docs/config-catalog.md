@@ -655,6 +655,8 @@ export type OnboardingProcess = 'compact' | 'standard' | 'detailed'
 export interface Config {
   /** Offer the browser API-key step when no native shell owns credential onboarding. */
   credentialOnboarding: boolean
+  /** Resolve custom model capacities and input types through Host discovery. */
+  automaticModelMetadata: boolean
 }
 ```
 <!-- END GENERATED config-catalog:@deepseek-ai/dsh-client-ui-settings-models -->
@@ -4770,10 +4772,13 @@ export interface Config extends GatewayConfig {
 
 - `inject`: `credentials` · `settings` · `agentDefaultModel`
 - `refs`: `GatewayModel` (`@deepseek-ai/dsh-uwork-gateway/types`)
-- `source`: [`packages/llm/uwork-model-provisioning/src/index.ts:19`](../packages/llm/uwork-model-provisioning/src/index.ts)
+- `source`: [`packages/llm/uwork-model-provisioning/src/index.ts:20`](../packages/llm/uwork-model-provisioning/src/index.ts)
 
 ```ts config-catalog
 interface Config {
+  /** Optional public metadata directory for custom provider model discovery. */
+  publicModelCatalog?: PublicModelCatalogConfig | null
+
   /** Native pi-ai profile entry whose provider dictionary stores owned routes. */
   settingsNamespace: string
   /** Optional HTTPS control-plane origin; omission disables account-to-model synchronization. */
@@ -4794,6 +4799,20 @@ interface Config {
   modelCatalog: ModelCatalogEntry[]
   /** Removed product providers whose saved default may move to an authorized enterprise model. */
   retiredDefaultProviders: string[]
+}
+
+/** Deployment-owned public catalog settings. No provider credential is accepted. */
+export interface PublicModelCatalogConfig {
+  /** HTTPS directory endpoint. */
+  url: string
+  /** Maximum response and cache size in bytes. */
+  maxBytes: number
+  /** Fetch deadline in milliseconds. */
+  timeoutMs: number
+  /** Freshness interval in milliseconds. */
+  ttlMs: number
+  /** Failed-refresh retry interval in milliseconds. */
+  retryMs: number
 }
 
 /** Release-declared text/tool routes for a legacy OpenAI directory lacking capability metadata. */

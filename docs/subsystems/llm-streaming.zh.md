@@ -775,6 +775,8 @@ interface LlmModelDiscoveryRequest {
   baseURL?: string
   /** Wire protocol the endpoint speaks, when the draft names one. */
   api?: string
+  /** Exact model IDs to describe without interrogating the provider endpoint. */
+  modelIds?: readonly string[]
   /** Credential for this interrogation alone; the harness never stores it. */
   apiKey?: string
 }
@@ -1269,6 +1271,25 @@ The provider topology changed: an adapter registered or unregistered routes, or 
 ```
 
 Source: [`packages/llm/llm/src/types.ts`](../../packages/llm/llm/src/types.ts)
+
+<a id="llmdiscover-models--waterfall"></a>
+
+#### `llm/discover-models` — waterfall
+
+Enrich discovered models without exposing the draft credential.
+
+```ts cordis-catalog
+/**
+ * Enrich discovered models without exposing the draft credential.
+ * @param request - public endpoint, provider, and protocol identifiers.
+ * @param next - delegate to the registered model discovery.
+ * @param signal - caller cancellation.
+ * @mode waterfall
+ */
+'llm/discover-models'(request: Omit<LlmModelDiscoveryRequest, 'apiKey'>, signal: AbortSignal | undefined, next: () => Promise<readonly LlmDiscoveredModel[]>): Promise<readonly LlmDiscoveredModel[]>
+```
+
+Source: [`packages/llm/llm/src/index.ts`](../../packages/llm/llm/src/index.ts)
 
 <a id="llmmodels-updated--emit"></a>
 

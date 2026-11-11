@@ -206,12 +206,13 @@ function firstMutate(mutate: ReturnType<typeof vi.fn>): MutateCall {
   return { ns, ops, ...expectedRevision === undefined ? {} : { expectedRevision } }
 }
 
-async function mountSection(options: Parameters<typeof scriptedFace>[0] = {}) {
+async function mountSection(options: Parameters<typeof scriptedFace>[0] = {}, automaticModelMetadata = false) {
   const scripted = scriptedFace(options)
   const controller = new ModelsSettingsStore(
     ctxWith(scripted.face), settingsSchema, new SettingsDescribeMirror(ctxWith(scripted.face)))
   await controller.load()
   const injected: ModelsSectionProps = {
+    automaticModelMetadata,
     controller,
     useSnapshot: bindSnapshotSelector(controller.store),
     operations: operationsWith(scripted.face),
@@ -1799,4 +1800,13 @@ describe('API key field', () => {
     await waitFor(() => { expect(load).toHaveBeenCalledOnce() })
     expect(screen.queryByRole('textbox', { name: en.customRoute })).toBeNull()
   })
+})
+
+it('carries automatic metadata from the section into custom provider forms', async () => {
+  await mountSection({}, true)
+  openCustomMode()
+  expect(screen.getByText(en.metadataSource)).toBeTruthy()
+  fireEvent.click(screen.getByRole('button', { name: en.addModel }))
+  expandModel(1)
+  expect(screen.getByLabelText<HTMLInputElement>(`${en.contextWindow} 1`).readOnly).toBe(true)
 })

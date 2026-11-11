@@ -69,6 +69,9 @@ export interface ProbeTarget {
 
 /** Props of {@link ModelListEditor}. */
 export interface ModelListEditorProps {
+  /** Fetch capacities and input types instead of accepting manual values. */
+  automaticModelMetadata?: boolean | undefined
+
   /** The rows as currently drafted. */
   models: readonly ModelDraft[]
   /** Installed provider whose catalog supplies defaults without endpoint I/O. */
@@ -258,7 +261,10 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
     if (listed.has(id) && !isPicked(id)) removedRows.add(at)
   })
   // A kept row the user already tuned wins over the provider's own numbers.
-  const keptRows = models.filter((_model, at) => !removedRows.has(at))
+  const keptRows = models.filter((_model, at) => !removedRows.has(at)).map((model) => {
+    const candidate = props.automaticModelMetadata ? activeCandidates.find(item => item.id === model.id) : undefined
+    return candidate === undefined ? model : { ...model, ...adopt(candidate) }
+  })
   const keptIds = new Set(keptRows.map(model => textOf(model, 'id')))
   const addedRows = activeCandidates
     .filter(candidate => isPicked(candidate.id) && !keptIds.has(candidate.id))
@@ -343,6 +349,7 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
           {busy ? t('fetching') : t('fetchModels')}
         </button>
       </div>
+      {props.automaticModelMetadata ? <p className={styles['advancedHint']}>{t('metadataSource')}</p> : null}
       {models.length === 0 ? <p className={styles['modelEmpty']}>{t('modelsEmpty')}</p> : null}
       <AnimatedRows className={styles['modelList'] as string} rowKeys={rowState.rows.map(row => String(row.key))} ready resetKey="">
         {rowState.rows.map(({ model, key, expanded, order }, index) => (
@@ -353,7 +360,9 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
             model={model}
             position={index + 1}
             inputField="input"
-            inputFallback={inputDefaults.get(textOf(model, 'id')) ?? props.defaultInput}
+            metadataReadOnly={props.automaticModelMetadata}
+
+            inputFallback={inputDefaults.get(textOf(model, 'id')) ?? props.defaultInput ?? (props.automaticModelMetadata ? [] : undefined)}
             inputLoading={catalogProvider !== undefined && catalog === undefined}
             reasoningLevels={props.reasoningLevels}
             expanded={expanded}
@@ -361,15 +370,18 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
             t={t}
             contextWindow={{
               value: capacityText(model, index, 'contextWindow'),
-              placeholder: CAPACITY_HINT.contextWindow,
+              placeholder: props.automaticModelMetadata ? t('metadataAutomatic') : CAPACITY_HINT.contextWindow,
               onChange: (text) => { editCapacity(index, 'contextWindow', text) },
             }}
             maxTokens={{
               value: capacityText(model, index, 'maxTokens'),
-              placeholder: CAPACITY_HINT.maxTokens,
+              placeholder: props.automaticModelMetadata ? t('metadataAutomatic') : CAPACITY_HINT.maxTokens,
               onChange: (text) => { editCapacity(index, 'maxTokens', text) },
             }}
-            onFieldChange={(field, value) => { patch(index, { [field]: value }) }}
+            onFieldChange={(field, value) => {
+              patch(index, { [field]: value, ...field === 'id' && props.automaticModelMetadata
+                ? { contextWindow: undefined, maxTokens: undefined, input: undefined } : {} })
+            }}
             onChange={(next) => { onChange(models.map((row, at) => at === index ? next : row)) }}
             onToggle={() => { rowState.toggle(index) }}
             onRemove={() => {

@@ -1,4 +1,5 @@
 /** Host-only enterprise model configuration through the native pi-ai adapter. */
+import { installPublicModelDiscovery, type PublicModelCatalogConfig } from './public-model-discovery.ts'
 import { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { credentialKey, credentialRef } from '@deepseek-ai/dsh-credentials'
@@ -17,6 +18,9 @@ import type { LegacyTextCatalog, ModelCatalogEntry, ModelIdentityBinding, ModelP
 
 declare module '@deepseek-ai/cordis' { interface Context { uworkModelProvisioning: UworkModelProvisioning } }
 interface Config {
+  /** Optional public metadata directory for custom provider model discovery. */
+  publicModelCatalog?: PublicModelCatalogConfig | null
+
   /** Native pi-ai profile entry whose provider dictionary stores owned routes. */
   settingsNamespace: string
   /** Optional HTTPS control-plane origin; omission disables account-to-model synchronization. */
@@ -72,23 +76,29 @@ function journalFrom(value: unknown): Journal {
 /** Main-process capability. No Remote projection exposes input keys or credential records. */
 export class UworkModelProvisioning extends TypertRemoteService {
   static inject = ['credentials', 'settings', 'agentDefaultModel']
-  static Config = z.object({ settingsNamespace: z.string().default('llm-pi-ai'), gatewayApiBaseUrl: z.string(),
-    allowedModelEndpointOrigins: z.array(String).default([]),
-    timeoutMs: z.natural().min(1).max(2147483647).default(30000), maxResponseBytes: z.natural().min(1).max(2147483647).default(524288),
-    maxItems: z.natural().min(1).max(2147483647).default(10000), preferredModels: z.array(String).default([]),
-    retiredDefaultProviders: z.array(String).default([]),
-    modelCatalog: z.array(z.object({
-      id: z.string().required(),
-      contextWindow: z.natural().min(1).max(2147483647).required(),
-      maxOutputTokens: z.natural().min(1).max(2147483647).required(),
-      inputModalities: z.array(z.union(['text', 'image'])).required(),
-      supportsTools: z.boolean().required(), supportsReasoning: z.boolean().required(),
-      reasoningLevels: z.array(z.union(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'])).required(),
-      thinkingFormat: z.const('deepseek'),
-    })).default([]),
-    legacyTextCatalog: z.union([z.object({ modelIds: z.array(z.string().required()).required(),
-      contextWindow: z.natural().min(1).max(2147483647).required(), maxOutputTokens: z.natural().min(1).max(2147483647).required() }),
-    z.const(null)]).default(null) })
+  static Config = z.object({ publicModelCatalog: z.union([z.object({
+    url: z.string().default('https://models.dev/api.json'),
+    maxBytes: z.natural().min(1).default(12582912),
+    timeoutMs: z.natural().min(1).max(2147483647).default(15000),
+    ttlMs: z.natural().min(1).max(2147483647).default(86400000),
+    retryMs: z.natural().min(1).max(2147483647).default(300000),
+  }), z.const(null)]).default(null), settingsNamespace: z.string().default('llm-pi-ai'), gatewayApiBaseUrl: z.string(),
+  allowedModelEndpointOrigins: z.array(String).default([]),
+  timeoutMs: z.natural().min(1).max(2147483647).default(30000), maxResponseBytes: z.natural().min(1).max(2147483647).default(524288),
+  maxItems: z.natural().min(1).max(2147483647).default(10000), preferredModels: z.array(String).default([]),
+  retiredDefaultProviders: z.array(String).default([]),
+  modelCatalog: z.array(z.object({
+    id: z.string().required(),
+    contextWindow: z.natural().min(1).max(2147483647).required(),
+    maxOutputTokens: z.natural().min(1).max(2147483647).required(),
+    inputModalities: z.array(z.union(['text', 'image'])).required(),
+    supportsTools: z.boolean().required(), supportsReasoning: z.boolean().required(),
+    reasoningLevels: z.array(z.union(['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'])).required(),
+    thinkingFormat: z.const('deepseek'),
+  })).default([]),
+  legacyTextCatalog: z.union([z.object({ modelIds: z.array(z.string().required()).required(),
+    contextWindow: z.natural().min(1).max(2147483647).required(), maxOutputTokens: z.natural().min(1).max(2147483647).required() }),
+  z.const(null)]).default(null) })
   private readonly transaction: ManagedRouteTransaction
   private startup: Promise<void>
   private readonly synchronizer: ModelSynchronizer | undefined
@@ -100,6 +110,10 @@ export class UworkModelProvisioning extends TypertRemoteService {
   private observation = 0
   constructor(ctx: Context, config: Config) {
     super(ctx, 'uworkModelProvisioning')
+    if (config.publicModelCatalog != null) {
+      const catalogConfig = config.publicModelCatalog
+      ctx.inject(['llm'], (child) => { installPublicModelDiscovery(child, catalogConfig) })
+    }
     this.retiredDefaultProviders = config.retiredDefaultProviders
     const legacy = config.legacyTextCatalog ?? undefined
     if (legacy !== undefined && (legacy.maxOutputTokens >= legacy.contextWindow || legacy.modelIds.length === 0

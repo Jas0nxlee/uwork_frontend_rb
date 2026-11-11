@@ -34,6 +34,12 @@
     },
     {
       "path": "../../typert/protocol"
+    },
+    {
+      "path": "../llm"
+    },
+    {
+      "path": "../../boot/app-boot"
     }
   ]
 }
