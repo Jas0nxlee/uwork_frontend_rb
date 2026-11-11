@@ -26,6 +26,7 @@ import { formatCapacity, parseCapacity } from './DeepSeekModelsEditor.tsx'
 import type { ModelsOperations } from './operations.ts'
 import type { DeepSeekModelDraft } from './DeepSeekModelsEditor.tsx'
 import type { en } from './locales.ts'
+import { discoveredReasoningEfforts } from './resolve-model-metadata.ts'
 import { ModelRow } from './ModelRow.tsx'
 import { useModelRows } from './useModelRows.ts'
 import type { CapacityField } from './useModelRows.ts'
@@ -140,12 +141,14 @@ function capacitySpelling(value: number | undefined): string {
 
 /** Adopt a candidate, preserving disclosed capacities and input types. */
 function adopt(candidate: LlmDiscoveredModel): ModelDraft {
+  const reasoningEfforts = discoveredReasoningEfforts(candidate.reasoningLevels)
   return {
     id: candidate.id,
     ...candidate.name === undefined ? {} : { name: candidate.name },
     ...candidate.contextWindow === undefined ? {} : { contextWindow: candidate.contextWindow },
     ...candidate.maxTokens === undefined ? {} : { maxTokens: candidate.maxTokens },
     ...candidate.inputModalities === undefined ? {} : { input: [...candidate.inputModalities] },
+    ...reasoningEfforts === undefined ? {} : { reasoningEfforts },
   }
 }
 
@@ -380,7 +383,7 @@ export function ModelListEditor(props: ModelListEditorProps): ReactNode {
             }}
             onFieldChange={(field, value) => {
               patch(index, { [field]: value, ...field === 'id' && props.automaticModelMetadata
-                ? { contextWindow: undefined, maxTokens: undefined, input: undefined } : {} })
+                ? { contextWindow: undefined, maxTokens: undefined, input: undefined, reasoningEfforts: undefined } : {} })
             }}
             onChange={(next) => { onChange(models.map((row, at) => at === index ? next : row)) }}
             onToggle={() => { rowState.toggle(index) }}

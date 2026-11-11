@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { CustomProviderCard } from '../src/client/CustomProviderCard.tsx'
-import { resolveModelMetadata } from '../src/client/resolve-model-metadata.ts'
+import { discoveredReasoningEfforts, resolveModelMetadata } from '../src/client/resolve-model-metadata.ts'
 import type { ModelsOperations } from '../src/client/operations.ts'
 import { en } from '../src/client/locales.ts'
 
@@ -12,7 +12,7 @@ afterEach(cleanup)
 function fixture(found = true) {
   const writeSettings = vi.fn<ModelsOperations['writeSettings']>().mockResolvedValue({ kind: 'refused', message: 'fixture stopped after write' })
   const discoverModels = vi.fn<ModelsOperations['discoverModels']>().mockResolvedValue({ kind: 'found', models: found
-    ? [{ id: 'vision', contextWindow: 200000, maxTokens: 8000, inputModalities: ['text', 'image'] }]
+    ? [{ id: 'vision', contextWindow: 200000, maxTokens: 8000, inputModalities: ['text', 'image'], reasoningLevels: ['none', 'low', 'high', 'xhigh'] }]
     : [{ id: 'vision' }] })
   const storeCredential = vi.fn<ModelsOperations['storeCredential']>()
   const operations: ModelsOperations = { discoverModels, writeSettings, storeCredential, removeCredential: vi.fn() }
@@ -44,6 +44,9 @@ it('displays read-only capabilities and writes fetched values before credentials
   expect(written).toContain('"contextWindow":200000')
   expect(written).toContain('"maxTokens":8000')
   expect(written).toContain('"input":["text","image"]')
+  expect(written).toContain('"reasoningEfforts":{"off":"none","low":"low","high":"high","xhigh":"xhigh"}')
+  expect(screen.getByRole('group', { name: `${en.modelReasoning} 1` }).textContent).toContain('none · low · high · xhigh')
+  expect(screen.queryByRole('switch', { name: `${en.modelReasoning} 1` })).toBeNull()
   expect(storeCredential).not.toHaveBeenCalled()
 })
 
@@ -61,5 +64,26 @@ it('replaces stale manual capacities while preserving unrelated model settings',
   const result = await resolveModelMetadata(operations, { settingsNs: 'llm-pi-ai', provider: 'personal' },
     [{ id: 'vision', contextWindow: 1000000, input: ['text'], name: 'My vision model', reasoningEfforts: false }], key => en[key])
   expect(result.models).toEqual([{ id: 'vision', contextWindow: 200000, maxTokens: 8000,
-    input: ['text', 'image'], name: 'My vision model', reasoningEfforts: false }])
+    input: ['text', 'image'], name: 'My vision model', reasoningEfforts: { off: 'none', low: 'low', high: 'high', xhigh: 'xhigh' } }])
+})
+
+it('maps only disclosed reasoning levels and distinguishes unsupported from unknown', () => {
+  expect(discoveredReasoningEfforts(false)).toBe(false)
+  expect(discoveredReasoningEfforts(undefined)).toBeUndefined()
+  expect(discoveredReasoningEfforts(['none'])).toBeUndefined()
+  expect(discoveredReasoningEfforts(['minimal', 'medium', 'max'])).toEqual({ minimal: 'minimal', medium: 'medium', max: 'max' })
+})
+
+it.each([
+  [false, en.modelReasoningUnsupported],
+  [undefined, en.modelReasoningUnknown],
+] as const)('shows the fetched reasoning status without manual controls (%s)', async (reasoningLevels, label) => {
+  const { operations, writeSettings, discoverModels } = fixture()
+  discoverModels.mockResolvedValue({ kind: 'found', models: [{ id: 'vision', contextWindow: 200000,
+    maxTokens: 8000, inputModalities: ['text'], ...reasoningLevels === undefined ? {} : { reasoningLevels } }] })
+  fill(operations)
+  fireEvent.click(screen.getByRole('button', { name: en.create }))
+  await waitFor(() => { expect(writeSettings).toHaveBeenCalledTimes(1) })
+  expect(screen.getByRole('group', { name: `${en.modelReasoning} 1` }).textContent).toContain(label)
+  expect(screen.queryByRole('switch', { name: `${en.modelReasoning} 1` })).toBeNull()
 })

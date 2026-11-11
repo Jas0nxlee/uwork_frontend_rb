@@ -27,7 +27,7 @@ Desktop product events use the optional [product analytics service](../product-a
 <a id="use-this-package"></a>
 ## Use this package
 
-When `automaticModelMetadata` is enabled, custom-provider input types, context windows, and output token limits are read-only. Saving resolves every model through Host discovery before writing settings; an unresolved model keeps the draft open with its ID in the error. The UWork desktop bundle enables this mode with its public Models.dev catalog plugin. Model IDs and display names remain editable.
+When `automaticModelMetadata` is enabled, custom-provider input types, context windows, output token limits, and reasoning levels are read-only. Saving resolves every model through Host discovery before writing settings; an unresolved model keeps the draft open with its ID in the error. The UWork desktop bundle enables this mode with its public Models.dev catalog plugin. Model IDs and display names remain editable. Explicit catalog effort values populate the model picker, with `none` mapped to the native Off choice. An explicit non-reasoning model disables reasoning. An undisclosed effort list stays unknown.
 
 Saving credentials or a custom provider preserves the selected model. The user can select an available model from the composer.
 

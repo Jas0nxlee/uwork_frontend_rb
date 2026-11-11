@@ -3,7 +3,9 @@
 /** English strings (the key-set source of truth for this pair). */
 export const en = {
   metadataAutomatic: 'Automatic',
-  metadataSource: 'Input types and token limits are fetched automatically from Models.dev when you save.',
+  metadataSource: 'Input types, token limits and reasoning levels are fetched automatically from Models.dev when you save.',
+  modelReasoningUnsupported: 'Reasoning is not supported.',
+  modelReasoningUnknown: 'The catalog does not specify reasoning levels.',
   metadataMissing: 'Could not find complete model metadata for: {models}. Check the exact model ID or retry after the public catalog is available.',
   nav: 'Models',
   deepSeekAccount: 'DeepSeek Account',
@@ -151,7 +153,9 @@ export type ModelsKey = keyof typeof en
 /** Chinese strings (same keys as {@link en}). */
 export const zh: { [Key in keyof typeof en]: string } = {
   metadataAutomatic: '自动获取',
-  metadataSource: '保存时自动从 Models.dev 获取输入类型和 Token 上限，无需手动填写。',
+  metadataSource: '保存时自动从 Models.dev 获取输入类型、Token 上限和推理等级，无需手动填写。',
+  modelReasoningUnsupported: '不支持推理',
+  modelReasoningUnknown: '目录未提供可选推理等级',
   metadataMissing: '未找到以下模型的完整能力信息：{models}。请检查完整模型 ID，或在公开目录恢复后重试。',
   nav: '模型',
   deepSeekAccount: 'DeepSeek 账号',
@@ -296,7 +300,9 @@ export const zh: { [Key in keyof typeof en]: string } = {
 /** Japanese copy, checked against the English keys. */
 export const ja = {
   metadataAutomatic: '自動取得',
-  metadataSource: '保存時に Models.dev から入力形式とトークン上限を自動取得します。',
+  metadataSource: '保存時に Models.dev から入力形式、トークン上限、推論レベルを自動取得します。',
+  modelReasoningUnsupported: '推論はサポートされていません。',
+  modelReasoningUnknown: 'カタログに推論レベルがありません。',
   metadataMissing: '完全なモデル情報が見つかりません：{models}。モデル ID を確認するか、再試行してください。',
   'nav': 'モデル',
   'deepSeekAccount': 'DeepSeekアカウント',
@@ -441,7 +447,9 @@ export const ja = {
 /** Spanish dictionary, checked against the English keys. */
 export const es = {
   metadataAutomatic: 'Automático',
-  metadataSource: 'Los tipos de entrada y límites se obtienen de Models.dev al guardar.',
+  metadataSource: 'Los tipos de entrada, límites y niveles de razonamiento se obtienen de Models.dev al guardar.',
+  modelReasoningUnsupported: 'El razonamiento no está disponible.',
+  modelReasoningUnknown: 'El catálogo no especifica niveles de razonamiento.',
   metadataMissing: 'Faltan metadatos para: {models}. Comprueba el ID o inténtalo de nuevo.',
   nav: 'Modelos',
   deepSeekAccount: 'Cuenta DeepSeek',
@@ -586,7 +594,9 @@ export const es = {
 /** French dictionary, checked against the English keys. */
 export const fr = {
   metadataAutomatic: 'Automatique',
-  metadataSource: 'Les types d’entrée et limites sont récupérés sur Models.dev à l’enregistrement.',
+  metadataSource: 'Les types d’entrée, limites et niveaux de raisonnement sont récupérés sur Models.dev à l’enregistrement.',
+  modelReasoningUnsupported: 'Le raisonnement n’est pas pris en charge.',
+  modelReasoningUnknown: 'Le catalogue ne précise pas les niveaux de raisonnement.',
   metadataMissing: 'Métadonnées incomplètes pour : {models}. Vérifiez l’ID ou réessayez.',
   nav: 'Modèles',
   deepSeekAccount: 'Compte DeepSeek',
@@ -731,7 +741,9 @@ export const fr = {
 /** German dictionary, checked against the English keys. */
 export const de = {
   metadataAutomatic: 'Automatisch',
-  metadataSource: 'Eingabetypen und Tokenlimits werden beim Speichern von Models.dev abgerufen.',
+  metadataSource: 'Eingabetypen, Tokenlimits und Denkstufen werden beim Speichern von Models.dev abgerufen.',
+  modelReasoningUnsupported: 'Denken wird nicht unterstützt.',
+  modelReasoningUnknown: 'Der Katalog gibt keine Denkstufen an.',
   metadataMissing: 'Unvollständige Modelldaten für: {models}. Prüfe die ID oder versuche es erneut.',
   nav: 'Modelle',
   deepSeekAccount: 'DeepSeek-Konto',
@@ -876,7 +888,9 @@ export const de = {
 /** Russian dictionary, checked against the English keys. */
 export const ru = {
   metadataAutomatic: 'Автоматически',
-  metadataSource: 'Типы ввода и лимиты токенов загружаются с Models.dev при сохранении.',
+  metadataSource: 'Типы ввода, лимиты токенов и уровни рассуждения загружаются с Models.dev при сохранении.',
+  modelReasoningUnsupported: 'Рассуждения не поддерживаются.',
+  modelReasoningUnknown: 'В каталоге не указаны уровни рассуждения.',
   metadataMissing: 'Неполные данные моделей: {models}. Проверьте ID или повторите попытку.',
   nav: 'Модели',
   deepSeekAccount: 'DeepSeek Аккаунт',
@@ -1021,7 +1035,9 @@ export const ru = {
 /** Portuguese dictionary, checked against the English keys. */
 export const pt = {
   metadataAutomatic: 'Automático',
-  metadataSource: 'Os tipos de entrada e limites são obtidos do Models.dev ao guardar.',
+  metadataSource: 'Os tipos de entrada, limites e níveis de raciocínio são obtidos do Models.dev ao guardar.',
+  modelReasoningUnsupported: 'O raciocínio não é suportado.',
+  modelReasoningUnknown: 'O catálogo não especifica níveis de raciocínio.',
   metadataMissing: 'Metadados incompletos para: {models}. Verifique o ID ou tente novamente.',
   nav: 'Modelos',
   deepSeekAccount: 'DeepSeek Conta',

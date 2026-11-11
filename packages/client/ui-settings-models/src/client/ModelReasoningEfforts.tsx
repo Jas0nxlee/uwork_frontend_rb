@@ -94,6 +94,8 @@ interface ModelReasoningEffortsProps {
   position: number
   /** Prevent changes while read-only or saving. */
   disabled: boolean
+  /** Show automatically obtained reasoning levels without editing controls. */
+  readOnly?: boolean | undefined
   /** Section copy. */
   t: (key: ModelsKey) => string
   /** Replace this row, preserving unrelated configuration. */
@@ -107,7 +109,7 @@ interface ModelReasoningEffortsProps {
  * @param props - model declaration and row replacement action.
  * @returns the reasoning-level group.
  */
-export function ModelReasoningEfforts({ model, levels, position, disabled, t, onChange }: ModelReasoningEffortsProps): ReactNode {
+export function ModelReasoningEfforts({ model, levels, position, disabled, readOnly, t, onChange }: ModelReasoningEffortsProps): ReactNode {
   const entries = readEfforts(model)
   // Only the focused field keeps its own text, so a field cleared while typing
   // stays empty although its level's name is stored. Leaving the field drops
@@ -158,6 +160,18 @@ export function ModelReasoningEfforts({ model, levels, position, disabled, t, on
 
   const refused = entries?.some(([level, wire]) => !acceptedValue(level, wire)) === true
   const missingLevel = entries !== undefined && !used.some(level => level !== 'off')
+
+  if (readOnly) {
+    const value = entries === undefined
+      ? t(model['reasoningEfforts'] === false ? 'modelReasoningUnsupported' : 'modelReasoningUnknown')
+      : entries.map(([level, wire]) => level === 'off' && wire === 'none' ? 'none' : level).join(' · ')
+    return (
+      <div className={styles['modelReasoning']} role="group" aria-label={label}>
+        <span className={styles['modelFieldLabel']}>{t('modelReasoningLevel')}</span>
+        <span>{value}</span>
+      </div>
+    )
+  }
 
   return (
     <div className={styles['modelReasoning']} role="group" aria-label={label}>

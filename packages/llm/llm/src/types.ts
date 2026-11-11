@@ -351,6 +351,8 @@ export interface LlmDiscoveredModel {
   maxTokens?: number
   /** Accepted input types when disclosed by the catalog or endpoint; absent means unknown. */
   inputModalities?: readonly ModelModality[]
+  /** Provider reasoning effort values. False means unsupported and absence means undisclosed. */
+  reasoningLevels?: readonly string[] | false
 }
 
 /**

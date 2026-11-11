@@ -1,7 +1,20 @@
 /** Resolve custom model capabilities before committing a provider draft. */
+import type { LlmDiscoveredModel } from '@deepseek-ai/dsh-api-remotes/client'
 import type { ModelDraft, ProbeTarget } from './ModelListEditor.tsx'
 import type { ModelsOperations } from './operations.ts'
 import type { ModelsKey } from './locales.ts'
+
+/** Translate disclosed provider effort values into native pi-ai level mappings.
+ * @param levels - exact provider effort values, false for unsupported, or undefined when undisclosed.
+ * @returns a native reasoning declaration, without inventing undisclosed levels.
+ */
+export function discoveredReasoningEfforts(levels: LlmDiscoveredModel['reasoningLevels']): false | Record<string, string> | undefined {
+  if (levels === undefined || (levels !== false && levels.length === 0)) return undefined
+  if (levels === false) return false
+  const supported = levels.filter(level => ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'].includes(level))
+  if (!supported.some(level => level !== 'none')) return undefined
+  return Object.fromEntries(supported.map(level => [level === 'none' ? 'off' : level, level]))
+}
 
 /** Resolve every selected model without forwarding credentials to the public directory.
  * @param operations - Host discovery operations.
@@ -30,8 +43,10 @@ export async function resolveModelMetadata(
       || !metadata.inputModalities?.includes('text')) {
       missing.push(String(model.id))
     } else {
+      const reasoningEfforts = discoveredReasoningEfforts(metadata.reasoningLevels)
       resolved.push({ ...model, contextWindow: metadata.contextWindow,
-        maxTokens: metadata.maxTokens, input: [...metadata.inputModalities] })
+        maxTokens: metadata.maxTokens, input: [...metadata.inputModalities],
+        ...reasoningEfforts === undefined ? {} : { reasoningEfforts } })
     }
   }
   return missing.length > 0

@@ -112,7 +112,7 @@ export function installPublicModelDiscovery(ctx: Context, config: PublicModelCat
   ctx.on('llm/discover-models', async (request, signal, next) => {
     const models = await next()
     if (models.length === 0 || models.every(model => model.contextWindow !== undefined
-      && model.maxTokens !== undefined && model.inputModalities !== undefined)) return models
+      && model.maxTokens !== undefined && model.inputModalities !== undefined && model.reasoningLevels !== undefined)) return models
     signal?.throwIfAborted()
     lifetime.signal.throwIfAborted()
     pending ??= refresh().finally(() => { pending = undefined })
@@ -137,11 +137,15 @@ export function installPublicModelDiscovery(ctx: Context, config: PublicModelCat
       const input = match.modalities?.input?.flatMap(value =>
         value === 'text' || value.startsWith('text/') ? ['text' as const]
           : value === 'image' || value.startsWith('image/') ? ['image' as const] : [])
+      const levels = match.reasoning_options?.flatMap(option => option.values)
+      const reasoningLevels = match.reasoning === false ? false
+        : levels?.some(level => level !== 'none') ? levels : undefined
       return {
         ...model,
         ...model.contextWindow !== undefined || !match.limit?.context ? {} : { contextWindow: match.limit.context },
         ...model.maxTokens !== undefined || !match.limit?.output ? {} : { maxTokens: match.limit.output },
         ...model.inputModalities !== undefined || !input?.length ? {} : { inputModalities: input },
+        ...model.reasoningLevels !== undefined || reasoningLevels === undefined ? {} : { reasoningLevels },
       }
     })
   })

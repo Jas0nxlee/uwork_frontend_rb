@@ -176,10 +176,11 @@ export function ModelRow(props: ModelRowProps): ReactNode {
                 fallback={props.inputFallback} disabled={disabled || props.inputLoading === true || props.metadataReadOnly === true}
                 t={t} onChange={props.onChange}
               />
-              {props.reasoningLevels !== undefined && props.reasoningLevels.length > 0
+              {props.metadataReadOnly === true || (props.reasoningLevels !== undefined && props.reasoningLevels.length > 0)
                 ? (
                   <ModelReasoningEfforts
-                    model={model} levels={props.reasoningLevels} position={position} disabled={disabled} t={t} onChange={props.onChange}
+                    model={model} levels={props.reasoningLevels ?? []} position={position} disabled={disabled}
+                    readOnly={props.metadataReadOnly} t={t} onChange={props.onChange}
                   />
                 )
                 : null}
