@@ -22,7 +22,7 @@ import { authenticateWebHost } from '../src/web-document.ts'
 const repository = fileURLToPath(new URL('../../../', import.meta.url))
 
 it('boots the configured UWork layer and preserves it after external-plugin recovery', { retry: 0 }, async () => {
-  const root = mkdtempSync(join(tmpdir(), 'uwork-desktop-profile-'))
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'uwork-desktop-profile-')))
   const resources: { host?: DesktopHostProcess } = {}
   onTestFinished(async () => {
     try { await resources.host?.stop() } finally {
