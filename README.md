@@ -1,77 +1,62 @@
-# DeepSeek Harness
+# UWork Next
 
 English | [中文](README.zh.md)
 
-DeepSeek Harness (`dsh`) is an open-source agent harness developed by [DeepSeek AI](https://deepseek.com).
+UWork Next is a desktop AI workspace for enterprise users. Sign in with Enterprise WeChat to access your organization's authorized models, company skills, and gateway usage in one application.
 
-It is built on an **everything-is-a-plugin** architecture and powered by [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512).
+## Features
 
-Documentation: [https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+- **Enterprise sign-in** — scan with Enterprise WeChat to connect your organization and automatically configure authorized models.
+- **AI conversations** — create conversations, attach files, and work with tools in your workspace. Models with the relevant capabilities support image input and adjustable reasoning effort.
+- **Managed models** — use company-provided UCAS models alongside your personal providers. Enterprise-managed provider settings are maintained by the application.
+- **Company market** — browse, install, and manage skills published by your organization.
+- **Enterprise usage** — view gateway request counts, token usage, success rates, and reported costs by period.
+- **Workspaces** — organize conversations and tasks, and use file previews and terminals while working.
 
-## Developer preview
+## Download and install
 
-DeepSeek Harness is in _developer preview_ and iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
+Download the installer for your platform from [GitHub Releases](https://github.com/Jas0nxlee/uwork_frontend_rb/releases).
 
-Review the [safety notice](SAFETY.md) before running the project.
+| Platform | Installer |
+| --- | --- |
+| macOS on Apple Silicon | Mac ARM `.dmg` |
+| Windows x64 | Windows `.exe` |
 
-## Run
+The installed application is named **UWork Next**. Current releases are unsigned previews. Read the release notes for the version's verification results and installation details.
 
-### Run from `npm`
+<a id="run"></a>
 
-Install `Node.js`, then run:
+## Get started
+
+1. Install and open UWork Next.
+2. Choose your organization and sign in with Enterprise WeChat.
+3. After your authorized models are configured, select a model in the conversation input area.
+4. Create a conversation and send a message. Attach files or use workspace tools as needed.
+5. Open the company market to manage company skills, or enterprise usage to review gateway activity.
+
+Model availability follows your organization's authorization. Image input and reasoning options depend on the selected model.
+
+## Local data
+
+Workspace configuration and conversation data are stored under the current user's `.uwork` directory by default. Back up the application data before moving to another computer.
+
+<a id="run-from-source"></a>
+
+## Build from source
+
+Use Node.js 24.9 or later and pnpm 11.28.5 in this repository.
 
 ```sh
-npx @deepseek-ai/dsh web
-```
-
-The command starts the Web UI at `http://127.0.0.1:3080` by default and opens it in the default browser for a local launch. An SSH launch only prints the host URL because the SSH client or editor owns the local forwarded address. Pass `--no-open` to run the server without opening a browser. See [Web UI guide](docs/user/guide/index.md).
-
-### Run from source
-
-To run from a repository checkout:
-
-```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
-pnpm install
+pnpm install --frozen-lockfile
 pnpm run build
-pnpm dsh web
 ```
 
-`pnpm run build` prepares the repository artifacts. `pnpm dsh web` uses those built artifacts without rebuilding.
+Desktop packaging instructions are in the [packaging guide](apps/desktop/packaging/README.md).
 
-## Community and support
+## Feedback
 
-- Submit feedback or bug reports through [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions).
-- Add the [`dsh-plugin`](https://github.com/topics/dsh-plugin) topic to your plugin repository for discoverability.
-- Join <a href="https://discord.gg/4MrtZUhpxg">DeepSeek Harness Discord community</a>.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Development
-
-Start with the [development guide](docs/development.md) and [architecture documentation](docs/architecture.md).
-
-`pnpm run dev:web` builds, serves, and rebuilds client bundles on source edits in one terminal, and `make help` lists the matching Make targets for Web and Desktop; the guide's application commands section owns the full table.
-
-For agents, follow [AGENTS.md](AGENTS.md).
-
-## Citation
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
-```
+Report problems and feature requests in [this project's Issues](https://github.com/Jas0nxlee/uwork_frontend_rb/issues). Include the application version, operating system, reproduction steps, and relevant logs with credentials and personal information removed.
 
 ## License
 
-[MIT](LICENSE)
-
-Third-party dependencies and their licenses are disclosed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[MIT](LICENSE). Third-party license notices are available in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

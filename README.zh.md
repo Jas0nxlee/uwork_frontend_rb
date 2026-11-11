@@ -1,96 +1,62 @@
-# DeepSeek Harness
+# UWork Next
 
 [English](README.md) | 中文
 
-DeepSeek Harness（`dsh`）是由 [DeepSeek AI](https://deepseek.com) 开发的开源 agent harness（智能体框架）。
+UWork Next 是面向企业用户的桌面 AI 工作空间。通过企业微信登录，在同一个应用中使用企业授权模型、公司技能，并查看网关用量。
 
-它构建于**一切皆插件**的架构之上，由 [Cordis](https://github.com/cordiverse/cordis) 驱动，其设计参见论文 [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512)。
+## 功能
 
-文档：[https://deepseek-harness.github.io/deepseek-harness/](https://deepseek-harness.github.io/deepseek-harness/)
+- **企业登录** — 使用企业微信扫码接入所属组织，自动配置已授权模型。
+- **AI 对话** — 创建会话、添加文件，并结合工作区工具处理任务。具备相应能力的模型支持图片输入和推理强度调整。
+- **模型管理** — 使用公司提供的 UCAS 模型，也可添加个人模型提供商。企业托管提供商的配置由应用维护。
+- **公司市场** — 浏览、安装和管理组织发布的技能。
+- **企业用量** — 按周期查看网关请求数、Token 用量、成功率和服务端提供的费用数据。
+- **工作空间** — 管理会话与任务，结合文件预览和终端开展工作。
 
-## 开发者预览
+## 下载与安装
 
-DeepSeek Harness 处于 _开发者预览_ 阶段，正在快速迭代。**未来将出现破坏兼容性的变更。**
+在 [GitHub Releases](https://github.com/Jas0nxlee/uwork_frontend_rb/releases) 下载适合当前系统的安装包。
 
-运行本项目前，请阅读[安全说明](SAFETY.zh.md)。
+| 平台 | 安装包 |
+| --- | --- |
+| Apple Silicon Mac | Mac ARM `.dmg` |
+| Windows x64 | Windows `.exe` |
+
+安装后的应用名称为 **UWork Next**。当前发布的是未签名预览版，具体版本的验证结果和安装说明请查看发布说明。
 
 <a id="run"></a>
 
-## 运行
+## 开始使用
 
-### 通过 `npm` 运行
+1. 安装并打开 UWork Next。
+2. 选择所属组织，使用企业微信登录。
+3. 授权模型配置完成后，在对话输入区选择模型。
+4. 创建会话并发送消息，按需添加文件或使用工作区工具。
+5. 打开公司市场管理公司技能，或进入企业用量查看网关使用情况。
 
-安装 `Node.js`，然后运行：
+可用模型由组织授权决定。图片输入和推理选项取决于所选模型的能力。
 
-```sh
-npx @deepseek-ai/dsh web
-```
+## 本地数据
 
-该命令默认会在 `http://127.0.0.1:3080` 启动 Web UI，本机启动时还会用默认浏览器打开页面。通过 SSH 启动时只打印宿主机 URL，因为本地转发地址由 SSH 客户端或编辑器持有。传入 `--no-open` 可仅运行服务器而不打开浏览器。详见 [Web UI 指南](docs/user/guide/index.zh.md)。
+工作区配置和会话数据默认保存在当前用户目录下的 `.uwork` 中。迁移电脑时请先备份应用数据。
 
 <a id="run-from-source"></a>
 
-### 从源码运行
+## 从源码构建
 
-如需从仓库源码运行：
+在本仓库中使用 Node.js 24.9 或更高版本，以及 pnpm 11.28.5。
 
 ```sh
-git clone https://github.com/deepseek-ai/deepseek-harness.git
-cd deepseek-harness
-pnpm install
+pnpm install --frozen-lockfile
 pnpm run build
-pnpm dsh web
 ```
 
-`pnpm run build` 会准备仓库产物。`pnpm dsh web` 会直接使用这些已构建产物，不会重新构建。
+桌面安装包构建步骤见[打包指南](apps/desktop/packaging/README.zh.md)。
 
-## 社区与支持
+## 反馈
 
-- 通过 [GitHub Discussions](https://github.com/deepseek-ai/deepseek-harness/discussions) 提交反馈或 bug 报告。
-- 为你的插件仓库添加 [`dsh-plugin`](https://github.com/topics/dsh-plugin) 话题，便于被发现。
-- 欢迎加入 DeepSeek Harness 企微群！扫描下方二维码填写入群问卷，小助手会定期发送入群邀请。
-
-<table>
-  <thead>
-    <tr>
-      <th align="center">入群问卷</th>
-      <th align="center">微信公众号</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center"><a href="https://trtgsjkv6r.feishu.cn/share/base/form/shrcnIt5twSVdLGD52KJBckGCgg"><img src="https://cdn.deepseek.com/harness/readme/community-wecom-survey.png" alt="DeepSeek Harness 入群问卷二维码" width="180" height="180"></a></td>
-      <td align="center"><img src="https://cdn.deepseek.com/harness/readme/community-wechat-official-account.png" alt="DeepSeek Harness 团队微信公众号二维码" width="180" height="180"></td>
-    </tr>
-  </tbody>
-</table>
-
-## 参与贡献
-
-参见 [CONTRIBUTING.md](CONTRIBUTING.zh.md)。
-
-## 开发
-
-请先阅读[开发指南](docs/development.zh.md)与[架构文档](docs/architecture.zh.md)。
-
-`pnpm run dev:web` 会在一个终端里完成构建、启动，并在源码修改时重建 client bundle；`make help` 列出 Web 与 Desktop 对应的 Make target。完整表格见开发指南的「应用命令」一节。
-
-面向 agent：请遵循 [AGENTS.md](AGENTS.md)。
-
-## 引用
-
-```bibtex
-@misc{deepseek-harness2026,
-  title={DeepSeek Harness: Everything is a Plugin},
-  author={DeepSeek-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/deepseek-ai/deepseek-harness}},
-}
-```
+通过[本项目 Issues](https://github.com/Jas0nxlee/uwork_frontend_rb/issues) 提交问题和功能建议。请附上应用版本、操作系统、复现步骤，以及已移除凭据和个人信息的相关日志。
 
 ## 许可证
 
-[MIT](LICENSE)
-
-第三方依赖及其许可证见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+[MIT](LICENSE)。第三方许可证声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
