@@ -753,14 +753,14 @@ describe('desktop main startup', () => {
 
   it('initializes the packaged product before opening its workspace', async () => {
     harness.embeddedProduct = {
-      name: 'UWork Next Preview', appId: 'io.github.jas0nxlee.uwork.next',
+      name: 'UWork Next', appId: 'io.github.jas0nxlee.uwork.next',
       userData: 'UWork Next Preview', defaultHome: '~/.uwork/harness-preview',
       protocol: 'uwork-next', artifactStem: 'uwork-next',
       bundles: ['@deepseek-ai/dsh-uwork-desktop'],
     }
     const explicitHome = process.env.DSH_HOME
     await readyForUpdate()
-    expect(harness.app.setName).toHaveBeenCalledWith('UWork Next Preview')
+    expect(harness.app.setName).toHaveBeenCalledWith('UWork Next')
     expect(harness.projectBundles).toHaveBeenCalledWith([
       '@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-uwork-desktop',
     ])
@@ -768,7 +768,7 @@ describe('desktop main startup', () => {
     expect(harness.app.setAppUserModelId).toHaveBeenCalledWith('io.github.jas0nxlee.uwork.next')
     expect(harness.app.setAsDefaultProtocolClient).toHaveBeenCalledWith('uwork-next')
     expect(process.env.DSH_HOME).toBe(explicitHome)
-    expect(harness.app.setAboutPanelOptions).toHaveBeenCalledWith(expect.objectContaining({ applicationName: 'UWork Next Preview' }))
+    expect(harness.app.setAboutPanelOptions).toHaveBeenCalledWith(expect.objectContaining({ applicationName: 'UWork Next' }))
   })
 
   it('routes shell update documents and assets through the registered main protocol handler', async () => {

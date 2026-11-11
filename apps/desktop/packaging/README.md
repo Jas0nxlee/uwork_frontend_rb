@@ -10,7 +10,7 @@ English | [中文](README.zh.md)
 
 Build Desktop installers locally or through Windows or macOS Actions, choose deployment and signing mode, and retrieve artifacts and diagnostics. This guide keeps build operations separate from publishing and installed-application qualification. Platform signing details and shared-runner risks must be checked before using hardware credentials.
 
-The UWork fork also provides a [GitHub-hosted preview workflow](../../../.github/workflows/uwork-preview-release.yml). Dispatch it from `master` with an explicit build version to validate, package Mac ARM and Windows x64, and publish both installers with SHA-256 checksums as a GitHub prerelease. These unsigned packages use the UWork Next Preview identity and have no release updater or notarization.
+The UWork fork also provides a [GitHub-hosted preview workflow](../../../.github/workflows/uwork-preview-release.yml). Dispatch it from `master` with an explicit build version to validate, package Mac ARM and Windows x64, and publish both installers with SHA-256 checksums as a GitHub prerelease. These unsigned packages install as UWork Next and have no release updater or notarization.
 
 ## Table of Contents
 

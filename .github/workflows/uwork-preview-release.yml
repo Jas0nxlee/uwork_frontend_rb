@@ -39,6 +39,10 @@ jobs:
       - name: Enterprise and settings regressions
         run: >-
           pnpm exec vitest run
+          apps/desktop/tests/installer-packaging.spec.ts
+          apps/desktop/tests/macos-signature.spec.ts
+          apps/desktop/tests/package-macos.spec.ts
+          apps/desktop/tests/main-startup.spec.ts
           apps/desktop/tests/prepare-package-set.spec.ts
           scripts/release/process.spec.ts
           packages/credentials/uwork-enterprise/tests
@@ -130,9 +134,9 @@ jobs:
           printf '%s\n' \
             'UWork 未签名预览版：Mac ARM 与 Windows x64。' \
             '' \
-            '本版修复企业微信登录后的模型自动配置与选择、UCAS 模型能力和推理强度、企业托管提供商保护，以及企业用量组织与用户名称显示。' \
+            '本版将安装后的应用名称改为 UWork Next。' \
             '' \
-            '安装包使用独立的 UWork Next Preview 身份。不含正式代码签名、公证或自动更新资格。Windows 安装后实际交互仍需目标机器验收。' \
+            '此版本为未签名预览版，沿用现有独立安装标识。Windows 安装后交互需在目标机器验收。' \
             '' \
             "源码提交：${GITHUB_SHA}" \
             "构建记录：https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \

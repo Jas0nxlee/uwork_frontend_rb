@@ -51,15 +51,16 @@ describe('installer preparation preserves application dependencies', () => {
         metadata: { value: metadata },
       })
       const appInfo = new AppInfo(metadataPackager, undefined)
+      expect(appInfo.productFilename).toBe('UWork Next')
       expect(appInfo.companyName).toBe('Hangzhou DeepSeek Artificial Intelligence Co., Ltd.')
-      expect(appInfo.copyright).toBe(`Copyright © ${new Date().getFullYear()} UWork Next Preview`)
+      expect(appInfo.copyright).toBe(`Copyright © ${new Date().getFullYear()} UWork Next`)
       if (platform === 'win32') {
-        expect(expandMacro(config.nsis.uninstallDisplayName, null, appInfo, {}, false)).toBe('UWork Next Preview')
+        expect(expandMacro(config.nsis.uninstallDisplayName, null, appInfo, {}, false)).toBe('UWork Next')
         expect(config.nsis.installerLanguages).toEqual(readInstallerLocales().map(locale => locale.id))
       }
       expect(config.mac.icon).toMatch(/uwork[/\\]icon\.icns$/)
       expect(config.win.icon).toMatch(/uwork[/\\]icon\.png$/)
-      expect(config.mac.extendInfo.NSMicrophoneUsageDescription).toContain('UWork Next Preview')
+      expect(config.mac.extendInfo.NSMicrophoneUsageDescription).toContain('UWork Next')
       const aboutIcon = config.extraResources.find(resource => resource.to === 'icon.png')
       expect(aboutIcon).toBeDefined()
       expect(readFileSync(aboutIcon!.from)).toEqual(readFileSync(new URL('../resources/uwork/icon.png', import.meta.url)))

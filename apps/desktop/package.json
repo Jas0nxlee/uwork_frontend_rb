@@ -96,7 +96,7 @@
     "@deepseek-ai/dsh-uwork-desktop": "workspace:*"
   },
   "dshDesktopProduct": {
-    "name": "UWork Next Preview",
+    "name": "UWork Next",
     "appId": "io.github.jas0nxlee.uwork.next",
     "userData": "UWork Next Preview",
     "defaultHome": "~/.uwork/harness-preview",
