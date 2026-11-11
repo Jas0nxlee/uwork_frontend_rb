@@ -2,7 +2,8 @@ import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { isAbsolute, join } from 'node:path'
+import * as releaseProcess from '../../../scripts/release/process.ts'
 import { DESKTOP_HOST_RUNTIME_FILES, DESKTOP_PACKAGES_DIR } from '../src/core-package-set.ts'
 import {
   assertDesktopHostPackageFiles,
@@ -150,7 +151,15 @@ it.each([{ os: 'darwin' }, { cpu: [42] }])('rejects malformed platform constrain
   expect(() => selectDesktopPackageClosure(packages, { platform: 'win32', arch: 'x64' })).toThrow(/has invalid/u)
 })
 
-it('copies no macOS tarball into the Windows package set', () => {
+it('reads absolute archive paths with a GNU-compatible invocation and excludes other platform packages', () => {
+  const capture = releaseProcess.capture
+  vi.spyOn(releaseProcess, 'capture').mockImplementation((command, args, options) => {
+    if (command === 'tar' && args[0] === '-xOzf' && isAbsolute(args[1] ?? '')) {
+      throw new Error('GNU tar requires an archive basename to avoid interpreting a Windows drive as a remote host')
+    }
+    return capture(command, args, options)
+  })
+  onTestFinished(() => { vi.restoreAllMocks() })
   const root = mkdtempSync(join(tmpdir(), 'desktop-platform-packages-'))
   onTestFinished(() => { rmSync(root, { recursive: true, force: true }) })
   const inputs = join(root, 'inputs')
@@ -166,7 +175,7 @@ it('copies no macOS tarball into the Windows package set', () => {
         writeFileSync(join(folder, file), '')
       }
     }
-    execFileSync('tar', ['-czf', join(inputs, `${stem}.tgz`), '-C', join(folder, '..'), 'package'])
+    execFileSync('tar', ['-czf', `${stem}.tgz`, '-C', join(folder, '..'), 'package'], { cwd: inputs })
   }
   const output = join(root, 'output')
   prepareDesktopPackageSet([inputs], output, { platform: 'win32', arch: 'x64' })

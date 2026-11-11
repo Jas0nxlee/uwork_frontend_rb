@@ -39,6 +39,8 @@ jobs:
       - name: Enterprise and settings regressions
         run: >-
           pnpm exec vitest run
+          apps/desktop/tests/prepare-package-set.spec.ts
+          scripts/release/process.spec.ts
           packages/credentials/uwork-enterprise/tests
           packages/llm/uwork-model-provisioning/tests
           packages/boot/uwork-gateway/tests
