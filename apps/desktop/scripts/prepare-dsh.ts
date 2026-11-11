@@ -160,6 +160,8 @@ async function main(): Promise<void> {
       dependencies: Object.fromEntries(packageSet.packages.map(entry => [entry.name, entry.version])),
       dsh: { profile: { bundles: profileBundles } },
     }, undefined, 2)}\n`)
+    // The prepared CLI reads the application manifest beside dsh, as it does inside app.asar.
+    copyFileSync(join(APP_ROOT, 'package.json'), join(BUILD_PATHS.root, 'package.json'))
     for (const file of DESKTOP_HOST_RUNTIME_FILES) {
       if (!existsSync(join(DSH_OUTPUT_ROOT, 'node_modules', DESKTOP_HOST_PACKAGE, file))) {
         throw new Error(`desktop runtime: missing private Host file ${file}`)

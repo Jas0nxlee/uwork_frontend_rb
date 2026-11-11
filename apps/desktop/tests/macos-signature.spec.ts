@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { NotarizeOptions } from '@electron/notarize'
+import { localMacOSPackageEnvironment } from '../scripts/desktop-package-environment.mjs'
 import {
   resolveDesktopAppId,
   resolveMacOSNotarizationEnvironment,
@@ -158,10 +159,13 @@ describe('desktop macOS release signature', () => {
 
   it.each(['arm64', 'x64'])('builds local macOS %s DMGs without release credentials or update metadata', async (arch) => {
     const { createElectronBuilderConfig } = await import('../scripts/electron-builder-config.mjs')
-    const config = createElectronBuilderConfig({
+    const config = createElectronBuilderConfig(localMacOSPackageEnvironment({
       DSH_DESKTOP_APP_ID: RELEASE_ENVIRONMENT.DSH_DESKTOP_APP_ID,
-      DSH_DESKTOP_UNSIGNED: '1',
-    }, 'darwin', arch)
+    }), 'darwin', arch)
+    expect(config).toMatchObject({
+      appId: 'io.github.jas0nxlee.uwork.next',
+      extraMetadata: { dshDesktopProduct: { appId: 'io.github.jas0nxlee.uwork.next' } },
+    })
     expect(portablePath(config.directories.output)).toContain(`/targets/mac-${arch}/unsigned-artifacts`)
     expect(config.artifactName).toBe('uwork-next-${version}-${os}-${arch}-unsigned.${ext}')
     expect(config.mac).toMatchObject({ identity: '-', forceCodeSigning: false, notarize: false, target: ['dmg'] })
