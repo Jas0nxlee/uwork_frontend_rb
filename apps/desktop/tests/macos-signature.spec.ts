@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import type { NotarizeOptions } from '@electron/notarize'
-import { localMacOSPackageEnvironment } from '../scripts/desktop-package-environment.mjs'
+import { localUnsignedPackageEnvironment } from '../scripts/desktop-package-environment.mjs'
 import {
   resolveDesktopAppId,
   resolveMacOSNotarizationEnvironment,
@@ -159,7 +159,7 @@ describe('desktop macOS release signature', () => {
 
   it.each(['arm64', 'x64'])('builds local macOS %s DMGs without release credentials or update metadata', async (arch) => {
     const { createElectronBuilderConfig } = await import('../scripts/electron-builder-config.mjs')
-    const config = createElectronBuilderConfig(localMacOSPackageEnvironment({
+    const config = createElectronBuilderConfig(localUnsignedPackageEnvironment({
       DSH_DESKTOP_APP_ID: RELEASE_ENVIRONMENT.DSH_DESKTOP_APP_ID,
     }), 'darwin', arch)
     expect(config).toMatchObject({

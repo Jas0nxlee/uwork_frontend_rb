@@ -1,0 +1,142 @@
+name: UWork preview release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_version:
+        description: 'Preview version extending the product version, e.g. 0.2.2-rc.1.20261111.8'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uwork-preview-release
+  cancel-in-progress: false
+
+env:
+  DSH_TELEMETRY_DISABLED: '1'
+  BUILD_VERSION: ${{ inputs.build_version }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v5.0.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+      - name: Validate immutable release inputs
+        run: node .github/scripts/uwork-preview-release.mjs prepare
+      - run: pnpm install --frozen-lockfile
+      - run: node --test .github/scripts/uwork-preview-release.test.mjs
+      - run: pnpm run build
+      - name: Enterprise and settings regressions
+        run: >-
+          pnpm exec vitest run
+          packages/credentials/uwork-enterprise/tests
+          packages/llm/uwork-model-provisioning/tests
+          packages/boot/uwork-gateway/tests
+          packages/boot/uwork-gateway-service/tests
+          packages/boot/uwork-company-market/tests
+          packages/settings/settings/tests
+          packages/api/settings-controller/tests
+          packages/api/session-controller/tests/session-models.host.spec.ts
+          packages/client/ui-settings-models/tests
+          packages/client/ui-uwork-usage/tests
+      - run: pnpm run doc-sync
+
+  package:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: mac-arm64
+            runner: macos-15
+            platform: darwin
+            arch: arm64
+          - target: win-x64
+            runner: windows-2025
+            platform: win32
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    env:
+      DSH_DESKTOP_TARGET_PLATFORM: ${{ matrix.platform }}
+      DSH_DESKTOP_TARGET_ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v5.0.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+      - name: Require native architecture
+        shell: bash
+        run: node -e "if(process.platform!==process.env.DSH_DESKTOP_TARGET_PLATFORM || process.arch!==process.env.DSH_DESKTOP_TARGET_ARCH) throw Error('Runner architecture mismatch')"
+      - run: pnpm install --frozen-lockfile
+      - name: Package unsigned preview and run artifact smokes
+        shell: bash
+        env:
+          PACKAGE_TARGET: ${{ matrix.target }}
+        run: pnpm --dir apps/desktop exec tsx scripts/package-target.ts "$PACKAGE_TARGET" --unsigned --build-version "$BUILD_VERSION"
+      - name: Collect exact installers and checksums
+        env:
+          PACKAGE_TARGET: ${{ matrix.target }}
+        run: node .github/scripts/uwork-preview-release.mjs collect
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: uwork-preview-${{ matrix.target }}
+          path: .artifacts/uwork-preview/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: [validate, package]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          pattern: uwork-preview-*
+          path: .artifacts/uwork-preview
+          merge-multiple: true
+      - name: Verify both platforms from this exact commit
+        run: node .github/scripts/uwork-preview-release.mjs verify
+      - name: Publish GitHub prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="uwork-v${BUILD_VERSION}"
+          printf '%s\n' \
+            'UWork 未签名预览版：Mac ARM 与 Windows x64。' \
+            '' \
+            '本版修复企业微信登录后的模型自动配置与选择、UCAS 模型能力和推理强度、企业托管提供商保护，以及企业用量组织与用户名称显示。' \
+            '' \
+            '安装包使用独立的 UWork Next Preview 身份。不含正式代码签名、公证或自动更新资格。Windows 安装后实际交互仍需目标机器验收。' \
+            '' \
+            "源码提交：${GITHUB_SHA}" \
+            "构建记录：https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            'SHA256SUMS 与每个平台的构建清单随安装包提供。' > .artifacts/release-notes.md
+          gh release create "$tag" .artifacts/uwork-preview/* \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "UWork ${BUILD_VERSION}（未签名预览版）" \
+            --notes-file .artifacts/release-notes.md
