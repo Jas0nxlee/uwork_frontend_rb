@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-client-ui-uwork",
   "description": "UWork sidebar branding and blank-home presentation",
-  "version": "0.2.2-rc.1",
+  "version": "0.2.2-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -69,6 +69,9 @@
     "lib/assets",
     "licenses/UWork.Apache-2.0.txt",
     "licenses/UWork.notice.txt",
-    "lib/types/**/*.d.ts"
+    "lib/types/**/*.d.ts",
+    "lib/types/**/*.d.ts.map",
+    "lib/**/*.js.map",
+    "src"
   ]
 }

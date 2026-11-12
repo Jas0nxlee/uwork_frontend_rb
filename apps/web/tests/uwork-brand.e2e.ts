@@ -31,6 +31,7 @@ it('shows UWork and UCAS in both themes and keeps branding usable in a narrow de
   expect(await page.locator('[data-uwork-mark]').count()).toBe(2)
   expect(await page.locator('[data-home-whale]').count()).toBe(0)
   expect(await page.locator('[data-uwork-home-background]').getAttribute('data-uwork-home-background')).toBe('UCAS')
+  await page.getByRole('button', { name: 'Standard mode', exact: true }).waitFor()
   await compareOrRefreshGolden(expected,
     await captureStableAria(page, '[data-conversation-content]', scaffold.workspaceCwd), webSnapshotMode())
   await mkdir(artifacts, { recursive: true })

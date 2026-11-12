@@ -1,7 +1,7 @@
 {
   "name": "@deepseek-ai/dsh-uwork-desktop",
   "description": "UWork product layer over the standard dsh desktop profile",
-  "version": "0.2.2-rc.1",
+  "version": "0.2.2-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -27,7 +27,10 @@
     "locale/*.json",
     "lib/index.js",
     "cordis.patch.yml",
-    "lib/types/**/*.d.ts"
+    "lib/types/**/*.d.ts",
+    "lib/types/**/*.d.ts.map",
+    "lib/**/*.js.map",
+    "src"
   ],
   "license": "MIT",
   "dsh": {
@@ -41,6 +44,7 @@
     "@deepseek-ai/dsh-client-ui-uwork-company-market": "workspace:*",
     "@deepseek-ai/dsh-native-authorization": "workspace:*",
     "@deepseek-ai/dsh-uwork-enterprise": "workspace:*",
+    "@deepseek-ai/dsh-uwork-gateway": "workspace:*",
     "@deepseek-ai/dsh-uwork-gateway-service": "workspace:*",
     "@deepseek-ai/dsh-uwork-model-provisioning": "workspace:*",
     "@deepseek-ai/dsh-client-ui-uwork-enterprise": "workspace:*",

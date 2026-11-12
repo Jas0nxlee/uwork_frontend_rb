@@ -3,6 +3,8 @@
   disabled: true
 - id: ui-settings-account
   disabled: true
+- id: ui-account-notifications
+  disabled: true
 - id: llm-deepseek
   disabled: true
 - id: llm-deepseek-account

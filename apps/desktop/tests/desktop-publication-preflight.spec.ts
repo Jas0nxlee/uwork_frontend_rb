@@ -8,7 +8,10 @@ import { retainDesktopCi } from '../scripts/retain-desktop-ci.ts'
 import { desktopPublicationSummary } from '../scripts/desktop-publication-summary.ts'
 import { prepareDesktopPublication } from '../scripts/publish-desktop-ci.ts'
 
-it.each(['mac-arm64', 'win-x64'] as const)('preflights a complete retained %s build without credentials or source checkout manifests', async (target) => {
+it.each([
+  { target: 'mac-arm64', customized: false }, { target: 'win-x64', customized: false },
+  { target: 'mac-arm64', customized: true }, { target: 'win-x64', customized: true },
+] as const)('preflights a retained $target build with customized=$customized without credentials or checkout manifests', async ({ target, customized }) => {
   const root = await mkdtemp(join(tmpdir(), 'desktop-preflight-'))
   try {
     const app = join(root, 'app')
@@ -17,14 +20,17 @@ it.each(['mac-arm64', 'win-x64'] as const)('preflights a complete retained %s bu
     await mkdir(artifacts, { recursive: true })
     await mkdir(join(configRoot, 'presets'), { recursive: true })
     await mkdir(join(configRoot, 'publishing'))
-    await writeFile(join(app, 'package.json'), JSON.stringify({ version: '1.0.0' }))
+    await writeFile(join(app, 'package.json'), JSON.stringify({ version: '1.0.0', ...customized ? { dshDesktopProduct: {
+      name: 'UWork Next', appId: 'io.github.jas0nxlee.uwork.next', userData: 'UWork Next Preview',
+      defaultHome: '~/.uwork/harness-preview', protocol: 'uwork-next', artifactStem: 'uwork-next',
+    } } : {} }))
     const releaseId = 'a'.repeat(32)
     await writeFile(join(configRoot, 'presets/test.env'), `DSH_DESKTOP_AUTO_UPDATE_ENV=test\nDOWNLOAD_TEST_RELEASE_ID=${releaseId}\n`)
     await writeFile(join(configRoot, 'publishing/test.json'), JSON.stringify({
       bucket: 'fixture-1250000000', origin: 'https://EXAMPLE.com:443/', credentialsFile: join(root, 'absent-credentials.json'),
     }))
     const commit = 'b'.repeat(40)
-    const base = `uwork-next-1.0.0-${target}`
+    const base = `${customized ? 'uwork-next' : 'deepseek-harness'}-1.0.0-${target}`
     const extension = target === 'win-x64' ? 'exe' : 'zip'
     const bytes = 'fixture installer bytes'
     await writeFile(join(artifacts, `${base}.${extension}`), bytes)
@@ -32,7 +38,7 @@ it.each(['mac-arm64', 'win-x64'] as const)('preflights a complete retained %s bu
     if (target !== 'win-x64') await writeFile(join(artifacts, `${base}.dmg`), 'fixture DMG')
     await writeFile(join(artifacts, `${target}-release.json`), JSON.stringify({
       schemaVersion: 1, target, environment: 'test', version: '1.0.0', commit, dirty: false,
-      publicUrl: `https://example.com/dsh-desk/${releaseId}/feeds/${target}/`,
+      publicUrl: `https://example.com/${customized ? 'uwork-next' : 'dsh-desk'}/${releaseId}/feeds/${target}/`,
     }))
     await writeFile(join(artifacts, target === 'win-x64' ? 'nightly.yml' : 'nightly-mac.yml'), JSON.stringify({
       version: '1.0.0', files: [{ url: `${base}.${extension}`, size: Buffer.byteLength(bytes),
@@ -54,14 +60,14 @@ it.each(['mac-arm64', 'win-x64'] as const)('preflights a complete retained %s bu
     expect(prepared.plan.version).toBe('1.0.0')
     expect(prepared.plan.artifacts.every(file => file.path.startsWith(retained))).toBe(true)
     expect(signatureChecks).toBe(1)
-    // A retained Preview identity must reject a legacy receipt, regardless of the publishing checkout's identity.
+    // The retained identity must match its receipt, regardless of the publishing checkout identity.
     const manifestPath = join(retained, 'manifest.json')
     const retainedManifest = await readFile(manifestPath, 'utf8')
     const preview = JSON.parse(retainedManifest) as {
       source: { distribution?: { artifactStem: string } }
       files: { name: string; size: number; sha512: string }[]
     }
-    preview.source.distribution = { artifactStem: 'uwork-next' }
+    preview.source.distribution = { artifactStem: customized ? 'deepseek-harness' : 'uwork-next' }
     await writeFile(manifestPath, JSON.stringify(preview))
     await expect(prepareDesktopPublication(env, signature)).rejects.toThrow('does not match the test update destination')
     const receiptPath = join(retained, `${target}-release.json`)
@@ -73,8 +79,10 @@ it.each(['mac-arm64', 'win-x64'] as const)('preflights a complete retained %s bu
     const entry = preview.files.find(file => file.name === `${target}-release.json`)!
     entry.size = Buffer.byteLength(previewReceipt)
     entry.sha512 = createHash('sha512').update(previewReceipt).digest('base64')
+    preview.source.distribution = { artifactStem: 'uwork-next' }
     await writeFile(manifestPath, JSON.stringify(preview))
-    expect((await prepareDesktopPublication(env, signature)).plan.version).toBe('1.0.0')
+    if (customized) expect((await prepareDesktopPublication(env, signature)).plan.version).toBe('1.0.0')
+    else await expect(prepareDesktopPublication(env, signature)).rejects.toThrow('must reference uwork-next-')
     // Missing or incorrect identity cannot reroute a Preview receipt into the legacy feed.
     for (const distribution of [undefined, { artifactStem: 'deepseek-harness' }]) {
       if (distribution === undefined) delete preview.source.distribution
@@ -85,7 +93,7 @@ it.each(['mac-arm64', 'win-x64'] as const)('preflights a complete retained %s bu
     await writeFile(receiptPath, originalReceipt)
     await writeFile(manifestPath, retainedManifest)
     const summary = await desktopPublicationSummary(prepared.manifest.source, prepared.plan, 'c'.repeat(64), false)
-    await expect(summary).toMatchFileSnapshot(`./expected/publication-${target}.md`)
+    await expect(summary).toMatchFileSnapshot(`./expected/publication-${customized ? 'preview-' : ''}${target}.md`)
     const feed = prepared.plan.artifacts.find(file => file.channelMetadata)!
     expect(summary).toContain(createHash('sha256').update(feed.contents!).digest('hex'))
     expect(summary).toContain('https&#58;//github.com/owner/repo/actions/runs/10/attempts/2')

@@ -1,15 +1,13 @@
 /** The installed CLI uses the shared pnpm distribution with Electron's package-operation environment. */
 
 import { delimiter, dirname, join } from 'node:path'
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises'
+import { homedir, tmpdir } from 'node:os'
 import { afterEach, expect, it, onTestFinished, vi } from 'vitest'
 import { runCli } from '@deepseek-ai/dsh/lib/bin.js'
-import { runDesktopCli } from '../../desktop-host/src/cli.ts'
-import { installOfficeEngineResolution } from '../../desktop-host/src/office-engine.ts'
+import { runDesktopCli, runtimeArchivePath } from '../../desktop-host/src/cli.ts'
 
 vi.mock('@deepseek-ai/dsh/lib/bin.js', () => ({ runCli: vi.fn() }))
-vi.mock('../../desktop-host/src/office-engine.ts', () => ({ installOfficeEngineResolution: vi.fn() }))
 
 afterEach(() => {
   vi.unstubAllEnvs()
@@ -27,7 +25,6 @@ it.each(['system-bin', undefined])('dispatches with bundled pnpm when PATH is %s
 
   await runDesktopCli(runtime, support)
 
-  expect(installOfficeEngineResolution).toHaveBeenCalledExactlyOnceWith(runtime)
   expect(runCli).toHaveBeenCalledExactlyOnceWith({
     manageDesktopProfile: true,
     packageManager: {
@@ -40,4 +37,27 @@ it.each(['system-bin', undefined])('dispatches with bundled pnpm when PATH is %s
       },
     },
   })
+})
+
+it('locates the archive of an ASAR-contained runtime and leaves a prepared runtime without one', () => {
+  const resources = join('Application 中文', 'resources')
+  expect(runtimeArchivePath(join(resources, 'app.asar', 'dsh'))).toBe(join(resources, 'app.asar'))
+  expect(runtimeArchivePath(join(resources, 'app.asar.unpacked', 'dsh'))).toBeUndefined()
+  expect(runtimeArchivePath(join(resources, 'dsh'))).toBeUndefined()
+})
+
+it.each([undefined, join(tmpdir(), 'explicit-uwork-home')])('selects the product home before CLI dispatch with override %s', async (override) => {
+  vi.stubEnv('DSH_HOME', override)
+  const root = await mkdtemp(join(tmpdir(), 'uwork-cli-product-'))
+  onTestFinished(() => rm(root, { recursive: true, force: true }))
+  const runtime = join(root, 'Application 中文 with spaces', 'resources', 'app.asar', 'dsh')
+  await mkdir(dirname(runtime), { recursive: true })
+  await writeFile(join(dirname(runtime), 'package.json'), await readFile(new URL('../package.json', import.meta.url)))
+  vi.mocked(runCli).mockImplementationOnce(async () => {
+    expect(process.env.DSH_HOME).toBe(override ?? join(homedir(), '.uwork', 'harness-preview'))
+  })
+
+  await runDesktopCli(runtime, join(root, 'runtime'))
+
+  expect(runCli).toHaveBeenCalledOnce()
 })

@@ -28,7 +28,7 @@ kind: "package-reference"
 
 root 作用域 HOC 接收通用 `interactionKind` 与原样原生 children。普通与 pending 状态保持相同布局中立 wrapper，因此交互类型变化不会重新挂载常驻输入。只有 approval、question 和 plan-review 应用交互角色；无关交互保留原生外观。
 
-源 UWork 的 `PermissionDialog.tsx` 与 `ElicitationDialog.tsx` 使用 rounded-2xl popover 卡片及轻阴影。此适配只在原生 composer seat 内应用 16px 卡片圆角、语义 popover 表面与紧凑 elevation。保留警告色、焦点提示、滚动上限、动作顺序和原生控件。浅暗表面沿用应用语义色板，不导入源 RPC、store、选项语义或模态生命周期。
+源 UWork 的 `PermissionDialog.tsx` 与 `ElicitationDialog.tsx` 使用 rounded-2xl popover 卡片及轻阴影。此适配只在原生 composer seat 内应用 16px 卡片圆角、语义 popover 表面与使用主题一级阴影的紧凑 elevation。保留警告色、焦点提示、滚动上限、动作顺序和原生控件。浅暗表面沿用应用语义色板，不导入源 RPC、store、选项语义或模态生命周期。
 
 <a id="model-experience"></a>
 ## 模型体验

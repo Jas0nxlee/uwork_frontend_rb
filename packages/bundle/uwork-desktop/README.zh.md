@@ -44,7 +44,7 @@ kind: "package-bundle"
 <details>
 <summary>实现内部说明</summary>
 
-补丁关闭 ui-brand-official，加入 UWork 品牌、匿名公司目录及其插件标签页。目录浏览与安装不需要企业身份；已启用安装通过原生技能 provider 提供。原生授权与企业身份负责登录及仅 Host 持有的凭据。网关服务通过 Host 协议客户端提供安全账号与用量投影。托管配置通过原生 llm-pi-ai 安装显式企业路由，保留个人 provider 与默认模型。发行配置按 UWork 目录逐模型声明上下文窗口、文本/图片输入和推理等级；单次请求输出预算为 32,768 个 token，与模型公布的最大输出容量分开。GPT 和 GLM 的上下文为 1,000,000 个 token，DeepSeek 和 Kimi 为 1,048,576 个。GLM 仅接收文本，另外五个已配置模型也接收图片。GPT 提供 low、medium、high、xhigh 和 max，其余提供 low、high 和 max。GLM 和 DeepSeek 同时发送 `thinking.type: enabled` 与 `reasoning_effort`，GPT 和 Kimi 发送 `reasoning_effort`。默认模型为空时选择首个有授权的偏好模型。企业账号及用量 UI 展示安全投影；会话、权限和工作台仍由前面各层负责。对话、交互及工作台展示通过原生 owner 扩展点接入，不复制会话、composer 决策或 pane 状态。后续 profile 补丁仍可覆盖这些行。 UWork 组合停用内置 DeepSeek API Key 和账号提供商。模型设置中的托管提供商为只读，企业同步负责更新。
+补丁关闭 ui-brand-official，加入 UWork 品牌、匿名公司目录及其插件标签页。目录浏览与安装不需要企业身份；已启用安装通过原生技能 provider 提供。原生授权与企业身份负责登录及仅 Host 持有的凭据。网关服务通过 Host 协议客户端提供安全账号与用量投影。托管配置通过原生 llm-pi-ai 安装显式企业路由，保留个人 provider 与默认模型。发行配置按 UWork 目录逐模型声明上下文窗口、文本/图片输入和推理等级；单次请求输出预算为 32,768 个 token，与模型公布的最大输出容量分开。GPT 和 GLM 的上下文为 1,000,000 个 token，DeepSeek 和 Kimi 为 1,048,576 个。GLM 仅接收文本，另外五个已配置模型也接收图片。GPT 提供 low、medium、high、xhigh 和 max，其余提供 low、high 和 max。GLM 和 DeepSeek 同时发送 `thinking.type: enabled` 与 `reasoning_effort`，GPT 和 Kimi 发送 `reasoning_effort`。默认模型为空时选择首个有授权的偏好模型。企业账号及用量 UI 展示安全投影；会话、权限和工作台仍由前面各层负责。对话、交互及工作台展示通过原生 owner 扩展点接入，不复制会话、composer 决策或 pane 状态。后续 profile 补丁仍可覆盖这些行。 UWork 组合停用内置 DeepSeek API Key 和账号提供商、对应的账号设置界面及依赖它的账号通知。模型设置中的托管提供商为只读，企业同步负责更新。
 
 企业组织与回调 allowlist 来自公开 UWork 发行配置，不含会话 token 或模型 key。真实认证后的能力验证与正式桌面验收仍独立于此组合。
 

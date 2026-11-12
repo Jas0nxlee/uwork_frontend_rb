@@ -250,7 +250,10 @@ export async function createDesktopUploadPlan(
     throw new Error(`desktop upload: ${metadataFilename}.files must contain exactly one target update file`)
   }
 
-  const base = `${desktopArtifactStem}-${buildVersion}-${target.os}-${target.arch}`
+  const artifactStem = options.packagedDistribution === undefined
+    ? distribution?.artifactStem ?? desktopArtifactStem
+    : distribution?.artifactStem ?? 'deepseek-harness'
+  const base = `${artifactStem}-${buildVersion}-${target.os}-${target.arch}`
   const updaterExtension = target.platform === 'darwin' ? 'zip' : 'exe'
   const updaterInfo = updateFileInfo(metadata.files[0], `${metadataFilename}.files[0]`, `${base}.${updaterExtension}`)
   const updaterPath = await verifyChecksummedArtifact(artifactsRoot, updaterInfo)

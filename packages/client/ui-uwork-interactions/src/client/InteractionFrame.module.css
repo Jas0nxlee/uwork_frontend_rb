@@ -7,6 +7,6 @@
   display: contents;
   --dsw-radius-xl: 16px;
   --dsw-specific-input-major: var(--dsw-alias-bg-layer-1);
-  --dsw-shadow-lv2: 0 1px 2px rgb(0 0 0 / 0.05);
-  --dsw-elevation-panel: 0 0 0 1px var(--dsw-alias-border-l2), 0 1px 2px rgb(0 0 0 / 0.05);
+  --dsw-shadow-lv2: var(--dsw-shadow-lv1);
+  --dsw-elevation-panel: 0 0 0 1px var(--dsw-alias-border-l2), var(--dsw-shadow-lv1);
 }

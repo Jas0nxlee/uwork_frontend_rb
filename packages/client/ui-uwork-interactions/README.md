@@ -28,7 +28,7 @@ Select this optional presentation after the native Conversation and interaction 
 
 The root-scoped HOC receives the generic `interactionKind` and unchanged native children. A stable layout-neutral wrapper remains for ordinary and pending states, so changing the interaction discriminator does not remount the resident input. Only approval, question and plan-review apply interaction roles. Unrelated interactions retain native appearance.
 
-The source UWork `PermissionDialog.tsx` and `ElicitationDialog.tsx` use rounded-2xl popover cards and a small shadow. This adaptation scopes a 16px card radius, semantic popover surface and compact elevation to the native composer seat. It preserves warning colors, focus indicators, scrolling limits, action order and native controls. Light and dark surfaces follow the application semantic palette. It does not import the source RPC, store, option semantics or modal lifetime.
+The source UWork `PermissionDialog.tsx` and `ElicitationDialog.tsx` use rounded-2xl popover cards and a small shadow. This adaptation scopes a 16px card radius, semantic popover surface and compact elevation using the theme’s level-one shadow to the native composer seat. It preserves warning colors, focus indicators, scrolling limits, action order and native controls. Light and dark surfaces follow the application semantic palette. It does not import the source RPC, store, option semantics or modal lifetime.
 
 <a id="model-experience"></a>
 ## Model Experience

@@ -78,6 +78,7 @@ it('verifies an account, confirms server key creation, and withdraws identity ac
   const page = await newEnglishPage(browser, 900)
   const console = watchConsole(page); onTestFailed(() => saveFailureShot(page, 'uwork-enterprise'))
   await page.goto(scaffold.authenticatedUrl, { waitUntil: 'load' })
+  await page.locator('[data-uwork-title]').waitFor()
   await connectFreshWorkspace(page, scaffold.workspaceCwd)
   const composer = page.locator('[data-composer-input][contenteditable="true"]').last()
   const draft = 'Check the enterprise model route.'
