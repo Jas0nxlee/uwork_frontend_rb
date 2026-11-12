@@ -10,7 +10,7 @@ description: "在本地或 Windows／macOS Actions 中生成 Desktop 安装包�
 
 在本地或 Windows／macOS Actions 中生成 Desktop 安装包，选择部署与签名模式，并获取产物和诊断。本指南区分构建操作、发布与已安装应用验收。使用硬件凭据前，必须检查平台签名要求与共享 runner 风险。
 
-UWork fork 另有 [GitHub 托管预览工作流](../../../.github/workflows/uwork-preview-release.yml)。在 `master` 上指定完整构建版本即可执行验证，打包 Mac ARM、Windows x64，并将两份安装包及 SHA-256 校验作为 GitHub 预发布上传。未签名包安装后的应用名称为 UWork Next，不包含发行更新器或公证。
+UWork fork 另有 [GitHub 托管预览工作流](../../../.github/workflows/uwork-preview-release.yml)。在 `master` 或版本匹配的 `integrate/dsh-v<product-version>` 分支上指定完整构建版本即可执行验证，打包 Mac ARM、Windows x64，并将两份安装包及 SHA-256 校验作为 GitHub 预发布上传。未签名包安装后的应用名称为 UWork Next，不包含发行更新器或公证。
 
 ## 目录
 

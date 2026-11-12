@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       build_version:
-        description: 'Preview version extending the product version, e.g. 0.2.2-rc.1.20261111.8'
+        description: 'Preview version extending the product version, e.g. 0.2.2-rc.2.20261112.1'
         required: true
         type: string
 
@@ -17,6 +17,8 @@ concurrency:
 
 env:
   DSH_TELEMETRY_DISABLED: '1'
+  DSH_GATE_CONCURRENCY: '1'
+  DSH_COVERAGE_TEST_TIMEOUT_MS: '30000'
   BUILD_VERSION: ${{ inputs.build_version }}
 
 jobs:
@@ -134,13 +136,14 @@ jobs:
         run: |
           set -euo pipefail
           tag="uwork-v${BUILD_VERSION}"
+          product_version="$(node -p 'require("./package.json").version')"
           printf '%s\n' \
             'UWork Next 未签名预览版，支持 Mac ARM 与 Windows x64。' \
             '' \
-            '自定义模型提供商保存时自动获取 Models.dev 的上下文、输出上限、文本/图片能力及推理等级，相关字段以只读方式显示。' \
-            '推理菜单按模型公开的档位生成，支持 none、minimal、low、medium、high、xhigh、max，并区分不支持推理与未披露等级。' \
-            '支持本地目录缓存与离线回退，无法匹配的型号会提示错误并保留原配置。' \
-            '修复企业认证服务与 Node TLS 密钥交换兼容性，恢复桌面启动后的登录校验。' \
+            "合并上游 DSH ${product_version}，保留企微登录、企业托管模型、公司技能市场及独立数据目录。" \
+            '新增上游代码审阅增强、具名多层子代理及会话团队协作、Gemini 原生接口和请求重试设置等能力；部分功能需启用对应插件。' \
+            '保留自定义模型能力和推理等级自动发现、企业授权撤销及托管模型只读限制。' \
+            '修复账号通知依赖、主题样式及留存产物和更新源的产品身份隔离。' \
             '' \
             '此版本为未签名预览版，沿用现有独立安装标识。Windows 安装后交互需在目标机器验收。' \
             '' \

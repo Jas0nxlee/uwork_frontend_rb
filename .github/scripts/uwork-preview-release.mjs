@@ -9,7 +9,9 @@ const product = JSON.parse(readFileSync('package.json', 'utf8')).version
 const suffix = version.startsWith(`${product}.`) ? version.slice(product.length + 1) : ''
 if (!/^\d{8}\.\d+$/.test(suffix)) throw Error('Preview version must extend the product version with YYYYMMDD.number')
 if (!/^[a-f0-9]{40}$/.test(commit)) throw Error('A full source commit is required')
-if (process.env.GITHUB_REF !== 'refs/heads/master') throw Error('Preview publication requires master')
+if (!['refs/heads/master', `refs/heads/integrate/dsh-v${product}`].includes(process.env.GITHUB_REF)) {
+  throw Error('Preview publication requires master or the matching DSH integration branch')
+}
 const output = '.artifacts/uwork-preview'
 const targets = { 'mac-arm64': ['mac-arm64', 'dmg'], 'win-x64': ['win-x64', 'exe'] }
 
